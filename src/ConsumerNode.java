@@ -1,5 +1,4 @@
 
-
 public class ConsumerNode extends NodeImpl implements Consumer  {
 
     @Override
