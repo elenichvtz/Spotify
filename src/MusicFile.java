@@ -1,4 +1,18 @@
 import java.util.List;
+<<<<<<< HEAD
+import java.io.*; 
+
+public class MusicFile {
+
+	public String trackName;
+	public String artistName;
+	public String albumInfo;
+	public String genre;
+	public byte[] musicFileExtract;
+	
+
+}
+=======
 import java.io.*;
 
 
@@ -63,3 +77,4 @@ public class MusicFile {
         return super.toString();
     }
 }
+>>>>>>> 615de5ecf998569f132e565b2d8626a71b3373a4

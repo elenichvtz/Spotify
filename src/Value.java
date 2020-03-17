@@ -1,4 +1,13 @@
 import java.util.List;
+<<<<<<< HEAD
+import java.io.*; 
+
+public class Value {
+
+	public MusicFile musicFile;
+
+}
+=======
 import java.io.*;
 
 public class Value {
@@ -23,3 +32,4 @@ public class Value {
         return super.toString();
     }
 }
+>>>>>>> 615de5ecf998569f132e565b2d8626a71b3373a4
