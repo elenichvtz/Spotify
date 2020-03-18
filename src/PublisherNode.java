@@ -1,13 +1,16 @@
+import java.io.IOException;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+//Client
 public class PublisherNode extends NodeImpl implements Publisher{
 
     List<Broker> publisher_brokers; // den xreiazetai new mallon?
-    //Client
+    private Socket requestSocket = null;
 
     @Override
     public void getBrokerList(){
@@ -20,9 +23,6 @@ public class PublisherNode extends NodeImpl implements Publisher{
          */
 
         publisher_brokers = getBrokers();
-
-
-
     }
 
     @Override
@@ -30,20 +30,37 @@ public class PublisherNode extends NodeImpl implements Publisher{
         return null; //null για την ωρα
         //tha kanei to hashing
 
+    }
 
+    @Override
+    public void connect() {
+        try {
+            requestSocket = new Socket("127.0.0.1", 4321);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
+    public void disconnect(Broker broker,ArtistName artist) {
+        try {
+            requestSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void push(ArtistName artist,Value val){
         //analoga me to hashing 
 
-
     }
 
     @Override
     public void notifyFailure(Broker broker){
 
+    }
+
+    public static void main(String args[]){
 
     }
 
