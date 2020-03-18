@@ -1,26 +1,44 @@
+import javax.tools.ForwardingJavaFileManager;
+import javax.tools.JavaFileManager;
 import java.io.IOException;
 import java.io.*;
 import java.net.*;
 
 public class BrokerNode extends NodeImpl implements Broker {
 
-
-
-    ServerSocket mysocket;
+    public ServerSocket providerSocket;
     Socket connection = null;
-    ObjectOutputStream out = null;
-    ObjectInputStream in = null;
 
     @Override
-    public void calculateKeys(){
+    public void calculateKeys() {
 
     }
 
     @Override
-    public Publisher acceptConnection(Publisher publisher){
+    public void connect() {
+        try {
+            providerSocket = new ServerSocket(4321, 10);
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void disconnect() {
+        try {
+            providerSocket.close();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public Publisher acceptConnection(Publisher publisher) {
         try {
 
-            connection = mysocket.accept();
+            connection = providerSocket.accept();
             System.out.println("Connection accepted");
         }catch (IOException e){
             e.printStackTrace();
@@ -29,12 +47,11 @@ public class BrokerNode extends NodeImpl implements Broker {
         return publisher;
     }
 
-
     @Override
     public Consumer acceptConnection(Consumer consumer) {
         try {
 
-            connection = mysocket.accept();
+            connection = providerSocket.accept();
             System.out.println("Connection accepted");
         }catch (IOException e){
             e.printStackTrace();
@@ -42,35 +59,20 @@ public class BrokerNode extends NodeImpl implements Broker {
         }
 
         return consumer;
+    }
 
+    @Override
+    public void notifyPublisher(String name) {
 
     }
 
     @Override
-    public void notifyPublisher(String name){
-        try {
-            out = new ObjectOutputStream(requestSocket.getOutputStream());
-            in = new ObjectInputStream(requestSocket.getInputStream());
-        }catch (IOException e){
-            e.printStackTrace();
-        }
+    public void pull(ArtistName artist) {
 
     }
 
-    @Override
-    public void pull(ArtistName artist){
-
-
-
+    public static void main(String args[]) {
 
     }
-
-    public static void main(String args[]){
-
-
-    }
-
-   // NAI  🥺
-    //    👉👈
 
 }
