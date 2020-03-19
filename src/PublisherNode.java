@@ -53,7 +53,7 @@ public class PublisherNode extends NodeImpl implements Publisher{
     @Override
     public void connect() {
         try {
-            requestSocket = new Socket(address.getIp(), address.getPort());
+            requestSocket = new Socket("127.0.0.1", 4321);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -78,7 +78,7 @@ public class PublisherNode extends NodeImpl implements Publisher{
         try {
             out = new ObjectOutputStream(requestSocket.getOutputStream());  //initialize out
 
-           
+
 
 
 
