@@ -1,16 +1,21 @@
-import java.io.IOException;
+
+import java.io.*;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.math.BigInteger;
+import java.util.HashMap;
 
-//Client
+
 public class PublisherNode extends NodeImpl implements Publisher{
 
     List<Broker> publisher_brokers; // den xreiazetai new mallon?
+    Address address = new Address();
     private Socket requestSocket = null;
+    ObjectOutputStream out = null;
+    ObjectInputStream in = null;
+    //Client
 
     @Override
     public void getBrokerList(){
@@ -23,25 +28,39 @@ public class PublisherNode extends NodeImpl implements Publisher{
          */
 
         publisher_brokers = getBrokers();
+
+
+
     }
 
     @Override
-    public Broker hashTopic(ArtistName artist){
-        return null; //null για την ωρα
-        //tha kanei to hashing
+    public Broker hashTopic(ArtistName artist) throws NoSuchAlgorithmException{
+        //Hashes the ArtistName
+
+        MessageDigest sha = MessageDigest.getInstance("SHA-256"); //το περιεχομενο εδω δεν ειμαι σιγουρη πως το δηλωνουμε , αλλου το εχει string αλλου σκετο
+        String name = artist.getArtistName();
+
+
+        byte[] namehash = sha.digest(name.getBytes());
+        BigInteger big1 = new BigInteger(1,namehash); // 1 means positive
+
+        //TODO: Finish this
+
 
     }
+
 
     @Override
     public void connect() {
         try {
-            requestSocket = new Socket("127.0.0.1", 4321);
+            requestSocket = new Socket(address.getIp(), address.getPort());
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void disconnect(Broker broker,ArtistName artist) {
+    @Override
+    public void disconnect() {
         try {
             requestSocket.close();
         } catch (IOException e) {
@@ -49,18 +68,38 @@ public class PublisherNode extends NodeImpl implements Publisher{
         }
     }
 
+
+
     @Override
     public void push(ArtistName artist,Value val){
-        //analoga me to hashing 
+
+        byte[] song = val.getMusicfile().getMusicFileExtract();
+        int chunksize = 512; //512 kb at most
+        try {
+            out = new ObjectOutputStream(requestSocket.getOutputStream());  //initialize out
+
+           
+
+
+
+            for(int i =0; i < song.length; i+= chunksize) { //send chuncks of song
+                out.write(song, 0, chunksize+1);
+            }
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+        //TODO: Check if correct
+
+
+
+        //analoga me to hashing
+
 
     }
 
     @Override
     public void notifyFailure(Broker broker){
-
-    }
-
-    public static void main(String args[]){
+        //TODO: write code
 
     }
 
