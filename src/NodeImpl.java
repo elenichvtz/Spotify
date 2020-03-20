@@ -1,15 +1,12 @@
-import javax.imageio.IIOException;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.List;
-import java.net.*;
 
 public class NodeImpl implements Node{
 
     public Socket requestSocket;
     public ServerSocket providerSocket;
-    //public Socket connection = null;
-
 
     @Override
     public void init(int x){
@@ -18,15 +15,12 @@ public class NodeImpl implements Node{
             BrokerNode b = new BrokerNode();
             brokers.add(b);
         }
-
     }
-
 
     @Override
     public List<Broker> getBrokers() {
         return brokers;
     }
-
 
     @Override
     public void connect(){
@@ -36,7 +30,11 @@ public class NodeImpl implements Node{
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
+        }
+        try {
+            providerSocket = new ServerSocket(4321, 10);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -44,17 +42,14 @@ public class NodeImpl implements Node{
     public void disconnect(){
         try {
             requestSocket.close();
+            providerSocket.close();
         }catch (IOException e){
             e.printStackTrace();
         }
-
     }
 
     @Override
     public void updateNodes(){
-
-
-
 
     }
 }

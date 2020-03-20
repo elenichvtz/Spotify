@@ -1,7 +1,3 @@
-import java.util.List;
-import java.io.*;
-
-
 public class MusicFile {
 
     String trackName;
