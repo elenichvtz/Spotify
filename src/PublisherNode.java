@@ -1,4 +1,3 @@
-
 import java.io.*;
 import java.net.Socket;
 import java.util.List;
@@ -10,8 +9,6 @@ import java.util.HashMap;
 
 public class PublisherNode extends NodeImpl implements Publisher{
 
-    List<Broker> publisher_brokers; // den xreiazetai new mallon?
-    Address address = new Address();
     private Socket requestSocket = null;
     ObjectOutputStream out = null;
     ObjectInputStream in = null;
@@ -19,17 +16,7 @@ public class PublisherNode extends NodeImpl implements Publisher{
 
     @Override
     public void getBrokerList(){
-        /*Kalei tin method getBrokers() tis NodeImpl kai tin ekxwrei stin lista me tous brokers
-        tou publisher
-
-        -> mipws xreiazetai telika to new gia na exoume diaforetika antikeimena?
-        giati twra exoume mia anafora publisher_brokers stin lista brokers tis Node
-
-         */
-
-        publisher_brokers = getBrokers();
-
-
+        super.getBrokers();
 
     }
 
@@ -44,19 +31,21 @@ public class PublisherNode extends NodeImpl implements Publisher{
         byte[] namehash = sha.digest(name.getBytes());
         BigInteger big1 = new BigInteger(1,namehash); // 1 means positive
 
-        //TODO: Finish this
+        BigInteger hash2 = new BigInteger("3");
 
+        BigInteger hashNumber = big1.mod(hash2);
 
-    }
+        if(hashNumber.intValue() == 0){
 
-
-    @Override
-    public void connect() {
-        try {
-            requestSocket = new Socket("127.0.0.1", 4321);
-        } catch (IOException e) {
-            e.printStackTrace();
+            return getBrokers().get(0);
         }
+        else if(hashNumber.intValue() == 1){
+            return getBrokers().get(1);
+        }
+        else{
+            return getBrokers().get(2);
+        }
+
     }
 
     @Override
@@ -74,25 +63,17 @@ public class PublisherNode extends NodeImpl implements Publisher{
     public void push(ArtistName artist,Value val){
 
         byte[] song = val.getMusicfile().getMusicFileExtract();
-        int chunksize = 512; //512 kb at most
+        int chunksize = 512*1024; //512 kb or KB at most
         try {
             out = new ObjectOutputStream(requestSocket.getOutputStream());  //initialize out
 
-
-
-
-
-            for(int i =0; i < song.length; i+= chunksize) { //send chuncks of song
+            for(int i =0; i < song.length; i+= chunksize) { //send chunks of song
                 out.write(song, 0, chunksize+1);
             }
         }catch (IOException e){
             e.printStackTrace();
         }
         //TODO: Check if correct
-
-
-
-        //analoga me to hashing
 
 
     }

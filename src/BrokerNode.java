@@ -1,44 +1,38 @@
-import javax.tools.ForwardingJavaFileManager;
-import javax.tools.JavaFileManager;
 import java.io.IOException;
 import java.io.*;
 import java.net.*;
 
 public class BrokerNode extends NodeImpl implements Broker {
 
-    public ServerSocket providerSocket;
+
+
+    ServerSocket mysocket;
     Socket connection = null;
-
-    @Override
-    public void calculateKeys() {
-
-    }
+    ObjectOutputStream out = null;
+    ObjectInputStream in = null;
 
     @Override
     public void connect() {
-        try {
-            providerSocket = new ServerSocket(4321, 10);
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
+            try {
+                mysocket = new ServerSocket(4321, 10);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
     }
 
     @Override
-    public void disconnect() {
-        try {
-            providerSocket.close();
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void calculateKeys(){
+
+
+
     }
 
     @Override
-    public Publisher acceptConnection(Publisher publisher) {
+    public Publisher acceptConnection(Publisher publisher){
         try {
 
-            connection = providerSocket.accept();
+            connection = mysocket.accept();
             System.out.println("Connection accepted");
         }catch (IOException e){
             e.printStackTrace();
@@ -47,11 +41,13 @@ public class BrokerNode extends NodeImpl implements Broker {
         return publisher;
     }
 
+
     @Override
     public Consumer acceptConnection(Consumer consumer) {
         try {
+            connect();
 
-            connection = providerSocket.accept();
+            connection = mysocket.accept();
             System.out.println("Connection accepted");
         }catch (IOException e){
             e.printStackTrace();
@@ -59,20 +55,35 @@ public class BrokerNode extends NodeImpl implements Broker {
         }
 
         return consumer;
-    }
 
-    @Override
-    public void notifyPublisher(String name) {
 
     }
 
     @Override
-    public void pull(ArtistName artist) {
+    public void notifyPublisher(String name){
+        try {
+            out = new ObjectOutputStream(requestSocket.getOutputStream());
+            in = new ObjectInputStream(requestSocket.getInputStream());
+        }catch (IOException e){
+            e.printStackTrace();
+        }
 
     }
 
-    public static void main(String args[]) {
+    @Override
+    public void pull(ArtistName artist){
+
+
+
 
     }
+
+    public static void main(String args[]){
+
+
+    }
+
+   // NAI  🥺
+    //    👉👈
 
 }

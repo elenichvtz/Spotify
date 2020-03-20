@@ -5,42 +5,54 @@ public class ConsumerNode extends NodeImpl implements Consumer  {
 
     //Client
 
-    public Socket requestSocket = null;
+    Socket requestSocket = null; //ισως μεσα στην run οπως στο εργαστηριο??
+    ObjectOutputStream out = null;
+    ObjectInputStream in = null;
 
-    public void run(){
-        //Socket requestSocket = null;
 
-    }
 
-    @Override
-    public void connect() {
-        try {
-            requestSocket = new Socket("127.0.0.1", 4321);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+
+
 
     @Override
     public void register(Broker broker,ArtistName artist) {
 
-    }
-
-    @Override
-    public void disconnect(Broker broker,ArtistName artist) {
         try {
-            requestSocket.close();
+
+            //broker.notifyPublisher(artist.getArtistName());   //First notify
+
+            out = new ObjectOutputStream(requestSocket.getOutputStream());
+            out.writeUTF(artist.getArtistName());         //then send
+            out.flush(); //send for sure
+            //TODO: find the correct broker
+
+            broker.pull(artist);                                            // then pull
+
+
+
+
+
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    @Override
-    public void playData(ArtistName artist, Value val) {
+        @Override
+    public void disconnect(Broker broker,ArtistName artist) {
+        super.disconnect();
+        //remove from list
 
     }
 
-    public static void main(String args[]) {
+    @Override
+    public void playData(ArtistName artist, Value val){
+
+
+    }
+
+
+
+    public static void main(String args[]){
 
         ConsumerNode n1 = new ConsumerNode();
 
