@@ -1,6 +1,8 @@
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.List;
 
 public class NodeImpl implements Node{
@@ -8,10 +10,12 @@ public class NodeImpl implements Node{
     public Socket requestSocket;
     public ServerSocket providerSocket;
 
-    @Override
+   @Override
     public void init(int x){
-        System.out.println("Initializing..."+x);
+
+       // System.out.println("Initializing..."+x);
         for(int i = 0; i < x; ++i){
+
             BrokerNode b = new BrokerNode();
             brokers.add(b);
         }

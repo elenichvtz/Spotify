@@ -7,7 +7,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 //Client
-public class PublisherNode extends NodeImpl implements Publisher, java.io.Serializable {
+public class PublisherNode extends NodeImpl implements Publisher{
 
     private Socket requestSocket = null;
     ObjectOutputStream out = null;
@@ -23,14 +23,16 @@ public class PublisherNode extends NodeImpl implements Publisher, java.io.Serial
         byte[] namehash = sha.digest(name.getBytes());
         BigInteger big1 = new BigInteger(1,namehash); // 1 means positive
 
-        BigInteger hash2 = new BigInteger("3");
+        BigInteger hash2 = new BigInteger("71");
 
         BigInteger hashNumber = big1.mod(hash2);
 
-        if(hashNumber.intValue() == 0){
+
+
+        if(hashNumber.intValue() <= getBrokers().get(0).calculateKeys() && hashNumber.intValue() >= getBrokers().get(2).calculateKeys()){
             return getBrokers().get(0);
         }
-        else if(hashNumber.intValue() == 1) {
+        else if(hashNumber.intValue() <= getBrokers().get(1).calculateKeys()) {
             return getBrokers().get(1);
         }
         else{
@@ -72,6 +74,8 @@ public class PublisherNode extends NodeImpl implements Publisher, java.io.Serial
     }
 
     public static void main(String args[]){
+
+
 
     }
 }
