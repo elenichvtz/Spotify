@@ -123,19 +123,13 @@ public class PublisherNode extends NodeImpl implements Publisher{
                                         val.getMusicfile().setGenre(id3v1Tag.getGenre());
 
                                         val.getMusicfile().setMusicFileExtract(mp3file);
-
-
                                     }
-
-
-
                                 }
 
                             }catch (IOException e){
                                 e.printStackTrace();
                             }catch (InvalidDataException exception){
                                 //add something
-
 
                             }
 
