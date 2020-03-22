@@ -1,3 +1,8 @@
+import com.mpatric.mp3agic.ID3v1;
+import com.mpatric.mp3agic.InvalidDataException;
+import com.mpatric.mp3agic.Mp3File;
+import com.mpatric.mp3agic.UnsupportedTagException;
+
 import java.io.*;
 import java.math.BigInteger;
 import java.net.Socket;
@@ -7,7 +12,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-
 
 //Client
 public class PublisherNode extends NodeImpl implements Publisher{
@@ -34,7 +38,6 @@ public class PublisherNode extends NodeImpl implements Publisher{
             }
 
         }
-
 
         BigInteger hash2 = new BigInteger("max");
 
@@ -63,10 +66,6 @@ public class PublisherNode extends NodeImpl implements Publisher{
 
     @Override
     public void push(ArtistName artist,Value val){
-
-        //find song in disk
-
-
 
         byte[] song = val.getMusicfile().getMusicFileExtract();
         int chunk_size = 512*1024; //512 KB at most
@@ -99,7 +98,14 @@ public class PublisherNode extends NodeImpl implements Publisher{
                             String foldercontents = path.concat("//").concat(file.getFileName().toString());
                             try{
                                 String songname = songs.getFileName().toString(); //return the name of the song in string
-                                Mp3File mp3file = new Mp3File(foldercontents.concat("//").concat(songs.getFileName().toString()));
+                                Mp3File mp3file = null;
+                                try {
+                                    mp3file = new Mp3File(foldercontents.concat("//").concat(songs.getFileName().toString()));
+                                } catch (UnsupportedTagException e) {
+                                    e.printStackTrace();
+                                } catch (InvalidDataException e) {
+                                    e.printStackTrace();
+                                }
 
                                 File f2 = new File(foldercontents.concat("//").concat(songs.getFileName().toString()));
                                 f2.length();
@@ -112,31 +118,20 @@ public class PublisherNode extends NodeImpl implements Publisher{
                                         val.getMusicfile().setGenre(id3v1Tag.getGenre());
 
                                         val.getMusicfile().setMusicFileExtract(mp3file);
-
-
                                     }
-
-
-
                                 }
 
                             }catch (IOException e){
                                 e.printStackTrace();
                             }catch (InvalidDataException exception){
                                 //add something
-
-
                             }
-
                         }
-
-
                     }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
 
         }catch(IOException e){
             e.printStackTrace();
@@ -144,13 +139,7 @@ public class PublisherNode extends NodeImpl implements Publisher{
         }
 
         return val;
-
     }
-
-
-
-
-
 
     @Override
     public void notifyFailure(Broker broker){
@@ -161,8 +150,5 @@ public class PublisherNode extends NodeImpl implements Publisher{
     public static void main(String args[]){
 
         System.out.println("ALL GOOD 😎");
-
-
-
     }
 }
