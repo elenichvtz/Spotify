@@ -53,6 +53,10 @@ public class ConsumerNode extends NodeImpl implements Consumer {
     }
 
     //method run
+    public void run(){
+        connect();
+        //register();
+    }
 
     public static void main(String args[]){
 

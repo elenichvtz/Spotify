@@ -32,8 +32,23 @@ public class BrokerNode extends NodeImpl implements Broker{
     }*/
 
     @Override
-    public int calculateKeys(){
-           return  ("127.0.0.1" + "/" + 4321).hashCode();
+    public BigInteger calculateKeys(){
+        String s = "127.0.0.1"+ "4321";
+
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] messageDigest = md.digest(s.getBytes());
+            BigInteger no = new BigInteger(1, messageDigest);
+
+            return no;
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+
+
+        return null;
+
+
     }
 
     @Override
@@ -65,7 +80,7 @@ public class BrokerNode extends NodeImpl implements Broker{
 
         try {
             out = new ObjectOutputStream(requestSocket.getOutputStream());
-            out.writeInt(calculateKeys());
+            out.writeInt(calculateKeys().intValue());
             out.flush();
 
         } catch (IOException e) {
