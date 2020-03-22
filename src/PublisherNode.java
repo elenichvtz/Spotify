@@ -7,7 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import
+
 
 //Client
 public class PublisherNode extends NodeImpl implements Publisher{
@@ -67,6 +67,7 @@ public class PublisherNode extends NodeImpl implements Publisher{
         //find song in disk
 
 
+
         byte[] song = val.getMusicfile().getMusicFileExtract();
         int chunk_size = 512*1024; //512 KB at most
         try {
@@ -83,7 +84,7 @@ public class PublisherNode extends NodeImpl implements Publisher{
         //TODO: Check if correct
     }
 
-    public Value findSong(String path,ArtistName artist, Value val){
+    public Value findSong(String path, Value val){
 
         File f = null;
         BufferedReader reader = null;
@@ -99,12 +100,18 @@ public class PublisherNode extends NodeImpl implements Publisher{
                             try{
                                 String songname = songs.getFileName().toString(); //return the name of the song in string
                                 Mp3File mp3file = new Mp3File(foldercontents.concat("//").concat(songs.getFileName().toString()));
+
+                                File f2 = new File(foldercontents.concat("//").concat(songs.getFileName().toString()));
+                                f2.length();
+
                                 if (mp3file.hasId3v1Tag()) {
                                     ID3v1 id3v1Tag = mp3file.getId3v1Tag();
 
                                     if(val.getMusicfile().getArtistName().equals(id3v1Tag.getArtist()) && (val.getMusicfile().getTrackName().equals(id3v1Tag.getTrack()))){
                                         val.getMusicfile().setAlbumInfo(id3v1Tag.getAlbum());
                                         val.getMusicfile().setGenre(id3v1Tag.getGenre());
+
+                                        val.getMusicfile().setMusicFileExtract(mp3file);
 
 
                                     }

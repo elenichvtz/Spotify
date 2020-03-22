@@ -14,22 +14,7 @@ public class BrokerNode extends NodeImpl implements Broker{
     ObjectOutputStream out = null;
     ObjectInputStream in = null;
 
-    /*int number;
 
-    InetAddress ip;
-    int port;
-
-    BrokerNode(InetAddress ip, int port){
-        this.ip = ip;
-        this.port = port;
-    }
-
-    @Override
-    public void init(int x){
-
-        BrokerNode b = new BrokerNode(ip,port+x);
-
-    }*/
 
     @Override
     public BigInteger calculateKeys(){
