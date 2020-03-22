@@ -1,5 +1,3 @@
-import com.mpatric.mp3agic.Mp3File;
-
 public class MusicFile {
 
     String trackName;
@@ -28,11 +26,11 @@ public class MusicFile {
         this.artistName = artistName;
     }
 
-    public void setGenre(int genre) {
+    public void setGenre(String genre) {
         this.genre = genre;
     }
 
-    public void setMusicFileExtract(Mp3File musicFileExtract) {
+    public void setMusicFileExtract(byte[] musicFileExtract) {
         this.musicFileExtract = musicFileExtract;
     }
 

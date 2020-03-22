@@ -93,56 +93,66 @@ public class PublisherNode extends NodeImpl implements Publisher{
         File f = null;
         BufferedReader reader = null;
 
-        Path dirPath = Paths.get("path");
-        try (DirectoryStream<Path> dirPaths = Files.newDirectoryStream(dirPath)) { //stores the folders ex. "Comedy"  in the zip
-            for (Path file : dirPaths) { //for every folder in path
-                Path CurrentFolderContent = Paths.get(path.concat("//").concat(file.getFileName().toString()));
-                try (DirectoryStream<Path> currentsongs = Files.newDirectoryStream(CurrentFolderContent)) {//the songs in the current folder
-                    for (Path songs : currentsongs) {
-                        String foldercontents = path.concat("//").concat(file.getFileName().toString());
-                        try{
-                            String songname = songs.getFileName().toString(); //return the name of the song in string
-                            Mp3File mp3file = null;
-                            try {
-                                mp3file = new Mp3File(foldercontents.concat("//").concat(songs.getFileName().toString()));
-                            } catch (UnsupportedTagException e) {
-                                e.printStackTrace();
-                            } catch (InvalidDataException e) {
-                                e.printStackTrace();
-                            }
+        try {
+            Path dirPath = Paths.get("path");
+            try (DirectoryStream<Path> dirPaths = Files.newDirectoryStream(dirPath)) { //stores the folders ex. "Comedy"  in the zip
+                for (Path file : dirPaths) { //for every folder in path
+                    Path CurrentFolderContent = Paths.get(path.concat("//").concat(file.getFileName().toString()));
+                    try (DirectoryStream<Path> currentsongs = Files.newDirectoryStream(CurrentFolderContent)) {//the songs in the current folder
+                        for (Path songs : currentsongs) {
+                            String foldercontents = path.concat("//").concat(file.getFileName().toString());
+                            try{
+                                String songname = songs.getFileName().toString(); //return the name of the song in string
+                                Mp3File mp3file = null;
+                                try {
+                                    mp3file = new Mp3File(foldercontents.concat("//").concat(songs.getFileName().toString()));
+                                } catch (UnsupportedTagException e) {
+                                    e.printStackTrace();
+                                } catch (InvalidDataException e) {
+                                    e.printStackTrace();
+                                }
 
-                            File f2 = new File(foldercontents.concat("//").concat(songs.getFileName().toString()));
-                            f2.length();
+                                File f2 = new File(foldercontents.concat("//").concat(songs.getFileName().toString()));
+                                f2.length();
 
-                            if (mp3file.hasId3v1Tag()) {
-                                ID3v1 id3v1Tag = mp3file.getId3v1Tag();
+                                if (mp3file.hasId3v1Tag()) {
+                                    ID3v1 id3v1Tag = mp3file.getId3v1Tag();
 
-                                if(val.getMusicfile().getArtistName().equals(((ID3v1) id3v1Tag).getArtist()) && (val.getMusicfile().getTrackName().equals(id3v1Tag.getTrack()))){
-                                    val.getMusicfile().setAlbumInfo(id3v1Tag.getAlbum());
-                                    val.getMusicfile().setGenre(id3v1Tag.getGenre());
+                                    if(val.getMusicfile().getArtistName().equals(id3v1Tag.getArtist()) && (val.getMusicfile().getTrackName().equals(id3v1Tag.getTrack()))){
+                                        val.getMusicfile().setAlbumInfo(id3v1Tag.getAlbum());
+                                        val.getMusicfile().setGenre(id3v1Tag.getGenre());
 
-                                    val.getMusicfile().setMusicFileExtract(mp3file);
+                                        val.getMusicfile().setMusicFileExtract(mp3file);
+
+
+                                    }
+
 
 
                                 }
 
+                            }catch (IOException e){
+                                e.printStackTrace();
+                            }catch (InvalidDataException exception){
+                                //add something
 
 
                             }
 
-                        }catch (IOException e){
-                            e.printStackTrace();
                         }
 
+
                     }
-
-
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
+
+        }catch(IOException e){
+            e.printStackTrace();
+
+        }
 
         return val;
 
