@@ -17,7 +17,6 @@ import java.util.ArrayList;
 
 import static java.lang.Math.ceil;
 
-
 //Client
 public class PublisherNode extends NodeImpl implements Publisher{
 
@@ -59,7 +58,6 @@ public class PublisherNode extends NodeImpl implements Publisher{
 
         }
 
-
         BigInteger hash2 = new BigInteger("max");
 
         BigInteger hashNumber = big1.mod(hash2);
@@ -77,8 +75,28 @@ public class PublisherNode extends NodeImpl implements Publisher{
     }
 
 
+<<<<<<< HEAD
 
     public void push(ArtistName artist,Value val) {
+=======
+        byte[] song = val.getMusicfile().getMusicFileExtract();
+        int chunk_size = 512*1024; //512 KB at most
+        try {
+            out = new ObjectOutputStream(requestSocket.getOutputStream());  //initialize out
+
+            for(int i =0; i < song.length; i+= chunk_size) { //send chunks of song
+
+                out.write(song, 0, chunk_size+1);
+                out.flush();
+            }
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+        //TODO: Check if correct
+    }
+
+    public Value findSong(String path, Value val){
+>>>>>>> 1080b5e35f7d49e97f93afa54d1e3ea3ec87948d
 
         File f = null;
         BufferedReader reader = null;
@@ -104,14 +122,39 @@ public class PublisherNode extends NodeImpl implements Publisher{
                                 e.printStackTrace();
                             }
 
+<<<<<<< HEAD
                             //File f2 = new File(foldercontents.concat("//").concat(songs.getFileName().toString()));
                             //f2.length();
+=======
+        try {
+            Path dirPath = Paths.get("path");
+            try (DirectoryStream<Path> dirPaths = Files.newDirectoryStream(dirPath)) { //stores the folders ex. "Comedy"  in the zip
+                for (Path file : dirPaths) { //for every folder in path
+                    Path CurrentFolderContent = Paths.get(path.concat("//").concat(file.getFileName().toString()));
+                    try (DirectoryStream<Path> currentsongs = Files.newDirectoryStream(CurrentFolderContent)) {//the songs in the current folder
+                        for (Path songs : currentsongs) {
+                            String foldercontents = path.concat("//").concat(file.getFileName().toString());
+                            try{
+                                String songname = songs.getFileName().toString(); //return the name of the song in string
+                                Mp3File mp3file = null;
+                                try {
+                                    mp3file = new Mp3File(foldercontents.concat("//").concat(songs.getFileName().toString()));
+                                } catch (UnsupportedTagException e) {
+                                    e.printStackTrace();
+                                } catch (InvalidDataException e) {
+                                    e.printStackTrace();
+                                }
+
+                                File f2 = new File(foldercontents.concat("//").concat(songs.getFileName().toString()));
+                                f2.length();
+>>>>>>> 1080b5e35f7d49e97f93afa54d1e3ea3ec87948d
 
                             if (mp3file.hasId3v1Tag()) {
                                 ID3v1 id3v1Tag = mp3file.getId3v1Tag();
 
                                 if (val.getMusicfile().getArtistName().equals(id3v1Tag.getArtist()) && (val.getMusicfile().getTrackName().equals(id3v1Tag.getTrack()))) {
 
+<<<<<<< HEAD
 
                                     ByteArrayOutputStream byteout = new ByteArrayOutputStream();
 
@@ -145,14 +188,31 @@ public class PublisherNode extends NodeImpl implements Publisher{
                             }
                         } catch (IOException e) {
                             e.printStackTrace();
+=======
+                                        val.getMusicfile().setMusicFileExtract(mp3file);
+                                    }
+                                }
+
+                            }catch (IOException e){
+                                e.printStackTrace();
+                            }catch (InvalidDataException exception){
+                                //add something
+                            }
+>>>>>>> 1080b5e35f7d49e97f93afa54d1e3ea3ec87948d
                         }
                     }
                 }
             }
+<<<<<<< HEAD
         } catch (IOException e) {
+=======
+
+        }catch(IOException e){
+>>>>>>> 1080b5e35f7d49e97f93afa54d1e3ea3ec87948d
             e.printStackTrace();
         }
 
+<<<<<<< HEAD
     }
 
 
@@ -185,6 +245,11 @@ public class PublisherNode extends NodeImpl implements Publisher{
 
 
 
+=======
+        return val;
+    }
+
+>>>>>>> 1080b5e35f7d49e97f93afa54d1e3ea3ec87948d
     @Override
     public void notifyFailure(Broker broker){
         //TODO: write code
@@ -194,8 +259,5 @@ public class PublisherNode extends NodeImpl implements Publisher{
     public static void main(String args[]){
 
         System.out.println("ALL GOOD 😎");
-
-
-
     }
 }
