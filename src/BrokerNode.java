@@ -35,10 +35,36 @@ public class BrokerNode extends NodeImpl implements Broker{
 
 
     }
+    @Override
+    public void connect(){
+        while(!requestSocket.isConnected()) {
+            try {
+                requestSocket = new Socket("127.0.0.1", 4321);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        try {
+            providerSocket = new ServerSocket(4321, 10);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void disconnect(){
+        try {
+            requestSocket.close();
+            providerSocket.close();
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+    }
 
     @Override
     public Publisher acceptConnection(Publisher publisher){
         try {
+
             connection = mysocket.accept();
             System.out.println("Connection accepted");
         }catch (IOException e){
@@ -50,7 +76,7 @@ public class BrokerNode extends NodeImpl implements Broker{
     @Override
     public Consumer acceptConnection(Consumer consumer) {
         try {
-            connect();
+
             connection = mysocket.accept();
             System.out.println("Connection accepted");
         }catch (IOException e){

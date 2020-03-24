@@ -1,17 +1,30 @@
-public class MusicFile {
+import java.io.Serializable;
+
+public class MusicFile implements Serializable {
+
+
+    //writeObject
+    //readObject
+    //arraylist me filename
+    //oxi localhost
+    //brokers diaforetika port alliws tha evgaze bind error
 
     String trackName;
     String artistName;
     String albumInfo;
     String genre;
+    int totalChunks;
+    int chunkId;
     byte[] musicFileExtract;
 
-    MusicFile(String trackName,String artistName,String albumInfo,String genre,byte[] musicFileExtract){
+    MusicFile(String trackName,String artistName,String albumInfo,String genre,byte[] musicFileExtract, int chunkId, int totalChunks){
         this.trackName = trackName;
         this.artistName =  artistName;
         this.albumInfo = albumInfo;
         this.genre = genre;
         this.musicFileExtract = musicFileExtract;
+        this.chunkId = chunkId;
+        this.totalChunks= totalChunks;
     }
 
     public void setTrackName(String trackName){
@@ -34,6 +47,10 @@ public class MusicFile {
         this.musicFileExtract = musicFileExtract;
     }
 
+    public void setChunkId(int chunkId) { this.chunkId = chunkId;} //new
+
+    public void setTotalChunks(int totalChunks) { this.totalChunks = totalChunks; } //new
+
     public String getTrackName() {
         return trackName;
     }
@@ -53,6 +70,10 @@ public class MusicFile {
     public byte[] getMusicFileExtract() {
         return musicFileExtract;
     }
+
+    public int getChunkId() { return chunkId; } //new
+
+    public int getTotalChunks() { return totalChunks; } //new
 
     @Override
     public String toString() {

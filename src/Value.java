@@ -1,7 +1,8 @@
+import java.io.Serializable;
 import java.util.List;
 import java.io.*;
 
-public class Value {
+public class Value implements Serializable{
 
     MusicFile musicfile;
 
