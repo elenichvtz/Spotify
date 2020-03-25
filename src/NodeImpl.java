@@ -13,12 +13,7 @@ public class NodeImpl implements Node{
    @Override
     public void init(int x){
 
-       // System.out.println("Initializing..."+x);
-        for(int i = 0; i < x; ++i){
 
-            BrokerNode b = new BrokerNode();
-            brokers.add(b);
-        }
     }
 
     @Override

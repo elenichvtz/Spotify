@@ -13,8 +13,13 @@ public class BrokerNode extends NodeImpl implements Broker{
     Socket connection = null;
     ObjectOutputStream out = null;
     ObjectInputStream in = null;
+    ArrayList<Publisher> pub = new ArrayList<>();
+    @Override
+    public void init() {
+        
 
 
+    }
 
     @Override
     public BigInteger calculateKeys(){
@@ -30,11 +35,10 @@ public class BrokerNode extends NodeImpl implements Broker{
             e.printStackTrace();
         }
 
-
         return null;
 
-
     }
+
     @Override
     public void connect(){
         while(!requestSocket.isConnected()) {
