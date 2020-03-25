@@ -1,7 +1,4 @@
-import com.mpatric.mp3agic.ID3v1;
-import com.mpatric.mp3agic.InvalidDataException;
-import com.mpatric.mp3agic.Mp3File;
-import com.mpatric.mp3agic.UnsupportedTagException;
+import com.mpatric.mp3agic.*;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -55,13 +52,32 @@ public class Main {
                                 } catch (InvalidDataException e) {
                                     e.printStackTrace();
                                 }
+                                if (mp3file.hasId3v2Tag()) {
+                                    System.out.println("YES FOR ID2");
+                                    ID3v2 id3v2Tag = mp3file.getId3v2Tag();
+                                    System.out.println("Name of artist with tag version 2 is "+id3v2Tag.getArtist());
+                                    if (!id3v2Tag.getArtist().isEmpty() && (id3v2Tag.getArtist().charAt(0) >= this.start && id3v2Tag.getArtist().charAt(0) <= this.end) ) {
+                                        if (this.artistMap.containsKey(id3v2Tag.getArtist())) {
+
+
+                                            ArrayList<String> playlist = this.artistMap.get(id3v2Tag.getArtist());
+                                            playlist.add(id3v2Tag.getTitle());
+                                            this.artistMap.put(id3v2Tag.getArtist(), playlist);
+                                        } else {
+                                            ArrayList<String> playlist2 = new ArrayList<String>();
+                                            playlist2.add(id3v2Tag.getTitle());
+                                            this.artistMap.put(id3v2Tag.getArtist(), playlist2);
+                                        }
+                                    }
+                                }
 
                                 if (mp3file.hasId3v1Tag()) {
                                     ID3v1 id3v1Tag = mp3file.getId3v1Tag();
+                                    System.out.println("YES");
 
 
-                                    if ((id3v1Tag.getArtist().charAt(0) >= this.start && id3v1Tag.getArtist().charAt(0) <= this.end) && id3v1Tag.getArtist().isEmpty()) { //if artist already exists
-
+                                    if ((id3v1Tag.getArtist().charAt(0) >= this.start && id3v1Tag.getArtist().charAt(0) <= this.end) && !id3v1Tag.getArtist().isEmpty()) { //if artist already exists
+                                        System.out.println("YES");
                                         if (this.artistMap.containsKey(id3v1Tag.getArtist())) {
                                             // playlist.add(id3v1Tag.getTitle());
                                             ArrayList<String> playlist = this.artistMap.get(id3v1Tag.getArtist());
