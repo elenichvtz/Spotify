@@ -25,7 +25,7 @@ public class Main {
     }
 
     public void init(){
-        String path = "/Users/emiliadan/Downloads/distributed_project/dataset1";
+        String path = "C:/Users/eleni/Downloads/DS/dataset1";
         File f = null;
         BufferedReader reader = null;
 
@@ -33,68 +33,75 @@ public class Main {
         System.out.println(dirPath.getFileName());
         try (DirectoryStream<Path> dirPaths = Files.newDirectoryStream(dirPath)) { //stores the folders ex. "Comedy"  in the zip
             for (Path file : dirPaths) { //for every folder in path
-                if(!Files.isHidden(file)) {
+                if(Files.isDirectory(file)) {
                     //System.out.println(file.getName(3).toString());
-                    Path CurrentFolderContent = Paths.get(path.concat("//").concat(file.getFileName().toString()));
+                    Path CurrentFolderContent = Paths.get(path.concat("/").concat(file.getFileName().toString()));
                     System.out.println(CurrentFolderContent.getFileName());
-                    try (DirectoryStream<Path> currentsongs = Files.newDirectoryStream(CurrentFolderContent)) {//the songs in the current folder
-                        for (Path songs : currentsongs) {
-                            String foldercontents = path.concat("//").concat(file.getFileName().toString());
+                    //if(CurrentFolderContent.startsWith(".")){
+                    System.out.println("fghug");
+                        try (DirectoryStream<Path> currentsongs = Files.newDirectoryStream(CurrentFolderContent)) {//the songs in the current folder
+                            if (!currentsongs.toString().startsWith(".")) {
+                                System.out.println(currentsongs.toString()+" ddd");
+                                for (Path songs : currentsongs) {
+                                    String foldercontents = path.concat("/").concat(file.getFileName().toString());
 
-                            try {
-                                String songname = songs.getFileName().toString(); //return the name of the song in string
-                                Mp3File mp3file = null;
-                                try {
-                                    mp3file = new Mp3File(foldercontents.concat("//").concat(songs.getFileName().toString()));
+                                    System.out.println(foldercontents+" giuhgfrhurfhjfrghfrg");
+                                    if(!songs.getFileName().toString().startsWith(".")) {
+                                        try {
+                                            //String songname = songs.getFileName().toString(); //return the name of the song in string
+                                            //System.out.println(songname);
+                                            Mp3File mp3file = new Mp3File(songs);
+                                            System.out.println("575757");
+                                            //Mp3File mp3file = new Mp3File(foldercontents.concat("/").concat(songs.getFileName().toString()));
+                                            System.out.println(mp3file.getId3v2Tag().getTitle());
 
-                                } catch (UnsupportedTagException e) {
-                                    e.printStackTrace();
-                                } catch (InvalidDataException e) {
-                                    e.printStackTrace();
-                                }
-                                if (mp3file.hasId3v2Tag()) {
-                                    System.out.println("YES FOR ID2");
-                                    ID3v2 id3v2Tag = mp3file.getId3v2Tag();
-                                    System.out.println("Name of artist with tag version 2 is "+id3v2Tag.getArtist());
-                                    if (!id3v2Tag.getArtist().isEmpty() && (id3v2Tag.getArtist().charAt(0) >= this.start && id3v2Tag.getArtist().charAt(0) <= this.end) ) {
-                                        if (this.artistMap.containsKey(id3v2Tag.getArtist())) {
+                                            if (mp3file.hasId3v2Tag()) {
+                                                System.out.println("YES FOR ID2");
+                                                ID3v2 id3v2Tag = mp3file.getId3v2Tag();
+                                                System.out.println("Name of artist with tag version 2 is " + id3v2Tag.getArtist());
+                                                //System.out.println(this.start);
+                                                if (!id3v2Tag.getArtist().isEmpty() && (id3v2Tag.getArtist().startsWith(String.valueOf(this.start)) && id3v2Tag.getArtist().charAt(0) <= this.end)) {
+                                                    if (this.artistMap.containsKey(id3v2Tag.getArtist())) {
+                                                        ArrayList<String> playlist = this.artistMap.get(id3v2Tag.getArtist());
+                                                        playlist.add(id3v2Tag.getTitle());
+                                                        this.artistMap.put(id3v2Tag.getArtist(), playlist);
+                                                    } else {
+                                                        ArrayList<String> playlist2 = new ArrayList<String>();
+                                                        playlist2.add(id3v2Tag.getTitle());
+                                                        this.artistMap.put(id3v2Tag.getArtist(), playlist2);
+                                                    }
+                                                }
+                                            }
+
+                                            if (mp3file.hasId3v1Tag()) {
+                                                ID3v1 id3v1Tag = mp3file.getId3v1Tag();
+                                                System.out.println("YES");
 
 
-                                            ArrayList<String> playlist = this.artistMap.get(id3v2Tag.getArtist());
-                                            playlist.add(id3v2Tag.getTitle());
-                                            this.artistMap.put(id3v2Tag.getArtist(), playlist);
-                                        } else {
-                                            ArrayList<String> playlist2 = new ArrayList<String>();
-                                            playlist2.add(id3v2Tag.getTitle());
-                                            this.artistMap.put(id3v2Tag.getArtist(), playlist2);
+                                                if ((id3v1Tag.getArtist().charAt(0) >= this.start && id3v1Tag.getArtist().charAt(0) <= this.end) && !id3v1Tag.getArtist().isEmpty()) { //if artist already exists
+                                                    System.out.println("YES");
+                                                    if (this.artistMap.containsKey(id3v1Tag.getArtist())) {
+                                                        // playlist.add(id3v1Tag.getTitle());
+                                                        ArrayList<String> playlist = this.artistMap.get(id3v1Tag.getArtist());
+                                                        playlist.add(id3v1Tag.getTitle());
+                                                        this.artistMap.put(id3v1Tag.getArtist(), playlist);
+                                                    } else {
+                                                        ArrayList<String> playlist2 = new ArrayList<String>();
+                                                        playlist2.add(id3v1Tag.getTitle());
+                                                        this.artistMap.put(id3v1Tag.getArtist(), playlist2);
+                                                    }
+
+                                                }
+                                            }
+                                        } catch (InvalidDataException e) {
+                                            e.printStackTrace();
+                                        } catch (UnsupportedTagException e) {
+                                            e.printStackTrace();
                                         }
                                     }
                                 }
-
-                                if (mp3file.hasId3v1Tag()) {
-                                    ID3v1 id3v1Tag = mp3file.getId3v1Tag();
-                                    System.out.println("YES");
-
-
-                                    if ((id3v1Tag.getArtist().charAt(0) >= this.start && id3v1Tag.getArtist().charAt(0) <= this.end) && !id3v1Tag.getArtist().isEmpty()) { //if artist already exists
-                                        System.out.println("YES");
-                                        if (this.artistMap.containsKey(id3v1Tag.getArtist())) {
-                                            // playlist.add(id3v1Tag.getTitle());
-                                            ArrayList<String> playlist = this.artistMap.get(id3v1Tag.getArtist());
-                                            playlist.add(id3v1Tag.getTitle());
-                                            this.artistMap.put(id3v1Tag.getArtist(), playlist);
-                                        } else {
-                                            ArrayList<String> playlist2 = new ArrayList<String>();
-                                            playlist2.add(id3v1Tag.getTitle());
-                                            this.artistMap.put(id3v1Tag.getArtist(), playlist2);
-                                        }
-
-                                    }
-                                }
-                            } catch (IOException e) {
-                                e.printStackTrace();
                             }
-                        }
+                        //}
                     }
                 }
             }
