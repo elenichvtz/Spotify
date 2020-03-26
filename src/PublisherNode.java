@@ -147,16 +147,13 @@ public class PublisherNode implements Publisher{
             e.printStackTrace();
         }
 
-        //connect();
-
-       // while(true) {
-            try {
-                this.out.writeObject(this.artistMap);
-                this.out.flush();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-       // }
+        //send map to broker
+        try {
+            this.out.writeObject(this.artistMap);
+            this.out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

@@ -6,6 +6,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 //Server
 public class BrokerNode implements Broker{
@@ -28,9 +29,9 @@ public class BrokerNode implements Broker{
     @Override
     public void init() {
 
-
         try {
             this.providerSocket = new ServerSocket(port, 10);
+            //this.requestSocket = this.providerSocket.accept();
             System.out.println("broker provider socket connect");
 
         } catch (IOException e) {
@@ -38,6 +39,22 @@ public class BrokerNode implements Broker{
         }
 
         connect();
+
+        try {
+            this.in = new ObjectInputStream(this.requestSocket.getInputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        //receive map from publisher
+        try {
+            Object publishermap = this.in.readObject();
+            System.out.println(publishermap.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
 
         this.key = calculateKeys();
 
