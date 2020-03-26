@@ -25,7 +25,7 @@ public class PublisherNode implements Publisher{
     private ServerSocket providerSocket = null;
     ObjectOutputStream out = null;
     ObjectInputStream in = null;
-    String path = "DS/dataset1";
+    String path = "spotify/dataset1";
     char start;
     char end;
 

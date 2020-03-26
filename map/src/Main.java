@@ -20,7 +20,7 @@ public class Main {
     }
 
     public void init() {
-        String path = "C:/Users/eleni/Downloads/DS/dataset1";
+        String path = "spotify/dataset1";
         File f = null;
         BufferedReader reader = null;
 
