@@ -8,17 +8,14 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Map;
+import java.util.*;
 
 public class Main {
 
 
     char start = 'A';
     char end = 'M';
-    Map<String,ArrayList<String>> artistMap;
-
-
+    Map<String,ArrayList<String>> artistMap = new HashMap<String, ArrayList<String>>();
 
     public Map getMap(){
         return this.artistMap;
@@ -41,11 +38,10 @@ public class Main {
                     System.out.println("fghug");
                         try (DirectoryStream<Path> currentsongs = Files.newDirectoryStream(CurrentFolderContent)) {//the songs in the current folder
                             if (!currentsongs.toString().startsWith(".")) {
-                                System.out.println(currentsongs.toString()+" ddd");
                                 for (Path songs : currentsongs) {
                                     String foldercontents = path.concat("/").concat(file.getFileName().toString());
 
-                                    System.out.println(foldercontents+" giuhgfrhurfhjfrghfrg");
+                                    //System.out.println(foldercontents+" giuhgfrhurfhjfrghfrg");
                                     if(!songs.getFileName().toString().startsWith(".")) {
                                         try {
                                             //String songname = songs.getFileName().toString(); //return the name of the song in string
@@ -60,15 +56,19 @@ public class Main {
                                                 ID3v2 id3v2Tag = mp3file.getId3v2Tag();
                                                 System.out.println("Name of artist with tag version 2 is " + id3v2Tag.getArtist());
                                                 //System.out.println(this.start);
-                                                if (!id3v2Tag.getArtist().isEmpty() && (id3v2Tag.getArtist().startsWith(String.valueOf(this.start)) && id3v2Tag.getArtist().charAt(0) <= this.end)) {
-                                                    if (this.artistMap.containsKey(id3v2Tag.getArtist())) {
-                                                        ArrayList<String> playlist = this.artistMap.get(id3v2Tag.getArtist());
-                                                        playlist.add(id3v2Tag.getTitle());
-                                                        this.artistMap.put(id3v2Tag.getArtist(), playlist);
-                                                    } else {
+                                                if (!id3v2Tag.getArtist().isEmpty() && (id3v2Tag.getArtist().charAt(0) >= this.start && id3v2Tag.getArtist().charAt(0) <= this.end)) {
+                                                    System.out.println("2228328384756547");
+                                                    System.out.println(id3v2Tag.getArtist());
+                                                    System.out.println(artistMap.get(id3v2Tag.getArtist()));
+                                                    if (!this.artistMap.containsKey(id3v2Tag.getArtist())) {
+                                                        System.out.println("rguhgfhu");
                                                         ArrayList<String> playlist2 = new ArrayList<String>();
                                                         playlist2.add(id3v2Tag.getTitle());
                                                         this.artistMap.put(id3v2Tag.getArtist(), playlist2);
+                                                    } else {
+                                                        ArrayList<String> playlist = this.artistMap.get(id3v2Tag.getArtist());
+                                                        playlist.add(id3v2Tag.getTitle());
+                                                        this.artistMap.put(id3v2Tag.getArtist(), playlist);
                                                     }
                                                 }
                                             }
