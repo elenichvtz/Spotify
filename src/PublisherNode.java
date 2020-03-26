@@ -1,7 +1,4 @@
-import com.mpatric.mp3agic.ID3v1;
-import com.mpatric.mp3agic.InvalidDataException;
-import com.mpatric.mp3agic.Mp3File;
-import com.mpatric.mp3agic.UnsupportedTagException;
+import com.mpatric.mp3agic.*;
 
 import java.io.*;
 import java.math.BigInteger;
@@ -14,30 +11,29 @@ import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
 import static java.lang.Math.ceil;
 
-
 //Client
-public class PublisherNode extends NodeImpl implements Publisher{
+public class PublisherNode implements Publisher{
 
     private Socket requestSocket = null;
     private ServerSocket providerSocket = null;
     ObjectOutputStream out = null;
     ObjectInputStream in = null;
-    String path = "distributed_project/dataset1";
+    String path = "DS/dataset1";
     char start;
     char end;
 
-    Map<String,ArrayList<String>> artistMap;
-
+    Map<String,ArrayList<String>> artistMap = new HashMap<String, ArrayList<String>>();
 
     PublisherNode(char start,char end){
         this.start = start;
         this.end = end;
-
     }
 
     public Map<String,ArrayList<String>> getArtistMap() {
@@ -50,46 +46,88 @@ public class PublisherNode extends NodeImpl implements Publisher{
         BufferedReader reader = null;
 
         Path dirPath = Paths.get(path);
-        try (DirectoryStream<Path> dirPaths = Files.newDirectoryStream(dirPath)) { //stores the folders ex. "Comedy"  in the zip
+        //System.out.println(dirPath.getFileName());
+        try (DirectoryStream<Path> dirPaths = Files.newDirectoryStream(dirPath)) {
             for (Path file : dirPaths) { //for every folder in path
-                Path CurrentFolderContent = Paths.get(path.concat("//").concat(file.getFileName().toString()));
-                try (DirectoryStream<Path> currentsongs = Files.newDirectoryStream(CurrentFolderContent)) {//the songs in the current folder
-                    for (Path songs : currentsongs) {
-                        String foldercontents = path.concat("//").concat(file.getFileName().toString());
+                if (Files.isDirectory(file)) {
+                    //System.out.println(file.getName(3).toString());
+                    Path CurrentFolderContent = Paths.get(path.concat("/").concat(file.getFileName().toString()));
+                    System.out.println(CurrentFolderContent.getFileName());
 
-                        try {
-                            String songname = songs.getFileName().toString(); //return the name of the song in string
-                            Mp3File mp3file = null;
-                            try {
-                                mp3file = new Mp3File(foldercontents.concat("//").concat(songs.getFileName().toString()));
+                    try (DirectoryStream<Path> currentsongs = Files.newDirectoryStream(CurrentFolderContent)) {//the songs in the current folder
+                        if (!currentsongs.toString().startsWith(".")) {
+                            for (Path songs : currentsongs) {
+                                String foldercontents = path.concat("/").concat(file.getFileName().toString());
 
-                            } catch (UnsupportedTagException e) {
-                                e.printStackTrace();
-                            } catch (InvalidDataException e) {
-                                e.printStackTrace();
-                            }
+                                if (!songs.getFileName().toString().startsWith(".")) {
+                                    try {
 
-                            if (mp3file.hasId3v1Tag()) {
-                                ID3v1 id3v1Tag = mp3file.getId3v1Tag();
+                                        Mp3File mp3file = new Mp3File(songs);
 
+                                        if (mp3file.hasId3v2Tag()) {
+                                            //System.out.println("YES FOR ID2");
+                                            ID3v2 id3v2Tag = mp3file.getId3v2Tag();
+                                            //System.out.println("Name of artist with tag version 2 is " + id3v2Tag.getArtist());
 
-                                if(id3v1Tag.getArtist().charAt(0) >= this.start && id3v1Tag.getArtist().charAt(0) <= this.end){ //if artist already exists
+                                            if (id3v2Tag.getArtist()!=null && !id3v2Tag.getArtist().isBlank()) {
+                                                if (id3v2Tag.getArtist().charAt(0) >= this.start && id3v2Tag.getArtist().charAt(0) <= this.end) {
 
-                                    if(this.artistMap.containsKey(id3v1Tag.getArtist())){
-                                       // playlist.add(id3v1Tag.getTitle());
-                                        ArrayList<String> playlist = this.artistMap.get(id3v1Tag.getArtist());
-                                        playlist.add(id3v1Tag.getTitle());
-                                        this.artistMap.put(id3v1Tag.getArtist(),playlist);
-                                    } else {
-                                        ArrayList<String> playlist2 = new ArrayList<String>();
-                                        playlist2.add(id3v1Tag.getTitle());
-                                        this.artistMap.put(id3v1Tag.getArtist(), playlist2);
+                                                    //System.out.println(id3v2Tag.getArtist());
+                                                    //System.out.println(artistMap.get(id3v2Tag.getArtist()));
+                                                    if (!this.artistMap.containsKey(id3v2Tag.getArtist())) {
+
+                                                        ArrayList<String> playlist = new ArrayList<String>();
+                                                        playlist.add(id3v2Tag.getTitle());
+                                                        this.artistMap.put(id3v2Tag.getArtist(), playlist);
+                                                    } else {
+                                                        ArrayList<String> playlist2 = this.artistMap.get(id3v2Tag.getArtist());
+                                                        playlist2.add(id3v2Tag.getTitle());
+                                                        this.artistMap.put(id3v2Tag.getArtist(), playlist2);
+                                                    }
+                                                }
+                                            }
+                                            else if((id3v2Tag.getArtist()==null || id3v2Tag.getArtist().isBlank()) && ('U'>= this.start && 'U'<=this.end)) {
+                                                ArrayList<String> playlist3 = new ArrayList<String>();
+                                                playlist3.add(id3v2Tag.getTitle());
+                                                id3v2Tag.setArtist("Unknown");
+                                                //System.out.println(id3v2Tag.getArtist());
+                                                this.artistMap.put(id3v2Tag.getArtist(),playlist3);
+                                            }
+                                        }
+
+                                        if (mp3file.hasId3v1Tag()) {
+                                            ID3v1 id3v1Tag = mp3file.getId3v1Tag();
+                                            //System.out.println("YES");
+
+                                            if(id3v1Tag.getArtist()!=null && !id3v1Tag.getArtist().isBlank()) {
+                                                if ((id3v1Tag.getArtist().charAt(0) >= this.start && id3v1Tag.getArtist().charAt(0) <= this.end)) { //if artist already exists
+
+                                                    if (this.artistMap.containsKey(id3v1Tag.getArtist())) {
+                                                        // playlist.add(id3v1Tag.getTitle());
+                                                        ArrayList<String> playlist = this.artistMap.get(id3v1Tag.getArtist());
+                                                        playlist.add(id3v1Tag.getTitle());
+                                                        this.artistMap.put(id3v1Tag.getArtist(), playlist);
+                                                    } else {
+                                                        ArrayList<String> playlist2 = new ArrayList<String>();
+                                                        playlist2.add(id3v1Tag.getTitle());
+                                                        this.artistMap.put(id3v1Tag.getArtist(), playlist2);
+                                                    }
+
+                                                }
+                                            }
+                                            else if(id3v1Tag.getArtist()==null && ('U'>= this.start && 'U'<=this.end)) {
+                                                ArrayList<String> playlist3 = new ArrayList<String>();
+                                                playlist3.add(id3v1Tag.getTitle());
+                                                id3v1Tag.setArtist("Unknown");
+                                                //System.out.println(id3v1Tag.getArtist());
+                                                this.artistMap.put(id3v1Tag.getArtist(),playlist3);
+                                            }
+                                        }
+                                    } catch (InvalidDataException | UnsupportedTagException e) {
+                                        e.printStackTrace();
                                     }
-
                                 }
                             }
-                        } catch (IOException e) {
-                            e.printStackTrace();
                         }
                     }
                 }
@@ -109,7 +147,11 @@ public class PublisherNode extends NodeImpl implements Publisher{
                 e.printStackTrace();
             }
         }
+    }
 
+    @Override
+    public List<Broker> getBrokers() {
+        return null;
     }
 
     @Override
@@ -131,11 +173,9 @@ public class PublisherNode extends NodeImpl implements Publisher{
 
         }
 
-
         BigInteger hash2 = new BigInteger("max");
 
         BigInteger hashNumber = big1.mod(hash2);
-
 
         if((hashNumber.compareTo(getBrokers().get(0).calculateKeys()) == -1) && (hashNumber.compareTo(getBrokers().get(2).calculateKeys())==1)){
             return getBrokers().get(0);
@@ -148,15 +188,12 @@ public class PublisherNode extends NodeImpl implements Publisher{
         }
     }
 
-
-
     public void push(ArtistName artist,Value val) {
 
         File f = null;
         BufferedReader reader = null;
         int chunk_size = 512 * 1024;
         int counter=1;
-
 
         Path dirPath = Paths.get(path);
         try (DirectoryStream<Path> dirPaths = Files.newDirectoryStream(dirPath)) { //stores the folders ex. "Comedy"  in the zip
@@ -176,14 +213,10 @@ public class PublisherNode extends NodeImpl implements Publisher{
                                 e.printStackTrace();
                             }
 
-                            //File f2 = new File(foldercontents.concat("//").concat(songs.getFileName().toString()));
-                            //f2.length();
-
                             if (mp3file.hasId3v1Tag()) {
                                 ID3v1 id3v1Tag = mp3file.getId3v1Tag();
 
                                 if (val.getMusicfile().getArtistName().equals(id3v1Tag.getArtist()) && (val.getMusicfile().getTrackName().equals(id3v1Tag.getTrack()))) {
-
 
                                     ByteArrayOutputStream byteout = new ByteArrayOutputStream();
 
@@ -228,9 +261,7 @@ public class PublisherNode extends NodeImpl implements Publisher{
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
-
 
     @Override
     public void connect(){
@@ -258,9 +289,6 @@ public class PublisherNode extends NodeImpl implements Publisher{
         }
     }
 
-
-
-
     @Override
     public void notifyFailure(Broker broker){
         //TODO: write code
@@ -268,10 +296,6 @@ public class PublisherNode extends NodeImpl implements Publisher{
     }
 
     public static void main(String args[]){
-
-        System.out.println("ALL GOOD 😎");
-
-
 
     }
 }
