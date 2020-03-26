@@ -5,25 +5,53 @@ import java.net.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.List;
 
 //Server
-public class BrokerNode extends NodeImpl implements Broker{
+public class BrokerNode implements Broker{
 
-    ServerSocket mysocket;
-    Socket connection = null;
+    ServerSocket providerSocket;
+    Socket requestSocket = null;
     ObjectOutputStream out = null;
     ObjectInputStream in = null;
-    ArrayList<Publisher> pub = new ArrayList<>();
+
+    BigInteger key;
+    ArrayList<Publisher> publishers = new ArrayList<>();
+    String ip;
+    int port;
+
+    BrokerNode(String ip, int port) {
+        this.ip = ip;
+        this.port = port;
+    }
+
     @Override
     public void init() {
-        
 
 
+        try {
+            this.providerSocket = new ServerSocket(port, 10);
+            System.out.println("broker provider socket connect");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        connect();
+
+        this.key = calculateKeys();
+
+        System.out.println("init");
+    }
+
+    @Override
+    public List<Broker> getBrokers() {
+        return null;
     }
 
     @Override
     public BigInteger calculateKeys(){
-        String s = "127.0.0.1"+ "4321";
+        String s = ip + port;
 
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
@@ -36,20 +64,12 @@ public class BrokerNode extends NodeImpl implements Broker{
         }
 
         return null;
-
     }
 
     @Override
     public void connect(){
-        while(!requestSocket.isConnected()) {
-            try {
-                requestSocket = new Socket("127.0.0.1", 4321);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
         try {
-            providerSocket = new ServerSocket(4321, 10);
+            this.requestSocket = this.providerSocket.accept();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -58,8 +78,8 @@ public class BrokerNode extends NodeImpl implements Broker{
     @Override
     public void disconnect(){
         try {
-            requestSocket.close();
-            providerSocket.close();
+            this.requestSocket.close();
+            this.providerSocket.close();
         }catch (IOException e){
             e.printStackTrace();
         }
@@ -68,8 +88,7 @@ public class BrokerNode extends NodeImpl implements Broker{
     @Override
     public Publisher acceptConnection(Publisher publisher){
         try {
-
-            connection = mysocket.accept();
+            this.requestSocket = this.providerSocket.accept();
             System.out.println("Connection accepted");
         }catch (IOException e){
             e.printStackTrace();
@@ -80,8 +99,7 @@ public class BrokerNode extends NodeImpl implements Broker{
     @Override
     public Consumer acceptConnection(Consumer consumer) {
         try {
-
-            connection = mysocket.accept();
+            this.requestSocket = this.providerSocket.accept();
             System.out.println("Connection accepted");
         }catch (IOException e){
             e.printStackTrace();
@@ -94,7 +112,7 @@ public class BrokerNode extends NodeImpl implements Broker{
         //Θα ενημερωνει ο broker τον καθε publisher για ποια κλειδια ειναι υπευθυνοι (για ποιο ευρος τιμων)
 
         try {
-            out = new ObjectOutputStream(requestSocket.getOutputStream());
+            out = new ObjectOutputStream(this.requestSocket.getOutputStream());
             out.writeInt(calculateKeys().intValue());
             out.flush();
 
@@ -106,17 +124,14 @@ public class BrokerNode extends NodeImpl implements Broker{
     @Override
     public void pull(ArtistName artist){
         try {
-            in = new ObjectInputStream(requestSocket.getInputStream());
+            in = new ObjectInputStream(this.requestSocket.getInputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     public static void main(String args[]){
-
-
-
-        Thread t1 = new Thread();
-
+        BrokerNode b = new BrokerNode("127.0.0.1",4321);
+        b.init();
     }
 }

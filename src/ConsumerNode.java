@@ -1,12 +1,23 @@
 import java.io.*;
 import java.net.*;
+import java.util.List;
 
 //Client
-public class ConsumerNode extends NodeImpl implements Consumer {
+public class ConsumerNode implements Consumer {
 
     Socket requestSocket = null; //ισως μεσα στην run οπως στο εργαστηριο??
     ObjectOutputStream out = null;
     ObjectInputStream in = null;
+
+    @Override
+    public void init() {
+
+    }
+
+    @Override
+    public List<Broker> getBrokers() {
+        return null;
+    }
 
     @Override
     public void connect() {
@@ -17,6 +28,11 @@ public class ConsumerNode extends NodeImpl implements Consumer {
                 e.printStackTrace();
             }
         }
+    }
+
+    @Override
+    public void disconnect() {
+
     }
 
     @Override

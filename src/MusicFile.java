@@ -2,7 +2,6 @@ import java.io.Serializable;
 
 public class MusicFile implements Serializable {
 
-
     //writeObject
     //readObject
     //arraylist me filename

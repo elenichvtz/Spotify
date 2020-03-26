@@ -1,7 +1,6 @@
 import java.util.List;
 import java.io.*;
 
-
 public class ArtistName {
     String artistName;
 

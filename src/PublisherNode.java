@@ -22,18 +22,22 @@ import static java.lang.Math.ceil;
 public class PublisherNode implements Publisher{
 
     private Socket requestSocket = null;
-    private ServerSocket providerSocket = null;
+    private ServerSocket providerSocket;
     ObjectOutputStream out = null;
     ObjectInputStream in = null;
-    String path = "spotify/dataset1";
+    String path = "C:\\Users\\eleni\\Downloads\\DS\\dataset1";
     char start;
     char end;
+    String ip;
+    int port;
 
     Map<String,ArrayList<String>> artistMap = new HashMap<String, ArrayList<String>>();
 
-    PublisherNode(char start,char end){
+    PublisherNode(char start,char end, String ip, int port){
         this.start = start;
         this.end = end;
+        this.ip = ip;
+        this.port = port;
     }
 
     public Map<String,ArrayList<String>> getArtistMap() {
@@ -112,7 +116,6 @@ public class PublisherNode implements Publisher{
                                                         playlist2.add(id3v1Tag.getTitle());
                                                         this.artistMap.put(id3v1Tag.getArtist(), playlist2);
                                                     }
-
                                                 }
                                             }
                                             else if(id3v1Tag.getArtist()==null && ('U'>= this.start && 'U'<=this.end)) {
@@ -136,17 +139,24 @@ public class PublisherNode implements Publisher{
             e.printStackTrace();
         }
 
-        while(true) {
+        //initialize sockets
+        try {
+            this.requestSocket = new Socket(ip, port);
+            this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());  //initialize out
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
+        //connect();
+
+       // while(true) {
             try {
-                this.requestSocket = this.providerSocket.accept();
-                out = new ObjectOutputStream(this.requestSocket.getOutputStream());  //initialize out
-                out.writeObject(this.artistMap);
-                out.flush();
+                this.out.writeObject(this.artistMap);
+                this.out.flush();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+       // }
     }
 
     @Override
@@ -170,7 +180,6 @@ public class PublisherNode implements Publisher{
             if ( getBrokers().get(i).calculateKeys().compareTo(max) > 1){
                 max = getBrokers().get(i).calculateKeys();
             }
-
         }
 
         BigInteger hash2 = new BigInteger("max");
@@ -237,11 +246,10 @@ public class PublisherNode implements Publisher{
                                             //send chunk through socket
                                             while(true) {
                                                 try {
-
-                                                    requestSocket = providerSocket.accept();
-                                                    out = new ObjectOutputStream(this.requestSocket.getOutputStream());  //initialize out
-                                                    out.writeObject(val);
-                                                    out.flush();
+                                                    this.requestSocket = this.providerSocket.accept();
+                                                    //this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());  //initialize out
+                                                    this.out.writeObject(val);
+                                                    this.out.flush();
                                                 } catch (IOException e) {
                                                     e.printStackTrace();
                                                 }
@@ -264,16 +272,9 @@ public class PublisherNode implements Publisher{
     }
 
     @Override
-    public void connect(){
-        while(!this.requestSocket.isConnected()) {
-            try {
-                this.requestSocket = new Socket("127.0.0.1", 4321);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+    public void connect() {
         try {
-            this.providerSocket = new ServerSocket(4321, 10);
+            this.requestSocket = this.providerSocket.accept();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -296,6 +297,7 @@ public class PublisherNode implements Publisher{
     }
 
     public static void main(String args[]){
-
+        PublisherNode p = new PublisherNode('A', 'M', "127.0.0.1", 4321);
+        p.init();
     }
 }
