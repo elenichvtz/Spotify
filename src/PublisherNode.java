@@ -142,7 +142,8 @@ public class PublisherNode implements Publisher{
         //initialize sockets
         try {
             this.requestSocket = new Socket(ip, port);
-            this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());  //initialize out
+            //this.in = new ObjectInputStream(this.requestSocket.getInputStream());
+            this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -154,6 +155,23 @@ public class PublisherNode implements Publisher{
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        /*try {
+            this.providerSocket = new ServerSocket(port, 10);
+            this.in = new ObjectInputStream(this.requestSocket.getInputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        //receive key from broker
+        try {
+            Object key = this.in.readObject();
+            System.out.println(key.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }*/
     }
 
     @Override

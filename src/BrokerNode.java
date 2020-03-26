@@ -42,6 +42,7 @@ public class BrokerNode implements Broker{
 
         try {
             this.in = new ObjectInputStream(this.requestSocket.getInputStream());
+            //this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -58,7 +59,22 @@ public class BrokerNode implements Broker{
 
         this.key = calculateKeys();
 
-        System.out.println("init");
+        /*try {
+            this.requestSocket = new Socket(ip, port);
+            this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        //send key to publisher
+        try {
+            this.out.writeObject(this.key);
+            this.out.flush();
+            System.out.println("flush");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }*/
+
     }
 
     @Override
