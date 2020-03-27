@@ -47,15 +47,29 @@ public class BrokerNode implements Broker{
             e.printStackTrace();
         }
 
-        //receive map from publisher
+        //receive map, ip and port from publisher
         try {
             Object publishermap = this.in.readObject();
             System.out.println(publishermap.toString());
+            String publisherip = this.in.readUTF();
+            System.out.println(publisherip);
+            int publisherport = this.in.readInt();
+            System.out.println(publisherport);
+            char start = this.in.readChar();
+            char end = this.in.readChar();
+            System.out.println(start +" & "+ end);
+
+            PublisherNode pn = new PublisherNode(start, end, publisherip, publisherport);
+            registeredPublishers.add(pn);
+            System.out.println(registeredPublishers.isEmpty());
+
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
+
+        //System.out.println(registeredPublishers.isEmpty());
 
         this.key = calculateKeys();
 
