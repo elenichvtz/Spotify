@@ -66,6 +66,11 @@ public class BrokerNode implements Broker{
             Object publishermap = this.in.readObject();
             System.out.println(publishermap.toString());
 
+            //receive ip and port from consumer
+            String consumerip = this.in.readUTF();
+            System.out.println("con "+consumerip);
+            int consumerport = this.in.readInt();
+            System.out.println(consumerport);
 
         } catch (IOException e) {
             e.printStackTrace();

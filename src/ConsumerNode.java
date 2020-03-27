@@ -8,10 +8,31 @@ public class ConsumerNode implements Consumer {
     Socket requestSocket = null; //ισως μεσα στην run οπως στο εργαστηριο??
     ObjectOutputStream out = null;
     ObjectInputStream in = null;
+    String ip;
+    int port;
+
+    ConsumerNode(String ip, int port) {
+        this.ip = ip;
+        this.port = port;
+    }
 
     @Override
     public void init() {
+        try {
+            this.requestSocket = new Socket(this.ip, this.port);
+            this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
+        //send ip and port to broker
+        try {
+            this.out.writeUTF(this.ip);
+            this.out.writeInt(this.port);
+            this.out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -76,6 +97,7 @@ public class ConsumerNode implements Consumer {
 
     public static void main(String args[]){
 
-        ConsumerNode n1 = new ConsumerNode();
+        ConsumerNode cn = new ConsumerNode("127.0.0.3", 4321);
+        cn.init();
     }
 }
