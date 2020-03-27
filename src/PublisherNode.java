@@ -142,7 +142,19 @@ public class PublisherNode implements Publisher{
         //initialize sockets
         try {
             this.requestSocket = new Socket(ip, port);
-            this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());  //initialize out
+            //this.in = new ObjectInputStream(this.requestSocket.getInputStream());
+            this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        //send ip, port, start and end to broker
+        try {
+            this.out.writeUTF(this.ip);
+            this.out.writeInt(this.port);
+            this.out.writeChar(this.start);
+            this.out.writeChar(this.end);
+            this.out.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -152,6 +164,32 @@ public class PublisherNode implements Publisher{
             this.out.writeObject(this.artistMap);
             this.out.flush();
         } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            this.providerSocket = new ServerSocket(this.port, 10);
+            //this.in = new ObjectInputStream(this.requestSocket.getInputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        connect();
+
+        try {
+            this.in = new ObjectInputStream(this.requestSocket.getInputStream());
+            //this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        //receive key from broker
+        try {
+            Object key = (BigInteger) this.in.readObject();
+            System.out.println(key);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
@@ -310,7 +348,7 @@ public class PublisherNode implements Publisher{
 
 
     public static void main(String args[]){
-        PublisherNode p = new PublisherNode('A', 'M', "127.0.0.1", 4321);
+        PublisherNode p = new PublisherNode('A', 'M', "127.0.0.2", 4321);
         p.init();
         p.receive();
     }

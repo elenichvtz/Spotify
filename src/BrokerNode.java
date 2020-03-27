@@ -55,8 +55,22 @@ public class BrokerNode implements Broker{
             e.printStackTrace();
         }
 
-        //receive map from publisher
+        //receive map, ip and port from publisher
         try {
+            String publisherip = this.in.readUTF();
+            System.out.println(publisherip);
+            int publisherport = this.in.readInt();
+            System.out.println(publisherport);
+            char start = this.in.readChar();
+            char end = this.in.readChar();
+            System.out.println(start +" & "+ end);
+
+            PublisherNode pn = new PublisherNode(start, end, publisherip, publisherport);
+            registeredPublishers.add(pn);
+            System.out.println(registeredPublishers.isEmpty());
+
+            //acceptConnection(pn);
+
             Object publishermap = this.in.readObject();
             System.out.println(publishermap.toString());
 
@@ -72,9 +86,34 @@ public class BrokerNode implements Broker{
             e.printStackTrace();
         }
 
+        //System.out.println(registeredPublishers.isEmpty());
+
         this.key = calculateKeys();
 
-        System.out.println("init");
+        try {
+            this.requestSocket = new Socket(this.ip, this.port);
+            this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        //send key to publisher
+        try {
+            this.out.writeObject(this.key);
+            this.out.flush();
+            System.out.println(this.key);
+            System.out.println("flush");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        /*try {
+            this.requestSocket = new Socket(ip, port);
+            this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }*/
+
     }
 
     @Override
