@@ -187,8 +187,9 @@ public class PublisherNode implements Publisher{
 
         //receive key from broker
         try {
-            Object key = (BigInteger) this.in.readObject();
-            System.out.println(key);
+            Object brokerkey = (BigInteger) this.in.readObject();
+
+            System.out.println(brokerkey);
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
