@@ -19,7 +19,7 @@ public class ConsumerNode implements Consumer {
     @Override
     public void init() {
         try {
-            this.requestSocket = new Socket(this.ip, this.port);
+            this.requestSocket = new Socket(this.ip, this.port+2);
             this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
         } catch (IOException e) {
             e.printStackTrace();
