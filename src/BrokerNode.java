@@ -49,8 +49,6 @@ public class BrokerNode implements Broker{
 
         //receive map, ip and port from publisher
         try {
-            Object publishermap = this.in.readObject();
-            System.out.println(publishermap.toString());
             String publisherip = this.in.readUTF();
             System.out.println(publisherip);
             int publisherport = this.in.readInt();
@@ -63,6 +61,12 @@ public class BrokerNode implements Broker{
             registeredPublishers.add(pn);
             System.out.println(registeredPublishers.isEmpty());
 
+            //acceptConnection(pn);
+
+            Object publishermap = this.in.readObject();
+            System.out.println(publishermap.toString());
+
+
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
@@ -73,8 +77,8 @@ public class BrokerNode implements Broker{
 
         this.key = calculateKeys();
 
-        /*try {
-            this.requestSocket = new Socket(ip, port);
+        try {
+            this.requestSocket = new Socket(this.ip, this.port);
             this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
         } catch (IOException e) {
             e.printStackTrace();
@@ -84,7 +88,15 @@ public class BrokerNode implements Broker{
         try {
             this.out.writeObject(this.key);
             this.out.flush();
+            System.out.println(this.key);
             System.out.println("flush");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        /*try {
+            this.requestSocket = new Socket(ip, port);
+            this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }*/

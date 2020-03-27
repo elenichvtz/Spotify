@@ -148,14 +148,6 @@ public class PublisherNode implements Publisher{
             e.printStackTrace();
         }
 
-        //send map to broker
-        try {
-            this.out.writeObject(this.artistMap);
-            this.out.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
         //send ip, port, start and end to broker
         try {
             this.out.writeUTF(this.ip);
@@ -167,22 +159,39 @@ public class PublisherNode implements Publisher{
             e.printStackTrace();
         }
 
-        /*try {
-            this.providerSocket = new ServerSocket(port, 10);
+        //send map to broker
+        try {
+            this.out.writeObject(this.artistMap);
+            this.out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            this.providerSocket = new ServerSocket(this.port, 10);
+            //this.in = new ObjectInputStream(this.requestSocket.getInputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        connect();
+
+        try {
             this.in = new ObjectInputStream(this.requestSocket.getInputStream());
+            //this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }
 
         //receive key from broker
         try {
-            Object key = this.in.readObject();
-            System.out.println(key.toString());
+            Object key = (BigInteger) this.in.readObject();
+            System.out.println(key);
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
-        }*/
+        }
     }
 
     @Override
