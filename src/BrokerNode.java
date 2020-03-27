@@ -11,14 +11,10 @@ import java.util.Map;
 //Server
 public class BrokerNode implements Broker{
 
-    ServerSocket ConsumerSocket;
-    ServerSocket PublisherSocket;
-    Socket connectionPublisher;
-    Socket connectionConsumer;
+    ServerSocket providerSocket;
+    Socket requestSocket = null;
     ObjectOutputStream out = null;
-    ObjectOutputStream outc = null;
-    ObjectInputStream in = null; //in for publisher
-    ObjectInputStream inc = null; //in for consumer
+    ObjectInputStream in = null;
 
     BigInteger key;
     ArrayList<Publisher> publishers = new ArrayList<>();
@@ -34,8 +30,7 @@ public class BrokerNode implements Broker{
     public void init() {
 
         try {
-            this.ConsumerSocket = new ServerSocket(port+1, 10);
-            this.PublisherSocket = new ServerSocket(port,10);
+            this.providerSocket = new ServerSocket(this.port, 10);
             //this.requestSocket = this.providerSocket.accept();
             System.out.println("broker provider socket connect");
 
@@ -46,11 +41,8 @@ public class BrokerNode implements Broker{
         connect();
 
         try {
-            this.in = new ObjectInputStream(this.connectionPublisher.getInputStream());
-            this.inc = new ObjectInputStream(this.connectionConsumer.getInputStream());
-
-            this.out = new ObjectOutputStream(this.connectionConsumer.getOutputStream());
-            this.outc = new ObjectOutputStream(this.connectionConsumer.getOutputStream());
+            this.in = new ObjectInputStream(this.requestSocket.getInputStream());
+            //this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -74,11 +66,6 @@ public class BrokerNode implements Broker{
             Object publishermap = this.in.readObject();
             System.out.println(publishermap.toString());
 
-            BigInteger k = calculateKeys();
-            out.writeObject(k);
-            out.flush();
-
-
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -91,7 +78,7 @@ public class BrokerNode implements Broker{
         this.key = calculateKeys();
 
         try {
-            this.requestSocket = new Socket(this.ip, this.port);
+            this.requestSocket = new Socket(this.ip, this.port+1);
             this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
         } catch (IOException e) {
             e.printStackTrace();
@@ -106,14 +93,6 @@ public class BrokerNode implements Broker{
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        /*try {
-            this.requestSocket = new Socket(ip, port);
-            this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
-
     }
 
     @Override
@@ -123,7 +102,7 @@ public class BrokerNode implements Broker{
 
     @Override
     public BigInteger calculateKeys(){
-        String s = this.ip + this.port;
+        String s = ip + port;
 
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
@@ -141,8 +120,7 @@ public class BrokerNode implements Broker{
     @Override
     public void connect(){
         try {
-            this.connectionConsumer = this.ConsumerSocket.accept();
-            this.connectionPublisher = this.PublisherSocket.accept();
+            this.requestSocket = this.providerSocket.accept();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -151,8 +129,8 @@ public class BrokerNode implements Broker{
     @Override
     public void disconnect(){
         try {
-            this.connectionPublisher.close();
-            this.PublisherSocket.close();
+            this.requestSocket.close();
+            this.providerSocket.close();
         }catch (IOException e){
             e.printStackTrace();
         }
@@ -161,7 +139,7 @@ public class BrokerNode implements Broker{
     @Override
     public Publisher acceptConnection(Publisher publisher){
         try {
-            this.connectionPublisher = this.PublisherSocket.accept();
+            this.requestSocket = this.providerSocket.accept();
             System.out.println("Connection accepted");
         }catch (IOException e){
             e.printStackTrace();
@@ -172,7 +150,7 @@ public class BrokerNode implements Broker{
     @Override
     public Consumer acceptConnection(Consumer consumer) {
         try {
-            this.connectionConsumer = this.ConsumerSocket.accept();
+            this.requestSocket = this.providerSocket.accept();
             System.out.println("Connection accepted");
         }catch (IOException e){
             e.printStackTrace();
@@ -180,17 +158,12 @@ public class BrokerNode implements Broker{
         return consumer;
     }
 
-    public void SendPublisher(Publisher publisher){
-
-
-    }
-
     @Override
     public void notifyPublisher(String name){
         //Θα ενημερωνει ο broker τον καθε publisher για ποια κλειδια ειναι υπευθυνοι (για ποιο ευρος τιμων)
 
         try {
-            out = new ObjectOutputStream(this.connectionPublisher.getOutputStream());
+            out = new ObjectOutputStream(this.requestSocket.getOutputStream());
             out.writeInt(calculateKeys().intValue());
             out.flush();
 
@@ -202,7 +175,7 @@ public class BrokerNode implements Broker{
     @Override
     public void pull(ArtistName artist){
         try {
-            in = new ObjectInputStream(this.connectionConsumer.getInputStream());
+            in = new ObjectInputStream(this.requestSocket.getInputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }

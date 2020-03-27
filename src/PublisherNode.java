@@ -21,11 +21,11 @@ import static java.lang.Math.ceil;
 //Client
 public class PublisherNode implements Publisher{
 
-    private Socket requestSocket = null;
-    private ServerSocket providerSocket;
+    Socket requestSocket = null;
+    ServerSocket providerSocket = null;
     ObjectOutputStream out = null;
     ObjectInputStream in = null;
-    String path = "/Users/emiliadan/Downloads/distributed_project/dataset1";
+    String path = "C:\\Users\\eleni\\Downloads\\DS\\dataset1";
     char start;
     char end;
     String ip;
@@ -141,7 +141,7 @@ public class PublisherNode implements Publisher{
 
         //initialize sockets
         try {
-            this.requestSocket = new Socket(ip, port);
+            this.requestSocket = new Socket(this.ip, this.port);
             //this.in = new ObjectInputStream(this.requestSocket.getInputStream());
             this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
         } catch (IOException e) {
@@ -167,8 +167,10 @@ public class PublisherNode implements Publisher{
             e.printStackTrace();
         }
 
+        System.out.println("wait");
+
         try {
-            this.providerSocket = new ServerSocket(this.port, 10);
+            this.providerSocket = new ServerSocket(this.port+1, 10);
             //this.in = new ObjectInputStream(this.requestSocket.getInputStream());
         } catch (IOException e) {
             e.printStackTrace();
@@ -203,7 +205,7 @@ public class PublisherNode implements Publisher{
     public Broker hashTopic(ArtistName artist) throws NoSuchAlgorithmException{
         //Hashes the ArtistName
 
-        MessageDigest sha = MessageDigest.getInstance("SHA-256"); //το περιεχομενο εδω δεν ειμαι σιγουρη πως το δηλωνουμε , αλλου το εχει string αλλου σκετο
+        MessageDigest sha = MessageDigest.getInstance("SHA-256");
         String name = artist.getArtistName();
 
         byte[] namehash = sha.digest(name.getBytes());
@@ -329,27 +331,10 @@ public class PublisherNode implements Publisher{
     public void notifyFailure(Broker broker){
         //TODO: write code
         //not being the right publisher or not having the song/artist?????
-
-
-
     }
-
-    public void receive(){
-
-        try {
-            Object fromBroker = this.in.readObject();
-            System.out.println(fromBroker.toString());
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
-
 
     public static void main(String args[]){
         PublisherNode p = new PublisherNode('A', 'M', "127.0.0.2", 4321);
         p.init();
-        p.receive();
     }
 }
