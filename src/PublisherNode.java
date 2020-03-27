@@ -25,7 +25,7 @@ public class PublisherNode implements Publisher{
     private ServerSocket providerSocket;
     ObjectOutputStream out = null;
     ObjectInputStream in = null;
-    String path = "C:\\Users\\eleni\\Downloads\\DS\\dataset1";
+    String path = "/Users/emiliadan/Downloads/distributed_project/dataset1";
     char start;
     char end;
     String ip;
@@ -291,10 +291,27 @@ public class PublisherNode implements Publisher{
     public void notifyFailure(Broker broker){
         //TODO: write code
         //not being the right publisher or not having the song/artist?????
+
+
+
     }
+
+    public void receive(){
+
+        try {
+            Object fromBroker = this.in.readObject();
+            System.out.println(fromBroker.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     public static void main(String args[]){
         PublisherNode p = new PublisherNode('A', 'M', "127.0.0.1", 4321);
         p.init();
+        p.receive();
     }
 }
