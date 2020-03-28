@@ -286,7 +286,43 @@ public class PublisherNode implements Publisher{
                                                 try {
                                                     this.requestSocket = this.providerSocket.accept();
                                                     this.out.writeInt(numberOfChunks); //send number of chunks?????
-                                                    //this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());  //initialize out
+                                                    this.out.writeObject(val);
+                                                    this.out.flush();
+                                                } catch (IOException e) {
+                                                    e.printStackTrace();
+                                                }
+                                            }
+                                        }
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            }
+
+                            if (mp3file.hasId3v2Tag()){
+                                ID3v2 id3v2Tag = mp3file.getId3v2Tag();
+                                if(val.getMusicfile().getArtistName().equals(id3v2Tag.getArtist()) && (val.getMusicfile().getTrackName().equals(id3v2Tag.getTrack()))) {
+                                    ByteArrayOutputStream byteout = new ByteArrayOutputStream();
+
+                                    File file2 = new File(foldercontents.concat("//").concat(songs.getFileName().toString()));
+                                    FileInputStream fis = new FileInputStream(file2);
+
+                                    byte[] chunk = new byte[chunk_size];
+                                    int numberOfChunks = (int)ceil(file2.length()/chunk_size);
+                                    try {
+                                        for (int readNum; (readNum = fis.read(chunk)) != -1; ) {
+                                            byteout.write(chunk, 0, readNum);
+                                            MusicFile musicfile = new MusicFile(id3v1Tag.getTitle(), id3v1Tag.getArtist(), id3v1Tag.getAlbum(),
+                                                    id3v1Tag.getGenreDescription(),chunk, counter,numberOfChunks);
+
+                                            counter++;
+                                            val.setMusicfile(musicfile);
+
+                                            //send chunk through socket
+                                            while(true) {
+                                                try {
+                                                    this.requestSocket = this.providerSocket.accept();
+                                                    out.writeInt(numberOfChunks); // sends also the number of chunks??? not sure if neeeded
                                                     this.out.writeObject(val);
                                                     this.out.flush();
                                                 } catch (IOException e) {
