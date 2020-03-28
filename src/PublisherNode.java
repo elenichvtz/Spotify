@@ -285,6 +285,7 @@ public class PublisherNode implements Publisher{
                                             while(true) {
                                                 try {
                                                     this.requestSocket = this.providerSocket.accept();
+                                                    this.out.writeInt(numberOfChunks); //send number of chunks?????
                                                     //this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());  //initialize out
                                                     this.out.writeObject(val);
                                                     this.out.flush();

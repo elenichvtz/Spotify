@@ -86,7 +86,17 @@ public class ConsumerNode implements Consumer {
 
     @Override
     public void playData(ArtistName artist, Value val){
-        //just play the chunks from stream!
+        int chunks = 0;
+        ArrayList<Value> pieces = new ArrayList<>();
+        try {
+            chunks = in.readInt();
+            for (int i = 1; i <= chunks;i++) {
+                Value value = new Value((MusicFile) in.readObject());
+                pieces.add(value); //αποθηκευει τοπικα τα chunks
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     //method run
