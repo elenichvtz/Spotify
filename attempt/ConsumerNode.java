@@ -1,23 +1,31 @@
 import java.io.*;
+import java.math.BigInteger;
 import java.net.*;
 import java.util.List;
 
 //Client
 public class ConsumerNode implements Consumer {
 
-    Socket requestSocket = null;
+    Socket requestSocket = null; //ισως μεσα στην run οπως στο εργαστηριο??
+
     ObjectOutputStream out = null;
     ObjectInputStream in = null;
+
     String ip;
     int port;
+    String artist;
+    String song;
 
-    ConsumerNode(String ip, int port) {
+    ConsumerNode(String ip, int port,String artist,String song){
         this.ip = ip;
         this.port = port;
+        this.artist = artist;
+        this.song = song;
     }
 
     @Override
     public void init() {
+        System.out.println("Initializing Consumer...");
         try {
             this.requestSocket = new Socket(this.ip, this.port+2);
             this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
@@ -25,27 +33,21 @@ public class ConsumerNode implements Consumer {
             e.printStackTrace();
         }
 
-        //send ip and port to broker
-        try {
-            this.out.writeUTF(this.ip);
-            this.out.writeInt(this.port);
-            this.out.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        //receive broker's key
         try {
             this.in = new ObjectInputStream(this.requestSocket.getInputStream());
-            //this.out = new ObjectOutputStream(this.publisher_requestSocket.getOutputStream());
+            //this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+        //receive map from broker
         try {
-            int key = this.in.readInt();
-            System.out.println(key);
+            Object themap = this.in.readObject();
+
+            System.out.println(themap);
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
@@ -57,17 +59,23 @@ public class ConsumerNode implements Consumer {
 
     @Override
     public void connect() {
-        while(!requestSocket.isConnected()) {
+        /*while(!requestSocket.isConnected()) {
             try {
-                requestSocket = new Socket("127.0.0.1", 4321);
+                requestSocket = new Socket(this.ip, this.port+1);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
+        }*/
     }
 
     @Override
     public void disconnect() {
+        try {
+            this.requestSocket.close();
+
+        }catch (IOException e){
+            e.printStackTrace();
+        }
 
     }
 
@@ -101,28 +109,26 @@ public class ConsumerNode implements Consumer {
 
     @Override
     public void playData(ArtistName artist, Value val){
-        int chunks = 0;
-        ArrayList<Value> pieces = new ArrayList<>();
+        //just play the chunks from stream!
         try {
-            chunks = in.readInt();
-            for (int i = 1; i <= chunks;i++) {
-                Value value = new Value((MusicFile) in.readObject());
-                pieces.add(value); //αποθηκευει τοπικα τα chunks
-            }
-        } catch (IOException | ClassNotFoundException e) {
+            int chunks = in.readInt();
+
+
+
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     //method run
-    public void run(){
+    /*public void run(){
         connect();
         //register();
-    }
+    }*/
 
     public static void main(String args[]){
 
-        ConsumerNode cn = new ConsumerNode("127.0.0.3", 4321);
-        cn.init();
+        ConsumerNode n1 = new ConsumerNode("120.0.0.1",4321, "Alexander Nakarada","Be Chillin");
+        n1.init();
     }
 }

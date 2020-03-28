@@ -8,15 +8,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-//Server
+//Server and Client
 public class BrokerNode implements Broker{
 
-    ServerSocket publisher_providerSocket;
-    Socket publisher_requestSocket = null;
-    ServerSocket consumer_providerSocket;
-    Socket consumer_requestSocket = null;
+    ServerSocket providerSocket;
+    Socket requestSocket = null;
+    ServerSocket providerSocket2;
+    //Socket requestSocket2 = null;
     ObjectOutputStream out = null;
     ObjectInputStream in = null;
+
+    ObjectOutputStream outc = null;
+    ObjectInputStream inc = null;
+
+    Object publishermap;
 
     BigInteger key;
     ArrayList<Publisher> publishers = new ArrayList<>();
@@ -32,18 +37,19 @@ public class BrokerNode implements Broker{
     public void init() {
 
         try {
-            this.publisher_providerSocket = new ServerSocket(this.port, 10);
-            //this.publisher_requestSocket = this.publisher_providerSocket.accept();
+            this.providerSocket = new ServerSocket(this.port, 10);
             System.out.println("broker provider socket connect");
 
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+        connect();
+
         try {
-            this.publisher_requestSocket = this.publisher_providerSocket.accept();
-            this.in = new ObjectInputStream(this.publisher_requestSocket.getInputStream());
-            //this.out = new ObjectOutputStream(this.publisher_requestSocket.getOutputStream());
+            this.in = new ObjectInputStream(this.requestSocket.getInputStream());
+
+            //this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -62,7 +68,10 @@ public class BrokerNode implements Broker{
             registeredPublishers.add(pn);
             System.out.println(registeredPublishers.isEmpty());
 
-            Object publishermap = this.in.readObject();
+            //acceptConnection(pn);
+
+
+            publishermap = this.in.readObject(); //receives map from publisher
             System.out.println(publishermap.toString());
 
         } catch (IOException e) {
@@ -71,41 +80,13 @@ public class BrokerNode implements Broker{
             e.printStackTrace();
         }
 
-        try {
-            this.consumer_providerSocket = new ServerSocket(this.port+2, 10);
-            //this.publisher_requestSocket = this.publisher_providerSocket.accept();
-            System.out.println("broker consumer provider socket connect");
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        
-        try {
-            this.consumer_requestSocket = this.consumer_providerSocket.accept();
-            this.in = new ObjectInputStream(this.consumer_requestSocket.getInputStream());
-            //this.out = new ObjectOutputStream(this.publisher_requestSocket.getOutputStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        //receive ip and port from consumer
-        String consumerip = null;
-        try {
-            consumerip = this.in.readUTF();
-            System.out.println("con "+consumerip);
-            int consumerport = this.in.readInt();
-            System.out.println(consumerport);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
         //System.out.println(registeredPublishers.isEmpty());
 
         this.key = calculateKeys();
 
         try {
-            this.publisher_requestSocket = new Socket(this.ip, this.port+1);
-            this.out = new ObjectOutputStream(this.publisher_requestSocket.getOutputStream());
+            this.requestSocket = new Socket(this.ip, this.port+1);
+            this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -120,22 +101,39 @@ public class BrokerNode implements Broker{
             e.printStackTrace();
         }
 
+        //disconnect();
+
+        System.out.println("Connected to consumer before... ");
+
+        //FOR CONSUMER NOW --------------------------------------------------------------
+
         try {
-            this.consumer_requestSocket = new Socket(this.ip, this.port+1);
-            this.out = new ObjectOutputStream(this.consumer_requestSocket.getOutputStream());
+            System.out.println("yo");
+
+            this.providerSocket2 = new ServerSocket(this.port+2, 10);
+            System.out.println("yo");
+            this.requestSocket = providerSocket2.accept(); //εδω εχει προβλημα... κολλαει
+            System.out.println("yo");
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        //send key to consumer
+
+
+        System.out.println("Connected to consumer after ");
+
+
         try {
-            this.out.writeObject(this.key);
-            this.out.flush();
-            System.out.println(this.key);
-            System.out.println("flushed");
+            this.outc = new ObjectOutputStream(this.requestSocket.getOutputStream());
+            this.outc.writeObject(publishermap); //send map to consumer
+            this.outc.flush();
+
+            System.out.println("flush for consumer");
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+
     }
 
     @Override
@@ -163,18 +161,20 @@ public class BrokerNode implements Broker{
     @Override
     public void connect(){
         try {
-            this.publisher_requestSocket = this.publisher_providerSocket.accept();
-
+            this.requestSocket = this.providerSocket.accept();
+            //this.requestSocket2 = this.providerSocket2.accept(); //SAME THING WITH ACCEPT CONNECTION FOR CONSUMER
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    
     @Override
     public void disconnect(){
         try {
-            this.publisher_requestSocket.close();
-            this.publisher_providerSocket.close();
+            //this.requestSocket.close();
+            this.providerSocket.close();
+
         }catch (IOException e){
             e.printStackTrace();
         }
@@ -183,7 +183,7 @@ public class BrokerNode implements Broker{
     @Override
     public Publisher acceptConnection(Publisher publisher){
         try {
-            this.publisher_requestSocket = this.publisher_providerSocket.accept();
+            this.requestSocket = this.providerSocket.accept();
             System.out.println("Connection accepted");
         }catch (IOException e){
             e.printStackTrace();
@@ -194,7 +194,7 @@ public class BrokerNode implements Broker{
     @Override
     public Consumer acceptConnection(Consumer consumer) {
         try {
-            this.publisher_requestSocket = this.publisher_providerSocket.accept();
+            this.requestSocket = this.providerSocket2.accept();
             System.out.println("Connection accepted");
         }catch (IOException e){
             e.printStackTrace();
@@ -207,7 +207,7 @@ public class BrokerNode implements Broker{
         //Θα ενημερωνει ο broker τον καθε publisher για ποια κλειδια ειναι υπευθυνοι (για ποιο ευρος τιμων)
 
         try {
-            out = new ObjectOutputStream(this.publisher_requestSocket.getOutputStream());
+            out = new ObjectOutputStream(this.requestSocket.getOutputStream());
             out.writeInt(calculateKeys().intValue());
             out.flush();
 
@@ -219,14 +219,14 @@ public class BrokerNode implements Broker{
     @Override
     public void pull(ArtistName artist){
         try {
-            in = new ObjectInputStream(this.publisher_requestSocket.getInputStream());
+            in = new ObjectInputStream(this.requestSocket.getInputStream()); //θα στειλει στον consumer
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     public static void main(String args[]){
-        BrokerNode b = new BrokerNode("127.0.0.1",4321);
+        BrokerNode b = new BrokerNode("127.0.0.1",4321); //TODO: FIX THIS FOR MY PC
         b.init();
     }
 }

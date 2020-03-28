@@ -68,7 +68,11 @@ public class ConsumerNode implements Consumer {
 
     @Override
     public void disconnect() {
-
+        try {
+            this.requestSocket.close();
+        }catch (IOException e){
+            e.printStackTrace();
+        }
     }
 
     @Override

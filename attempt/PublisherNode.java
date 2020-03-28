@@ -18,14 +18,14 @@ import java.util.Map;
 
 import static java.lang.Math.ceil;
 
-//Client
+//Client and Server
 public class PublisherNode implements Publisher{
 
     Socket requestSocket = null;
     ServerSocket providerSocket = null;
     ObjectOutputStream out = null;
     ObjectInputStream in = null;
-    String path = "C:\\Users\\eleni\\Downloads\\DS\\dataset1";
+    String path = "/Users/emiliadan/Downloads/distributed_project/dataset1";
     char start;
     char end;
     String ip;
@@ -175,8 +175,10 @@ public class PublisherNode implements Publisher{
         } catch (IOException e) {
             e.printStackTrace();
         }
+        System.out.println("Yes");
 
         connect();
+        System.out.println("after connect");
 
         try {
             this.in = new ObjectInputStream(this.requestSocket.getInputStream());
@@ -285,43 +287,7 @@ public class PublisherNode implements Publisher{
                                             while(true) {
                                                 try {
                                                     this.requestSocket = this.providerSocket.accept();
-                                                    this.out.writeInt(numberOfChunks); //send number of chunks?????
-                                                    this.out.writeObject(val);
-                                                    this.out.flush();
-                                                } catch (IOException e) {
-                                                    e.printStackTrace();
-                                                }
-                                            }
-                                        }
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                            }
-
-                            if (mp3file.hasId3v2Tag()){
-                                ID3v2 id3v2Tag = mp3file.getId3v2Tag();
-                                if(val.getMusicfile().getArtistName().equals(id3v2Tag.getArtist()) && (val.getMusicfile().getTrackName().equals(id3v2Tag.getTrack()))) {
-                                    ByteArrayOutputStream byteout = new ByteArrayOutputStream();
-
-                                    File file2 = new File(foldercontents.concat("//").concat(songs.getFileName().toString()));
-                                    FileInputStream fis = new FileInputStream(file2);
-
-                                    byte[] chunk = new byte[chunk_size];
-                                    int numberOfChunks = (int)ceil(file2.length()/chunk_size);
-                                    try {
-                                        for (int readNum; (readNum = fis.read(chunk)) != -1; ) {
-                                            byteout.write(chunk, 0, readNum);
-                                            MusicFile musicfile = new MusicFile(id3v1Tag.getTitle(), id3v1Tag.getArtist(), id3v1Tag.getAlbum(),
-                                                    id3v1Tag.getGenreDescription(),chunk, counter,numberOfChunks);
-
-                                            counter++;
-                                            val.setMusicfile(musicfile);
-
-                                            //send chunk through socket
-                                            while(true) {
-                                                try {
-                                                    this.requestSocket = this.providerSocket.accept();
+                                                    //this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());  //initialize out
                                                     out.writeInt(numberOfChunks); // sends also the number of chunks??? not sure if neeeded
                                                     this.out.writeObject(val);
                                                     this.out.flush();
@@ -371,8 +337,8 @@ public class PublisherNode implements Publisher{
         //not being the right publisher or not having the song/artist?????
     }
 
-    public static void main(String args[]){
-        PublisherNode p = new PublisherNode('A', 'M', "127.0.0.2", 4321);
+    public static void main(String args[]){                                                    //TODO:
+        PublisherNode p = new PublisherNode('A', 'M', "127.0.0.1", 4321); // πρεπει να το φτιαξω για μενα να τρεχει και για ip = 127.0.0.2
         p.init();
     }
 }

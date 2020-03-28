@@ -30,6 +30,7 @@ public class PublisherNode implements Publisher{
     char end;
     String ip;
     int port;
+    Object brokerkey;
 
     Map<String,ArrayList<String>> artistMap = new HashMap<String, ArrayList<String>>();
 
@@ -143,26 +144,7 @@ public class PublisherNode implements Publisher{
         try {
             this.requestSocket = new Socket(this.ip, this.port);
             //this.in = new ObjectInputStream(this.requestSocket.getInputStream());
-            this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        //send ip, port, start and end to broker
-        try {
-            this.out.writeUTF(this.ip);
-            this.out.writeInt(this.port);
-            this.out.writeChar(this.start);
-            this.out.writeChar(this.end);
-            this.out.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        //send map to broker
-        try {
-            this.out.writeObject(this.artistMap);
-            this.out.flush();
+            //this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -170,15 +152,13 @@ public class PublisherNode implements Publisher{
         System.out.println("wait");
 
         try {
-            this.providerSocket = new ServerSocket(this.port+1, 10);
+            this.providerSocket = new ServerSocket(this.port+2, 10);
             //this.in = new ObjectInputStream(this.requestSocket.getInputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        connect();
-
-        try {
+        /*try {
             this.in = new ObjectInputStream(this.requestSocket.getInputStream());
             //this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
         } catch (IOException e) {
@@ -187,14 +167,14 @@ public class PublisherNode implements Publisher{
 
         //receive key from broker
         try {
-            Object brokerkey = (BigInteger) this.in.readObject();
+            this.brokerkey = (BigInteger) this.in.readObject();
 
-            System.out.println(brokerkey);
+            System.out.println(this.brokerkey);
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
-        }
+        }*/
     }
 
     @Override
@@ -285,44 +265,7 @@ public class PublisherNode implements Publisher{
                                             while(true) {
                                                 try {
                                                     this.requestSocket = this.providerSocket.accept();
-                                                    this.out.writeInt(numberOfChunks); //send number of chunks?????
-                                                    this.out.writeObject(val);
-                                                    this.out.flush();
-                                                } catch (IOException e) {
-                                                    e.printStackTrace();
-                                                }
-                                            }
-                                        }
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                            }
-
-                            if (mp3file.hasId3v2Tag()){
-                                ID3v2 id3v2Tag = mp3file.getId3v2Tag();
-                                if(val.getMusicfile().getArtistName().equals(id3v2Tag.getArtist()) && (val.getMusicfile().getTrackName().equals(id3v2Tag.getTrack()))) {
-                                    ByteArrayOutputStream byteout = new ByteArrayOutputStream();
-
-                                    File file2 = new File(foldercontents.concat("//").concat(songs.getFileName().toString()));
-                                    FileInputStream fis = new FileInputStream(file2);
-
-                                    byte[] chunk = new byte[chunk_size];
-                                    int numberOfChunks = (int)ceil(file2.length()/chunk_size);
-                                    try {
-                                        for (int readNum; (readNum = fis.read(chunk)) != -1; ) {
-                                            byteout.write(chunk, 0, readNum);
-                                            MusicFile musicfile = new MusicFile(id3v1Tag.getTitle(), id3v1Tag.getArtist(), id3v1Tag.getAlbum(),
-                                                    id3v1Tag.getGenreDescription(),chunk, counter,numberOfChunks);
-
-                                            counter++;
-                                            val.setMusicfile(musicfile);
-
-                                            //send chunk through socket
-                                            while(true) {
-                                                try {
-                                                    this.requestSocket = this.providerSocket.accept();
-                                                    out.writeInt(numberOfChunks); // sends also the number of chunks??? not sure if neeeded
+                                                    //this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());  //initialize out
                                                     this.out.writeObject(val);
                                                     this.out.flush();
                                                 } catch (IOException e) {
@@ -346,6 +289,10 @@ public class PublisherNode implements Publisher{
         }
     }
 
+    public Object returnBrokerKey () {
+        return this.brokerkey;
+    }
+
     @Override
     public void connect() {
         try {
@@ -365,6 +312,30 @@ public class PublisherNode implements Publisher{
         }
     }
 
+    public Socket getSocket() {
+        return this.requestSocket;
+    }
+
+    public ServerSocket getServerSocket() {
+        return this.providerSocket;
+    }
+
+    public String getPublisherIP() {
+        return this.ip;
+    }
+
+    public int getPublisherPort() {
+        return this.port;
+    }
+    
+    public char getStart() {
+        return this.start;
+    }
+
+    public char getEnd() {
+        return this.end;
+    }
+
     @Override
     public void notifyFailure(Broker broker){
         //TODO: write code
@@ -374,5 +345,26 @@ public class PublisherNode implements Publisher{
     public static void main(String args[]){
         PublisherNode p = new PublisherNode('A', 'M', "127.0.0.2", 4321);
         p.init();
+
+        try {
+            Socket broker = p.getSocket();
+
+            ObjectOutputStream out = new ObjectOutputStream(broker.getOutputStream());
+            
+            //send ip, port, start and end to broker
+            out.writeUTF(p.getPublisherIP());
+            out.writeInt(p.getPublisherPort());
+            out.writeChar(p.getStart());
+            out.writeChar(p.getEnd());
+
+            //send map to broker
+            out.writeObject(p.getArtistMap());
+            out.flush();
+            
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
     }
 }

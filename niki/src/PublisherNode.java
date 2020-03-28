@@ -202,6 +202,9 @@ public class PublisherNode implements Publisher{
         return null;
     }
 
+    Map<Broker, ArtistName> brokerMap = new HashMap<Broker, ArtistName>(); //map that associates a broker with an artist name
+    //we could use this map to determine to which broker the publisher will send the chunks
+
     @Override
     public Broker hashTopic(ArtistName artist) throws NoSuchAlgorithmException{
         //Hashes the ArtistName
@@ -225,12 +228,15 @@ public class PublisherNode implements Publisher{
         BigInteger hashNumber = big1.mod(hash2);
 
         if((hashNumber.compareTo(getBrokers().get(0).calculateKeys()) == -1) && (hashNumber.compareTo(getBrokers().get(2).calculateKeys())==1)){
+            brokerMap.put(getBrokers().get(0), artist); ///
             return getBrokers().get(0);
         }
         else if(hashNumber.compareTo(getBrokers().get(1).calculateKeys()) == -1) {
+            brokerMap.put(getBrokers().get(1), artist); ///
             return getBrokers().get(1);
         }
         else{
+            brokerMap.put(getBrokers().get(2), artist); ///
             return getBrokers().get(2);
         }
     }
@@ -312,8 +318,8 @@ public class PublisherNode implements Publisher{
                                     try {
                                         for (int readNum; (readNum = fis.read(chunk)) != -1; ) {
                                             byteout.write(chunk, 0, readNum);
-                                            MusicFile musicfile = new MusicFile(id3v1Tag.getTitle(), id3v1Tag.getArtist(), id3v1Tag.getAlbum(),
-                                                    id3v1Tag.getGenreDescription(),chunk, counter,numberOfChunks);
+                                            MusicFile musicfile = new MusicFile(id3v2Tag.getTitle(), id3v2Tag.getArtist(), id3v2Tag.getAlbum(),
+                                                    id3v2Tag.getGenreDescription(),chunk, counter,numberOfChunks);
 
                                             counter++;
                                             val.setMusicfile(musicfile);
@@ -369,6 +375,7 @@ public class PublisherNode implements Publisher{
     public void notifyFailure(Broker broker){
         //TODO: write code
         //not being the right publisher or not having the song/artist?????
+
     }
 
     public static void main(String args[]){
