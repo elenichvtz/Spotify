@@ -5,6 +5,7 @@ import java.net.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -49,7 +50,7 @@ public class BrokerNode extends Thread implements Broker {
         }*/
 
         try {
-            this.consumer_providerSocket = new ServerSocket(this.port + 1, 10);
+            this.consumer_providerSocket = new ServerSocket(this.port + 3, 10);
             //this.publisher_requestSocket = this.publisher_providerSocket.accept();
             System.out.println("broker consumer provider socket connect");
 
@@ -226,14 +227,14 @@ public class BrokerNode extends Thread implements Broker {
                 System.out.println(start + " & " + end);
 
                 Object publishermap = in.readObject();
-                System.out.println(publishermap.toString());
+                maps.add((HashMap) publishermap);
+                //System.out.println(publishermap.toString());
 
                 PublisherNode pn = new PublisherNode(start, end, publisherip, publisherport);
-                registeredPublishers.add(pn);
-
-                System.out.println(registeredPublishers.isEmpty());
 
                 b.acceptConnection(pn);
+                System.out.println(registeredPublishers.isEmpty());
+
 
             } catch (IOException e) {
                 e.printStackTrace();

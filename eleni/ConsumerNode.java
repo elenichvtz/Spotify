@@ -19,7 +19,7 @@ public class ConsumerNode extends Thread implements Consumer {
     @Override
     public void init() {
         try {
-            this.requestSocket = new Socket(this.ip, this.port+1);
+            this.requestSocket = new Socket(this.ip, this.port+3);
             //this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
         } catch (IOException e) {
             e.printStackTrace();
