@@ -40,9 +40,8 @@ public class BrokerNode implements Broker{
             e.printStackTrace();
         }
 
-        connect();
-
         try {
+            this.publisher_requestSocket = this.publisher_providerSocket.accept();
             this.in = new ObjectInputStream(this.publisher_requestSocket.getInputStream());
             //this.out = new ObjectOutputStream(this.publisher_requestSocket.getOutputStream());
         } catch (IOException e) {
@@ -63,8 +62,6 @@ public class BrokerNode implements Broker{
             registeredPublishers.add(pn);
             System.out.println(registeredPublishers.isEmpty());
 
-            //acceptConnection(pn);
-
             Object publishermap = this.in.readObject();
             System.out.println(publishermap.toString());
 
@@ -82,9 +79,7 @@ public class BrokerNode implements Broker{
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        //connect();
-
+        
         try {
             this.consumer_requestSocket = this.consumer_providerSocket.accept();
             this.in = new ObjectInputStream(this.consumer_requestSocket.getInputStream());
@@ -121,6 +116,23 @@ public class BrokerNode implements Broker{
             this.out.flush();
             System.out.println(this.key);
             System.out.println("flush");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            this.consumer_requestSocket = new Socket(this.ip, this.port+1);
+            this.out = new ObjectOutputStream(this.consumer_requestSocket.getOutputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        //send key to consumer
+        try {
+            this.out.writeObject(this.key);
+            this.out.flush();
+            System.out.println(this.key);
+            System.out.println("flushed");
         } catch (IOException e) {
             e.printStackTrace();
         }

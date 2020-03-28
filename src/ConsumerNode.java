@@ -5,7 +5,7 @@ import java.util.List;
 //Client
 public class ConsumerNode implements Consumer {
 
-    Socket requestSocket = null; //ισως μεσα στην run οπως στο εργαστηριο??
+    Socket requestSocket = null;
     ObjectOutputStream out = null;
     ObjectInputStream in = null;
     String ip;
@@ -30,6 +30,21 @@ public class ConsumerNode implements Consumer {
             this.out.writeUTF(this.ip);
             this.out.writeInt(this.port);
             this.out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        //receive broker's key
+        try {
+            this.in = new ObjectInputStream(this.requestSocket.getInputStream());
+            //this.out = new ObjectOutputStream(this.publisher_requestSocket.getOutputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            int key = this.in.readInt();
+            System.out.println(key);
         } catch (IOException e) {
             e.printStackTrace();
         }
