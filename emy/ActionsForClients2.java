@@ -9,10 +9,10 @@ public class ActionsForClients2 extends Thread {
 
     ObjectInputStream in;
     //ObjectOutputStream out;
-    List<Consumer> registeredUsers = new ArrayList<>();
+    List<ConsumerNode> registeredUsers = new ArrayList<>();
     ConsumerNode con;
 
-    public ActionsForClients2(Socket consumer,List<Consumer> registeredUsers ) {
+    public ActionsForClients2(Socket consumer,List<ConsumerNode> registeredUsers ) {
         try {
             //out = new ObjectOutputStream(consumer.getOutputStream());
             in = new ObjectInputStream(consumer.getInputStream());
@@ -20,14 +20,12 @@ public class ActionsForClients2 extends Thread {
             e.printStackTrace();
         }
     }
-    public Consumer getConsumer(){
+    public ConsumerNode getConsumer(){
         return con;
     }
 
 
     public synchronized void run(){
-
-
 
             try {
                 // socket object to receive incoming consumer requests
@@ -51,15 +49,10 @@ public class ActionsForClients2 extends Thread {
                     e.printStackTrace();
                 }
 
-
-
-                    System.out.println("Assigning new thread for this client");
-
+                System.out.println("Assigning new thread for this client");
 
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-
-
     }
 }

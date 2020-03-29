@@ -28,8 +28,8 @@ public class ConsumerNode extends Thread implements Consumer, Serializable {
     }
 
     @Override
-    public List<Broker> getBrokers() {
-        return null;
+    public List<BrokerNode> getBrokers() {
+        return brokers;
     }
 
     @Override
@@ -49,7 +49,7 @@ public class ConsumerNode extends Thread implements Consumer, Serializable {
     }
 
     @Override
-    public void register(Broker broker, ArtistName artist) {
+    public void register(BrokerNode broker, ArtistName artist) {
         //TODO: check if random Broker is correct then pull ,else search for right Broker
         try {
 
@@ -67,7 +67,7 @@ public class ConsumerNode extends Thread implements Consumer, Serializable {
     }
 
     @Override
-    public void disconnect(Broker broker, ArtistName artist) {
+    public void disconnect(BrokerNode broker, ArtistName artist) {
             try {
                 this.requestSocket.close();
             } catch (IOException e) {

@@ -6,7 +6,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 //Server
 public class BrokerNode extends Thread implements Broker, Serializable {
@@ -19,7 +18,7 @@ public class BrokerNode extends Thread implements Broker, Serializable {
     ObjectInputStream in = null;
 
     BigInteger key;
-    ArrayList<Publisher> publishers = new ArrayList<>();
+    ArrayList<PublisherNode> publishers = new ArrayList<>();
     String ip;
     int port;
 
@@ -43,7 +42,6 @@ public class BrokerNode extends Thread implements Broker, Serializable {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
 
         try {
             this.consumer_providerSocket = new ServerSocket(this.port + 1, 10);
@@ -96,7 +94,7 @@ public class BrokerNode extends Thread implements Broker, Serializable {
 
 
     @Override
-    public List<Broker> getBrokers() {
+    public List<BrokerNode> getBrokers() {
         return brokers;
     }
 
@@ -138,14 +136,14 @@ public class BrokerNode extends Thread implements Broker, Serializable {
     }
 
     @Override
-    public Publisher acceptConnection(Publisher publisher) {
+    public PublisherNode acceptConnection(PublisherNode publisher) {
         registeredPublishers.add(publisher);
         System.out.println("Connection accepted");
         return publisher;
     }
 
     @Override
-    public Consumer acceptConnection(Consumer consumer) {
+    public ConsumerNode acceptConnection(ConsumerNode consumer) {
         registeredUsers.add(consumer);
         System.out.println("Connection accepted");
         return consumer;
@@ -207,6 +205,7 @@ public class BrokerNode extends Thread implements Broker, Serializable {
         //b2.init();
         //b3.init();
         brokers.add(b);
+        //System.out.println(brokers.get(0));
         //brokers.add(b2);
         //brokers.add(b3);
         synchronized (b) {
