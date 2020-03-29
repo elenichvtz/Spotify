@@ -210,12 +210,13 @@ public class BrokerNode extends Thread implements Broker {
         //brokers.add(b2);
         //brokers.add(b3);
         //synchronized (b) {
+        while(true){
             try {
                 // socket object to receive incoming publisher
                 Socket publisher = b.getPublisherServerSocket().accept();
 
                 System.out.println("A new publisher is connected: " + publisher);
-                ActionsForClients action = new ActionsForClients(publisher,registeredPublishers);
+                ActionsForClients action = new ActionsForClients(publisher, registeredPublishers);
                 action.start();
                 registeredPublishers.add(action.getPublisher());
                 System.out.println(registeredPublishers.isEmpty());
@@ -227,39 +228,19 @@ public class BrokerNode extends Thread implements Broker {
 
 
             //running infinite loop for getting client request
-            while (true) {
+
 
                 try {
                     // socket object to receive incoming consumer requests
                     Socket consumer = b.getConsumerServerSocket().accept();
 
+                    ActionsForClients2 action2 = new ActionsForClients2(consumer,registeredUsers);
+                    action2.start();
                     System.out.println("A new consumer is connected: " + consumer);
+                    registeredUsers.add(action2.getConsumer());
+                    System.out.println("Consumer list is empty?: "+registeredPublishers.isEmpty());
 
-                    try {
-                        ObjectInputStream in = new ObjectInputStream(consumer.getInputStream());
 
-                        //receive ip and port from consumer
-                        String consumerip = in.readUTF();
-                        System.out.println("con " + consumerip);
-                        int consumerport = in.readInt();
-                        System.out.println(consumerport);
-
-                        ConsumerNode cn = new ConsumerNode(consumerip, consumerport);
-
-                        registeredUsers.add(cn);
-                        System.out.println(registeredPublishers.isEmpty());
-
-                        System.out.println("Assigning new thread for this client");
-
-                        // create a new thread object
-                    /*Thread t = new ConsumerNode(consumerip, consumerport);
-
-                    t.start();
-                    System.out.println(b.getBrokerIP());*/
-
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
 
                 } catch (IOException e) {
                     e.printStackTrace();
