@@ -1,7 +1,7 @@
 import java.util.List;
 import java.io.*;
 
-public class ArtistName {
+public class ArtistName implements Serializable {
     String artistName;
 
     ArtistName(String artistName){
@@ -14,11 +14,9 @@ public class ArtistName {
     }
 
     public String getArtistName() {
-        return artistName;
+        return this.artistName;
     }
 
     @Override
-    public String toString() {
-        return super.toString();
-    }
+    public String toString() { return this.artistName.toString(); }
 }

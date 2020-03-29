@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 //Server
-public class BrokerNode extends Thread implements Broker {
+public class BrokerNode extends Thread implements Broker, Serializable {
 
     ServerSocket publisher_providerSocket;
     Socket publisher_requestSocket;

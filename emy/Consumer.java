@@ -1,7 +1,7 @@
 import java.util.List;
 import java.io.*;
 
-public interface Consumer extends Node {
+public interface Consumer extends Node, Serializable {
 
     public abstract void register(Broker broker,ArtistName artist);
 

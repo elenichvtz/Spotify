@@ -2,7 +2,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.io.*;
 
-public interface Node {
+public interface Node extends Serializable{
 
     public final static List<Broker> brokers = new ArrayList<Broker>();
 

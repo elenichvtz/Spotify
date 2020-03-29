@@ -19,13 +19,13 @@ import java.util.Map;
 import static java.lang.Math.ceil;
 
 //Client
-public class PublisherNode implements Publisher{
+public class PublisherNode implements Publisher, Serializable {
 
     Socket requestSocket = null;
     ServerSocket providerSocket = null;
     ObjectOutputStream out = null;
     ObjectInputStream in = null;
-    String path = "/Users/emiliadan/Downloads/distributed_project/dataset1";
+    String path = "C:\\\\Users\\\\eleni\\\\Downloads\\\\DS\\\\dataset1";
     char start;
     char end;
     String ip;

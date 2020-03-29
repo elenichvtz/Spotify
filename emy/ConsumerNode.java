@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 //Client
-public class ConsumerNode extends Thread implements Consumer {
+public class ConsumerNode extends Thread implements Consumer, Serializable {
 
     Socket requestSocket = null;
     ObjectOutputStream out = null;
