@@ -12,7 +12,7 @@ public class ActionsForClients extends Thread {
     List<Publisher> registeredPublishers = new ArrayList<>();
     PublisherNode pn;
 
-    public ActionsForClients(Socket publisher, List<Publisher> registeredPublishers) {
+    public ActionsForClients(Socket publisher, List<PublisherNode> registeredPublishers) {
         try {
             out = new ObjectOutputStream(publisher.getOutputStream());
             in = new ObjectInputStream(publisher.getInputStream());
@@ -21,7 +21,7 @@ public class ActionsForClients extends Thread {
         }
     }
 
-    public Publisher getPublisher(){
+    public PublisherNode getPublisher(){
         return pn;
     }
 

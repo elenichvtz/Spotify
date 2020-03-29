@@ -5,12 +5,12 @@ import java.util.List;
 
 public interface Broker extends Node, Serializable {
 
-    public final static List<Consumer> registeredUsers = new ArrayList<Consumer>();
-    public final static List<Publisher> registeredPublishers = new ArrayList<Publisher>();
+    public final static List<ConsumerNode> registeredUsers = new ArrayList<ConsumerNode>();
+    public final static List<PublisherNode> registeredPublishers = new ArrayList<PublisherNode>();
 
     public abstract BigInteger calculateKeys();
-    public abstract Publisher acceptConnection(Publisher publisher);
-    public abstract Consumer acceptConnection(Consumer consumer);
+    public abstract PublisherNode acceptConnection(PublisherNode publisher);
+    public abstract ConsumerNode acceptConnection(ConsumerNode consumer);
     public abstract void notifyPublisher(String name);
     public abstract void pull(ArtistName artist);
 }

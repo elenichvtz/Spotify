@@ -1,5 +1,7 @@
 import java.io.*;
 import java.net.*;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.List;
 
 //Client
@@ -85,7 +87,7 @@ public class ConsumerNode implements Consumer {
                 return;
             }
             else{
-                if(broker.equals(hashTopic(artist))){ //random broker is the correct broker
+                if(broker.equals(broker.registeredPublishers.get(0).hashTopic(artist))){ //random broker is the correct broker
                     //instead of this if statement maybe we can make another map with artists and their hash values
                     //but i'm leaving this here in case we fix it
                     broker.pull(artist);
@@ -107,7 +109,7 @@ public class ConsumerNode implements Consumer {
             //TODO: find the correct broker
             */
 
-        } catch (IOException e) {
+        } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
     }
