@@ -30,11 +30,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
 
     @Override
     public List<BrokerNode> getBrokers() {
-<<<<<<< HEAD
-        return null;
-=======
         return brokers;
->>>>>>> fcfeb9fb3a6dba7d65547ffd3b7229bdec553ae2
     }
 
     @Override
@@ -55,7 +51,6 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
 
     @Override
     public void register(BrokerNode broker, ArtistName artist) {
-<<<<<<< HEAD
 
         for (int i =0; i< broker.getPublisherList().size();i++){
             if (broker.getPublisherList().get(i).getStart() == (artist.getArtistName().charAt(0))){
@@ -71,9 +66,6 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
             }
         }
         /*broker.getPublisherList();
-=======
-        //TODO: check if random Broker is correct then pull ,else search for right Broker
->>>>>>> fcfeb9fb3a6dba7d65547ffd3b7229bdec553ae2
         try {
             if(!brokerMap.containsKey(broker)) {
                 System.out.println("Broker not found.");
