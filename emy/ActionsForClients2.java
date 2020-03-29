@@ -43,6 +43,15 @@ public class ActionsForClients2 extends Thread {
 
                     //registeredUsers.add(cn);
                     System.out.println(registeredUsers.isEmpty());
+                ArtistName artistName = null;
+                try {
+                    artistName = (ArtistName) in.readObject();
+                    System.out.println(artistName.toString()+" received from consumer");
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
+
+
 
                     System.out.println("Assigning new thread for this client");
 

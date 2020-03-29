@@ -209,7 +209,7 @@ public class BrokerNode extends Thread implements Broker {
         brokers.add(b);
         //brokers.add(b2);
         //brokers.add(b3);
-        //synchronized (b) {
+        synchronized (b) {
         while(true){
             try {
                 // socket object to receive incoming publisher
@@ -246,6 +246,6 @@ public class BrokerNode extends Thread implements Broker {
                     e.printStackTrace();
                 }
             }
-       // }
+        }
     }
 }

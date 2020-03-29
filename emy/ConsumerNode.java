@@ -118,10 +118,13 @@ public class ConsumerNode extends Thread implements Consumer {
             Socket broker = cn.getSocket();
 
             ObjectOutputStream out = new ObjectOutputStream(broker.getOutputStream());
+            ArtistName artistName = new ArtistName("Komiku");
+
 
             //send ip and port to broker
             out.writeUTF(cn.getConsumerIP());
             out.writeInt(cn.getConsumerPort());
+            out.writeObject(artistName);
             out.flush();
 
         } catch (IOException e) {
