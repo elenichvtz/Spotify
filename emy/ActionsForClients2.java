@@ -27,7 +27,7 @@ public class ActionsForClients2 extends Thread {
 
     public synchronized void run(){
 
-        while (true) {
+
 
             try {
                 // socket object to receive incoming consumer requests
@@ -51,6 +51,6 @@ public class ActionsForClients2 extends Thread {
                     e.printStackTrace();
                 }
 
-        }
+
     }
 }
