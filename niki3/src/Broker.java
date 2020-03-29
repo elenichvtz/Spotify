@@ -1,4 +1,5 @@
 import java.math.BigInteger;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,5 +12,5 @@ public interface Broker extends Node {
     public abstract Publisher acceptConnection(Publisher publisher);
     public abstract Consumer acceptConnection(Consumer consumer);
     public abstract void notifyPublisher(String name);
-    public abstract void pull(ArtistName artist);
+    public abstract void pull(ArtistName artist) /*throws NoSuchAlgorithmException*/;
 }
