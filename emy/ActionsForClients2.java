@@ -8,13 +8,15 @@ import java.util.List;
 public class ActionsForClients2 extends Thread {
 
     ObjectInputStream in;
-    //ObjectOutputStream out;
+    ObjectOutputStream out;
     List<ConsumerNode> registeredUsers = new ArrayList<>();
+    List<BrokerNode> brokers = new ArrayList<>();
     ConsumerNode con;
+    ArtistName artistreceived;
 
-    public ActionsForClients2(Socket consumer,List<ConsumerNode> registeredUsers ) {
+    public ActionsForClients2(Socket consumer,List<ConsumerNode> registeredUsers,List<BrokerNode> brokers) {
         try {
-            //out = new ObjectOutputStream(consumer.getOutputStream());
+            out = new ObjectOutputStream(consumer.getOutputStream());
             in = new ObjectInputStream(consumer.getInputStream());
         } catch (IOException e) {
             e.printStackTrace();
@@ -24,13 +26,19 @@ public class ActionsForClients2 extends Thread {
         return con;
     }
 
+    public ArtistName getArtistreceived(){ return artistreceived;}
+
+
 
     public synchronized void run(){
+
+
 
             try {
                 // socket object to receive incoming consumer requests
                 //Socket consumer = broker.getConsumerServerSocket().accept();
 
+                //out.writeObject(brokers); // revert back if necessary
                     //receive ip and port from consumer
                     String consumerip = in.readUTF();
                     System.out.println("con " + consumerip);
@@ -45,14 +53,20 @@ public class ActionsForClients2 extends Thread {
                 try {
                     artistName = (ArtistName) in.readObject();
                     System.out.println(artistName.toString()+" received from consumer");
+                    artistreceived = artistName; //
                 } catch (ClassNotFoundException e) {
                     e.printStackTrace();
                 }
 
-                System.out.println("Assigning new thread for this client");
+
+
+                    System.out.println("Assigning new thread for this client");
+
 
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+
+
     }
 }

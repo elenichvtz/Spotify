@@ -19,13 +19,13 @@ import java.util.Map;
 import static java.lang.Math.ceil;
 
 //Client
-public class PublisherNode implements Publisher, Serializable {
+public class PublisherNode implements Publisher,Serializable{
 
     Socket requestSocket = null;
     ServerSocket providerSocket = null;
     ObjectOutputStream out = null;
     ObjectInputStream in = null;
-    String path = "C:\\\\Users\\\\eleni\\\\Downloads\\\\DS\\\\dataset1";
+    String path = "/Users/emiliadan/Downloads/distributed_project/dataset1";
     char start;
     char end;
     String ip;
@@ -166,7 +166,7 @@ public class PublisherNode implements Publisher, Serializable {
     }
 
     @Override
-    public BrokerNode hashTopic(ArtistName artist) throws NoSuchAlgorithmException{
+    public Broker hashTopic(ArtistName artist) throws NoSuchAlgorithmException{
         //Hashes the ArtistName
 
         MessageDigest sha = MessageDigest.getInstance("SHA-256");
@@ -175,17 +175,18 @@ public class PublisherNode implements Publisher, Serializable {
         byte[] namehash = sha.digest(name.getBytes());
         BigInteger big1 = new BigInteger(1,namehash); // 1 means positive BigInteger for hash(nameartist)
 
-        BigInteger min = getBrokers().get(0).calculateKeys();
+        BigInteger max = getBrokers().get(0).calculateKeys();
 
-        for(int i=1; i<=2; i++){                               //vriskoume to mikrotero kleidi ton brokers
-            if ( getBrokers().get(i).calculateKeys().compareTo(min) < 0 ){ //ΕΔΩ ΤΗΝ ΣΥΓΚΡιση την αλλαζω???  εβαλα < 0  βασικα πριν ηταν > 1
-                min = getBrokers().get(i).calculateKeys();
+        for(int i=1; i<=2; i++){                               //vriskoume to megalutero kleidi ton brokers
+            if ( getBrokers().get(i).calculateKeys().compareTo(max) > 1){
+                max = getBrokers().get(i).calculateKeys();
             }
         }
 
         BigInteger hash2 = new BigInteger("max");// ΘΕΛΕΙ ΤΟ ΜΙΝ ΚΛΕΙΔΙ ΤΟΥ BROKER το απαντησε στο eclass
 
         BigInteger hashNumber = big1.mod(hash2);
+        //brokerMap
 
         if((hashNumber.compareTo(getBrokers().get(0).calculateKeys()) == -1) && (hashNumber.compareTo(getBrokers().get(2).calculateKeys())==1)){
             return getBrokers().get(0);
@@ -199,6 +200,16 @@ public class PublisherNode implements Publisher, Serializable {
     }
 
     public void push(ArtistName artist,Value val) {
+
+        boolean exist = false;
+        //getArtistMap();
+        for (String name: getArtistMap().keySet()){
+
+            if( name.equals(artist.toString())) {
+                exist = true;
+            }
+        }
+
 
         File f = null;
         BufferedReader reader = null;
@@ -286,7 +297,7 @@ public class PublisherNode implements Publisher, Serializable {
                                             while(true) {
                                                 try {
                                                     this.requestSocket = this.providerSocket.accept();
-                                                    //out.writeInt(numberOfChunks); // sends also the number of chunks??? not sure if neeeded
+                                                    out.writeInt(numberOfChunks); // sends also the number of chunks??? not sure if neeeded
                                                     this.out.writeObject(val);
                                                     this.out.flush();
                                                 } catch (IOException e) {
@@ -356,14 +367,16 @@ public class PublisherNode implements Publisher, Serializable {
     }
 
     @Override
-    public void notifyFailure(BrokerNode broker){
+    public void notifyFailure(Broker broker){
         //TODO: write code
         //not being the right publisher or not having the song/artist?????
     }
 
     public static void main(String args[]){
         PublisherNode p = new PublisherNode('A', 'M', "localhost", 7654);
+        //PublisherNode p2 = new PublisherNode('M','Z',"localhost",7655);
         p.init();
+
 
         try {
             Socket broker = p.getSocket();
@@ -380,11 +393,12 @@ public class PublisherNode implements Publisher, Serializable {
             //send map to broker
             out.writeObject(p.getArtistMap());
             out.flush();
+            //p.push();
             
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-
+        //p2.init();
     }
 }

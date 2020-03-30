@@ -9,8 +9,9 @@ public class ActionsForClients extends Thread {
 
     ObjectInputStream in;
     ObjectOutputStream out;
-    List<Publisher> registeredPublishers = new ArrayList<>();
+    List<PublisherNode> registeredPublishers = new ArrayList<>();
     PublisherNode pn;
+
 
     public ActionsForClients(Socket publisher, List<PublisherNode> registeredPublishers) {
         try {
@@ -19,6 +20,7 @@ public class ActionsForClients extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
     }
 
     public PublisherNode getPublisher(){
@@ -42,6 +44,7 @@ public class ActionsForClients extends Thread {
             System.out.println(publishermap.toString());
 
             pn = new PublisherNode(start, end, publisherip, publisherport);
+
             //out.writeObject(pn);
             //registeredPublishers.add(pn);
 

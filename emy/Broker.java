@@ -1,9 +1,8 @@
-import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
-public interface Broker extends Node, Serializable {
+public interface Broker extends Node {
 
     public final static List<ConsumerNode> registeredUsers = new ArrayList<ConsumerNode>();
     public final static List<PublisherNode> registeredPublishers = new ArrayList<PublisherNode>();

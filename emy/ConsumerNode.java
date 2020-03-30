@@ -30,7 +30,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
 
     @Override
     public List<BrokerNode> getBrokers() {
-        return brokers;
+        return null;
     }
 
     @Override
@@ -51,12 +51,48 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
 
     @Override
     public void register(BrokerNode broker, ArtistName artist) {
+        /*Socket brker = getSocket();
+        //ObjectOutputStream out = null;
+        try {
+            out = new ObjectOutputStream(brker.getOutputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        //Object list = in.readObject();
+        //send ip and port to broker
+        try {
+            out.writeUTF(getConsumerIP());
+            out.writeInt(getConsumerPort());
+            out.writeObject(artist); //successfully sends artistName to BrokerNode
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }*/
+
 
         for (int i =0; i< broker.getPublisherList().size();i++){
             if (broker.getPublisherList().get(i).getStart() == (artist.getArtistName().charAt(0))){
                 try {
                     //broker.getPublisherList().get(i).hashTopic(artist); //returns the Broker responsible for that artist
                     if(broker.equals(broker.getPublisherList().get(i).hashTopic(artist))){ //if current broker equals the one returned from hashtopic then
+                        Socket brker = getSocket();
+                        //ObjectOutputStream out = null;
+                        try {
+                            out = new ObjectOutputStream(brker.getOutputStream());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        //Object list = in.readObject();
+                        //send ip and port to broker
+                        try {
+                            out.writeUTF(getConsumerIP());
+                            out.writeInt(getConsumerPort());
+                            out.writeObject(artist); //successfully sends artistName to BrokerNode
+                            out.flush();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
                         broker.pull(artist);
                     }
                 } catch (NoSuchAlgorithmException e) {
@@ -65,61 +101,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
 
             }
         }
-        /*broker.getPublisherList();
-        try {
-            if(!brokerMap.containsKey(broker)) {
-                System.out.println("Broker not found.");
-                return;
-            }
-            else if (!brokerMap.containsValue(artist)){
-                System.out.println("Artist not found.");
-                return;
-            }
-            else{
-                if(broker.equals(hashTopic(artist))){ //random broker is the correct broker
-                    //instead of this if statement maybe we can make another map with artists and their hash values
-                    //but i'm leaving this here in case we fix it
-                    broker.pull(artist);
-                }
-                else{
-                    for(Broker br : brokerMap.keySet()){ //for every broker in brokerMap
-                        if(br.equals(broker)){ //when we find the correct broker
-                            broker.pull(artist);
-                        }
-                    }
-                }
-            }*/
 
-            //broker.notifyPublisher(artist.getArtistName());   //First notify
-            /*
-            out = new ObjectOutputStream(requestSocket.getOutputStream());
-            out.writeUTF(artist.getArtistName());         //then send
-            out.flush(); //sent for sure
-            //TODO: find the correct broker
-            */
-        /*
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
-
-
-
-
-
-        //TODO: check if random Broker is correct then pull ,else search for right Broker
-        /*try {
-
-            //broker.notifyPublisher(artist.getArtistName());   //First notify
-
-            out = new ObjectOutputStream(requestSocket.getOutputStream());
-            out.writeUTF(artist.getArtistName());         //then send
-            out.flush(); //sent for sure
-            //TODO: find the correct broker
-
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
     }
 
     @Override
@@ -168,27 +150,29 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
 
         ConsumerNode cn = new ConsumerNode("localhost", 7654);
         cn.init();
+        ArtistName artistName = new ArtistName("Komiku");
+        cn.register(brokers.get(0),artistName); //υποτιθεται οτι η λιστα με τους μπροκερσ πρεπει να ειναι γεματη
 
-        try {
+        //try {
 
-            Socket broker = cn.getSocket();
+            //Socket broker = cn.getSocket();
 
-            ObjectOutputStream out = new ObjectOutputStream(broker.getOutputStream());
-            ObjectInputStream in = new ObjectInputStream(broker.getInputStream());
-            ArtistName artistName = new ArtistName("Komiku");
+            //ObjectOutputStream out = new ObjectOutputStream(broker.getOutputStream());
+            //ObjectInputStream in = new ObjectInputStream(broker.getInputStream());
+            //ArtistName artistName = new ArtistName("Komiku");
 
-            Object list = in.readObject();
+            /*Object list = in.readObject();
             //send ip and port to broker
             out.writeUTF(cn.getConsumerIP());
             out.writeInt(cn.getConsumerPort());
             out.writeObject(artistName); //successfully sends artistName to BrokerNode
-            out.flush();
+            out.flush();*/
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
+        //} catch (IOException e) {
+           // e.printStackTrace();
+        //} catch (ClassNotFoundException e) {
+            //e.printStackTrace();
+        //}
 
         //ERROR IN PRINTING BROKER LIST!!!
 
