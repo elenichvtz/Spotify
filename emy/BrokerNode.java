@@ -246,8 +246,6 @@ public class BrokerNode extends Thread implements Broker,Serializable {
         // socket object to receive incoming publisher
         Socket publisher = b.getPublisherServerSocket().accept();
 
-
-
         synchronized (b) {
 
             System.out.println("A new publisher is connected: " + publisher);

@@ -12,6 +12,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
     ObjectInputStream in = null;
     String ip;
     int port;
+    ArrayList<String> listofsongs = new ArrayList<String>();
 
     ConsumerNode(String ip, int port) {
         this.ip = ip;
@@ -22,6 +23,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
     public void init() {
         try {
             this.requestSocket = new Socket(this.ip, this.port+1);
+            this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -71,12 +73,13 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
 
 
         for (int i =0; i< broker.getPublisherList().size();i++){
-            if (broker.getPublisherList().get(i).getStart() == (artist.getArtistName().charAt(0))){
+            if (broker.getPublisherList().get(i).getStart() >= (artist.getArtistName().charAt(0)) && broker.getPublisherList().get(i).getEnd() <= (artist.getArtistName().charAt(0))){
                 try {
                     //broker.getPublisherList().get(i).hashTopic(artist); //returns the Broker responsible for that artist
                     if(broker.equals(broker.getPublisherList().get(i).hashTopic(artist))){ //if current broker equals the one returned from hashtopic then
                         Socket brker = getSocket();
                         //ObjectOutputStream out = null;
+
                         try {
                             out = new ObjectOutputStream(brker.getOutputStream());
                         } catch (IOException e) {
@@ -93,9 +96,15 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
                             e.printStackTrace();
                         }
 
-                        broker.pull(artist);
+                        //lista tragoudion apo broker
+                        this.listofsongs = (ArrayList<String>) in.readObject();
+
+                        //broker.pull(artist);
                     }
-                } catch (NoSuchAlgorithmException e) {
+
+                    //else an den einai sostos o broker
+
+                } catch (NoSuchAlgorithmException | ClassNotFoundException | IOException e) {
                     e.printStackTrace();
                 }
 
@@ -128,7 +137,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
         }
     }
 
-
+    public ArrayList<String> getListofSongs() { return this.listofsongs; }
 
     public void setBrokers(BrokerNode b) { //ισως να μην χρειαστει
         brokers.add(b);
@@ -152,6 +161,28 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
         cn.init();
         ArtistName artistName = new ArtistName("Komiku");
         cn.register(brokers.get(0),artistName); //υποτιθεται οτι η λιστα με τους μπροκερσ πρεπει να ειναι γεματη
+
+        //o broker tou epistrefei ti lista an uparxei o artist
+        //an o artist den uparxei termatizei
+
+        //vlepei ti lista me ta tragoudia tou kallitexni pou dialekse
+        for(int i=0; i<cn.getListofSongs().size(); i++) {
+            System.out.println(i +". " + cn.getListofSongs().get(i));
+        }
+
+
+        //o consumer epilegei ena tragoudi kai to stelnei ston broker
+        try {
+            cn.out.writeUTF("Bleu"); //iparxei ston Komiku to elegksa
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        //lamvanei apo ton broker to value
+        //kalei tin playData kai to apothikeuei
+
+
+
 
         //try {
 
