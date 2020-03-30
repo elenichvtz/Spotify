@@ -53,7 +53,7 @@ public class ActionsForConsumers extends Thread {
                 try {
                     artistName = (ArtistName) in.readObject();
                     System.out.println(artistName.toString()+" received from consumer");
-                    artistreceived = artistName; //
+                    artistreceived = artistName;
                 } catch (ClassNotFoundException e) {
                     e.printStackTrace();
                 }

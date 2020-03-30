@@ -229,7 +229,7 @@ public class BrokerNode extends Thread implements Broker,Serializable {
         return this.port;
     }
 
-    public static void main(String args[]) {
+    public static void main(String args[]) throws IOException {
 
         BrokerNode b = new BrokerNode("localhost", 7654);
         //BrokerNode b2 = new BrokerNode("localhost", 7655);
@@ -243,33 +243,32 @@ public class BrokerNode extends Thread implements Broker,Serializable {
         System.out.println(brokers.isEmpty());
         //brokers.add(b2);
         //brokers.add(b3);
-        synchronized (b) {
-            while (true) {
-                try {
-                    // socket object to receive incoming publisher
-                    Socket publisher = b.getPublisherServerSocket().accept();
+        // socket object to receive incoming publisher
+        Socket publisher = b.getPublisherServerSocket().accept();
 
-                    System.out.println("A new publisher is connected: " + publisher);
-                    //ArtistName k = b.getArtistReceived();
-                    ActionsForPublishers action = new ActionsForPublishers(publisher, registeredPublishers);
-                    action.start();
-                    registeredPublishers.add(action.getPublisher());
-                    System.out.println(registeredPublishers.isEmpty());
-                    if(b.getArtistReceived()!= null){
-                        MusicFile f = new MusicFile(b.getArtistReceived().getArtistName(),null,null,null,null,0,0);
-                        Value val = new Value(f);
-                        for(int i=0;i <b.getPublisherList().size();i++){
-                            for(String name : b.getPublisherList().get(i).getArtistMap().keySet()){
-                                if (name.equals(b.getArtistReceived())){
-                                    b.getPublisherList().get(i).push(b.getArtistReceived(),val);
-                                }
+
+
+        synchronized (b) {
+
+            System.out.println("A new publisher is connected: " + publisher);
+            //ArtistName k = b.getArtistReceived();
+            ActionsForPublishers action = new ActionsForPublishers(publisher, registeredPublishers);
+            action.start();
+            registeredPublishers.add(action.getPublisher());
+            System.out.println(registeredPublishers.isEmpty());
+
+            while (true) {
+
+                if(b.getArtistReceived()!= null){
+                    MusicFile f = new MusicFile(b.getArtistReceived().getArtistName(),null,null,null,null,0,0);
+                    Value val = new Value(f);
+                    for(int i=0;i <b.getPublisherList().size();i++){
+                        for(String name : b.getPublisherList().get(i).getArtistMap().keySet()){
+                            if (name.equals(b.getArtistReceived())){
+                                b.getPublisherList().get(i).push(b.getArtistReceived(),val);
                             }
                         }
                     }
-
-
-                } catch (IOException ex) {
-                    ex.printStackTrace();
                 }
 
 
