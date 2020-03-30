@@ -5,7 +5,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ActionsForClients2 extends Thread {
+public class ActionsForConsumers extends Thread {
 
     ObjectInputStream in;
     ObjectOutputStream out;
@@ -14,7 +14,7 @@ public class ActionsForClients2 extends Thread {
     ConsumerNode con;
     ArtistName artistreceived;
 
-    public ActionsForClients2(Socket consumer,List<ConsumerNode> registeredUsers,List<BrokerNode> brokers) {
+    public ActionsForConsumers(Socket consumer,List<ConsumerNode> registeredUsers,List<BrokerNode> brokers) {
         try {
             out = new ObjectOutputStream(consumer.getOutputStream());
             in = new ObjectInputStream(consumer.getInputStream());

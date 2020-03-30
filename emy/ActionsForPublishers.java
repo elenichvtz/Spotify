@@ -5,7 +5,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ActionsForClients extends Thread {
+public class ActionsForPublishers extends Thread {
 
     ObjectInputStream in;
     ObjectOutputStream out;
@@ -13,7 +13,7 @@ public class ActionsForClients extends Thread {
     PublisherNode pn;
 
 
-    public ActionsForClients(Socket publisher, List<PublisherNode> registeredPublishers) {
+    public ActionsForPublishers(Socket publisher, List<PublisherNode> registeredPublishers) {
         try {
             out = new ObjectOutputStream(publisher.getOutputStream());
             in = new ObjectInputStream(publisher.getInputStream());

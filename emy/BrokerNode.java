@@ -251,7 +251,7 @@ public class BrokerNode extends Thread implements Broker,Serializable {
 
                     System.out.println("A new publisher is connected: " + publisher);
                     //ArtistName k = b.getArtistReceived();
-                    ActionsForClients action = new ActionsForClients(publisher, registeredPublishers);
+                    ActionsForPublishers action = new ActionsForPublishers(publisher, registeredPublishers);
                     action.start();
                     registeredPublishers.add(action.getPublisher());
                     System.out.println(registeredPublishers.isEmpty());
@@ -280,7 +280,7 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                     // socket object to receive incoming consumer requests
                     Socket consumer = b.getConsumerServerSocket().accept();
 
-                    ActionsForClients2 action2 = new ActionsForClients2(consumer, registeredUsers, brokers);
+                    ActionsForConsumers action2 = new ActionsForConsumers(consumer, registeredUsers, brokers);
                     action2.start();
                     System.out.println("A new consumer is connected: " + consumer);
                     registeredUsers.add(action2.getConsumer());
