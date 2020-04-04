@@ -5,10 +5,7 @@ import java.net.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.io.Serializable;
 
 //Server
 public class BrokerNode extends Thread implements Broker, Serializable {
@@ -21,7 +18,7 @@ public class BrokerNode extends Thread implements Broker, Serializable {
     ObjectInputStream in = null;
 
     BigInteger key;
-    ArrayList<Publisher> publishers = new ArrayList<>();
+    ArrayList<PublisherNode> publishers = new ArrayList<>();
     String ip;
     int port;
 
@@ -30,13 +27,16 @@ public class BrokerNode extends Thread implements Broker, Serializable {
         this.port = port;
     }
 
+    public void run(){
+        System.out.println("run");
+    }
     @Override
-    public void init() {
-
-        brokers.add(new BrokerNode(this.ip, this.port));
+    public synchronized void init() {
 
         try {
             this.publisher_providerSocket = new ServerSocket(this.port, 10);
+            //this.publisher_providerSocket.setReuseAddress(true);
+            //this.publisher_requestSocket = this.publisher_providerSocket.accept();
             System.out.println("broker provider socket connect");
 
         } catch (IOException e) {
@@ -44,15 +44,52 @@ public class BrokerNode extends Thread implements Broker, Serializable {
         }
 
         try {
-            this.consumer_providerSocket = new ServerSocket(this.port + 3, 10);
+            this.consumer_providerSocket = new ServerSocket(this.port + 1, 10);
+            //this.publisher_requestSocket = this.publisher_providerSocket.accept();
             System.out.println("broker consumer provider socket connect");
 
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+        /*try {
+            this.consumer_requestSocket = this.consumer_providerSocket.accept();
+            //this.in = new ObjectInputStream(this.publisher_requestSocket.getInputStream());
+            //this.out = new ObjectOutputStream(this.publisher_requestSocket.getOutputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }*/
+
+        //System.out.println(registeredPublishers.isEmpty());
+
         this.key = calculateKeys();
 
+        //send key to publisher
+        /*try {
+            this.out.writeObject(this.key);
+            this.out.flush();
+            System.out.println(this.key);
+            System.out.println("flush");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            this.consumer_requestSocket = new Socket(this.ip, this.port+1);
+            this.out = new ObjectOutputStream(this.consumer_requestSocket.getOutputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        //send key to consumer
+        try {
+            this.out.writeObject(this.key);
+            this.out.flush();
+            System.out.println(this.key);
+            System.out.println("flushed");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }*/
     }
 
 
@@ -99,14 +136,14 @@ public class BrokerNode extends Thread implements Broker, Serializable {
     }
 
     @Override
-    public Publisher acceptConnection(Publisher publisher) {
+    public PublisherNode acceptConnection(PublisherNode publisher) {
         registeredPublishers.add(publisher);
         System.out.println("Connection accepted");
         return publisher;
     }
 
     @Override
-    public Consumer acceptConnection(Consumer consumer) {
+    public ConsumerNode acceptConnection(ConsumerNode consumer) {
         registeredUsers.add(consumer);
         System.out.println("Connection accepted");
         return consumer;
@@ -128,7 +165,11 @@ public class BrokerNode extends Thread implements Broker, Serializable {
 
     @Override
     public void pull(ArtistName artist) {
-
+        try {
+            in = new ObjectInputStream(this.publisher_requestSocket.getInputStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public ServerSocket getPublisherServerSocket() {
@@ -155,184 +196,61 @@ public class BrokerNode extends Thread implements Broker, Serializable {
         return this.port;
     }
 
-    public BigInteger getKey() { return this.key;}
-
     public static void main(String args[]) {
 
-        BrokerNode b = new BrokerNode("127.0.0.1", 4321);
+        BrokerNode b = new BrokerNode("localhost", 7654);
+        BrokerNode b2 = new BrokerNode("localhost", 4321);
+        BrokerNode b3 = new BrokerNode("localhost", 5247);
         b.init();
+        b2.init();
+        b3.init();
+        Node.brokers.add(b);
+        Node.brokers.add(b2);
+        Node.brokers.add(b3);
 
-        System.out.println(brokers);
+        Node.brokers.parallelStream().forEach((broker) -> {
+            broker.run();
 
-        //publisher 1
-       // Thread t1 = new Thread() {
-         //   public void run() {
+            synchronized (broker) {
+
                 try {
                     // socket object to receive incoming publisher
-                    Socket publisher = b.getPublisherServerSocket().accept();
+                    Socket publisher = broker.getPublisherServerSocket().accept();
 
                     System.out.println("A new publisher is connected: " + publisher);
+                    ActionsForClients action = new ActionsForClients(publisher, registeredPublishers);
+                    action.start();
+                    registeredPublishers.add(action.getPublisher());
+                    System.out.println(registeredPublishers.isEmpty());
 
-                    try {
-                        ObjectInputStream in = new ObjectInputStream(publisher.getInputStream());
-
-                        //receive map, ip and port from publisher
-                        String publisherip = in.readUTF();
-                        System.out.println(publisherip);
-                        int publisherport = in.readInt();
-                        System.out.println(publisherport);
-                        char start = in.readChar();
-                        char end = in.readChar();
-                        System.out.println(start + " & " + end);
-
-                        Object publishermap = in.readObject();
-                        maps.add((HashMap) publishermap);
-                        System.out.println(maps);
-
-                        PublisherNode pn = new PublisherNode(start, end, publisherip, publisherport);
-
-                        b.acceptConnection(pn);
-                        System.out.println(registeredPublishers.size());
-
-                        ObjectOutputStream out = new ObjectOutputStream(publisher.getOutputStream());
-
-                        out.writeObject(b.getKey());
-                        out.flush();
-
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (ClassNotFoundException e) {
-                        e.printStackTrace();
-                    }
 
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
-        //    }
-       // };
 
-        //publisher 2
-        /*Thread t2 = new Thread() {
+                while(true){
 
-            public void run() {
-                try {
-                    // socket object to receive incoming publisher
-                    Socket publisher = b.getPublisherServerSocket().accept();
-
-                    System.out.println("A new publisher is connected: " + publisher);
+                    //running infinite loop for getting client request
 
                     try {
-                        ObjectInputStream in = new ObjectInputStream(publisher.getInputStream());
+                        // socket object to receive incoming consumer requests
+                        Socket consumer = broker.getConsumerServerSocket().accept();
 
-                        //receive map, ip and port from publisher
-                        String publisherip = in.readUTF();
-                        System.out.println(publisherip);
-                        int publisherport = in.readInt();
-                        System.out.println(publisherport);
-                        char start = in.readChar();
-                        char end = in.readChar();
-                        System.out.println(start + " & " + end);
-
-                        Object publishermap = in.readObject();
-                        maps.add((HashMap) publishermap);
-                        System.out.println(maps);
-
-                        PublisherNode pn = new PublisherNode(start, end, publisherip, publisherport);
-
-                        b.acceptConnection(pn);
-                        System.out.println(registeredPublishers.size());
-
-                        ObjectOutputStream out = new ObjectOutputStream(publisher.getOutputStream());
-
-                        out.writeObject(b.getKey());
-                        out.flush();
+                        ActionsForClients2 action2 = new ActionsForClients2(consumer,registeredUsers);
+                        action2.start();
+                        System.out.println("A new consumer is connected: " + consumer);
+                        registeredUsers.add(action2.getConsumer());
+                        System.out.println("Consumer list is empty?: "+registeredPublishers.isEmpty());
+                        System.out.println("yes "+registeredPublishers.get(1));
 
                     } catch (IOException e) {
                         e.printStackTrace();
-                    } catch (ClassNotFoundException e) {
-                        e.printStackTrace();
                     }
-
-                } catch(IOException ex) {
-                    ex.printStackTrace();
                 }
             }
-        };
 
-        t1.start();
-        t2.start();
+         });
 
-        try {
-            t1.join();
-            t2.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }*/
 
-        //running infinite loop for getting client request
-        while (true) {
-
-            try {
-                // socket object to receive incoming consumer requests
-                Socket consumer = b.getConsumerServerSocket().accept();
-
-                System.out.println("A new consumer is connected: " + consumer);
-
-                try {
-                    ObjectInputStream cin = new ObjectInputStream(consumer.getInputStream());
-                    ObjectOutputStream cout = new ObjectOutputStream(consumer.getOutputStream());
-
-                    //receive ip and port from consumer
-                    String consumerip = cin.readUTF();
-                    System.out.println("con " + consumerip);
-                    int consumerport = cin.readInt();
-                    System.out.println(consumerport);
-
-                    ConsumerNode cn = new ConsumerNode(consumerip, consumerport);
-
-                    registeredUsers.add(cn);
-                    System.out.println(registeredUsers.isEmpty());
-
-                    cout.writeUTF(b.getBrokerIP());
-                    cout.writeInt(b.getBrokerPort());
-                    cout.flush();
-
-                    System.out.println("Assigning new thread for this client");
-
-                    //receive artist's name from consumer
-                    Object artistName = (ArtistName) cin.readObject();
-                    System.out.println(artistName.toString()+" received from consumer");
-
-                    ObjectOutputStream out = new ObjectOutputStream(b.getPublisherSocket().getOutputStream());
-
-                    //send artistName to publisher
-                    out.writeObject(artistName);
-
-                    //create a new thread object
-                    /*Thread consumerthread = new Thread() {
-                        public void run() {
-                            System.out.println("consumer thread not done yet");
-
-                            //pairnei to artistname kai vlepei an to eksipiretei
-
-                            //an oxi, vriskei poios einai o katallilos broker(lista brokers (?)) kai stelnei s auton to artistname kai ta stoixeia tou consumer
-
-                            //an nai, zitaei apo ton sosto publisher(apo to maps) ta tragoudia tou artist
-
-                            //an den uparxei o artist, gurizei ston comsumer minima oti den uparxei
-
-                        }
-                    };
-
-                    consumerthread.start();*/
-
-                } catch (IOException | ClassNotFoundException e) {
-                    e.printStackTrace();
-                }
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 }
