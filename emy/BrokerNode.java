@@ -305,7 +305,7 @@ public class BrokerNode extends Thread implements Broker,Serializable {
             action.start();
             registeredPublishers.add(action.getPublisher());
             b.setMapReceived(action.getPublishermap());*/
-                System.out.println("Is map empty?" + (b.getMapReceived()).isEmpty());
+                System.out.println("Is map empty?" + (broker.getMapReceived()).isEmpty());
 
                 //System.out.println(registeredPublishers.isEmpty());
 
@@ -322,8 +322,8 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                         }
                     }
                 }*/
-                    if (b.getArtistReceived() != null) {
-                        System.out.println(b.getArtistReceived());
+                    if (broker.getArtistReceived() != null) {
+                        System.out.println(broker.getArtistReceived());
                         //      b.pull(b.getArtistReceived());
                     }
 
@@ -331,10 +331,10 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                     //running infinite loop for getting client request
                     try {
                         // socket object to receive incoming consumer requests
-                        Socket consumer = b.getConsumerServerSocket().accept();
+                        Socket consumer = broker.getConsumerServerSocket().accept();
 
-                        b.setOut(new ObjectOutputStream(consumer.getOutputStream()));
-                        b.setIn(new ObjectInputStream(consumer.getInputStream()));
+                        broker.setOut(new ObjectOutputStream(consumer.getOutputStream()));
+                        broker.setIn(new ObjectInputStream(consumer.getInputStream()));
 
 
                     /*ActionsForConsumers action2 = new ActionsForConsumers(consumer, registeredUsers,(Map<String,ArrayList<String>>)b.getMapReceived());
@@ -345,9 +345,9 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                     System.out.println("Consumer list is empty?: " + registeredPublishers.isEmpty());
                     System.out.println("Artist received from action is"+b.getArtistReceived());
                     */
-                        String consumerip = b.in.readUTF();
+                        String consumerip = broker.in.readUTF();
                         System.out.println("con " + consumerip);
-                        int consumerport = b.in.readInt();
+                        int consumerport = broker.in.readInt();
                         System.out.println(consumerport);
 
                         ConsumerNode cn = new ConsumerNode(consumerip, consumerport);
@@ -356,24 +356,24 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                         System.out.println(registeredUsers.isEmpty());
                         ArtistName artistName = null;
                         try {
-                            artistName = (ArtistName) b.in.readObject();
+                            artistName = (ArtistName) broker.in.readObject();
                             System.out.println(artistName.toString() + " received from consumer");
-                            b.setArtistReceived(artistName);
+                            broker.setArtistReceived(artistName);
                             //artistreceived.setArtistName(artistName.toString());
                         } catch (ClassNotFoundException e) {
                             e.printStackTrace();
                         }
 
-                        if (b.getMapReceived().containsKey(b.getArtistReceived().getArtistName())) {
+                        if (broker.getMapReceived().containsKey(broker.getArtistReceived().getArtistName())) {
                             System.out.println("it is exist");
                         }
-                        Map<String, ArrayList<String>> mapreceived = b.getMapReceived();
+                        Map<String, ArrayList<String>> mapreceived = broker.getMapReceived();
                         for (String name : mapreceived.keySet()) {
                             //System.out.println("key is:" + name);
-                            if (name.toString().equals(b.getArtistReceived().getArtistName())) {
+                            if (name.toString().equals(broker.getArtistReceived().getArtistName())) {
                                 System.out.println("Yes it is equal");
-                                b.out.writeObject(b.getMapReceived().get(name)); //πρεπει να στελνει μονο το arraylist αν το κλειδι ειναι αυτο που εστειλε ο consumer
-                                b.out.flush();
+                                broker.out.writeObject(b.getMapReceived().get(name)); //πρεπει να στελνει μονο το arraylist αν το κλειδι ειναι αυτο που εστειλε ο consumer
+                                broker.out.flush();
                             }
                         }
 
