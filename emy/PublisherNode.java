@@ -33,8 +33,8 @@ public class PublisherNode implements Publisher,Serializable{
     Object brokerkey;
 
     int BrokerPort1 = 7654;
-    int BrokerPort2 = 7655;
-    int BrokerPort3 = 7656;
+    int BrokerPort2 = 8765;
+    int BrokerPort3 = 9876;
 
     Map<String,ArrayList<String>> artistMap = new HashMap<String, ArrayList<String>>();
     ArrayList<BrokerNode> brokerKeys = new ArrayList<>();
@@ -164,12 +164,12 @@ public class PublisherNode implements Publisher,Serializable{
         }
 
     }
-    public void updateHashmap(){
-        BrokerNode b = new BrokerNode("localhost",7654); //na to ksanadw
+    public void updateList(){
+        BrokerNode b = new BrokerNode("localhost",BrokerPort1); //na to ksanadw
         brokerKeys.add(b);
-        BrokerNode b2 = new BrokerNode("localhost",7655);
+        BrokerNode b2 = new BrokerNode("localhost",BrokerPort2);
         brokerKeys.add(b2);
-        BrokerNode b3 = new BrokerNode("localhost",7656);
+        BrokerNode b3 = new BrokerNode("localhost",BrokerPort3);
         brokerKeys.add(b3);
     }
 
@@ -199,17 +199,23 @@ public class PublisherNode implements Publisher,Serializable{
         BigInteger big1 = new BigInteger(1,namehash); // 1 means positive BigInteger for hash(nameartist)
 
         BigInteger max = new BigInteger("-1");
+        updateList();
 
         for (int i=0; i< brokerKeys.size(); i++){
-            if (brokerKeys.get(i).calculateKeys().compareTo(max) > 1){
+            //brokerKeys.get(i).calculateKeys();
+            if (brokerKeys.get(i).calculateKeys().compareTo(max) == 1){
+                //System.out.println(brokerKeys.get(i).calculateKeys());
+
                 max = brokerKeys.get(i).calculateKeys();
 
             }
         }
 
-        BigInteger hash2 = new BigInteger("max"); ///???????
+        System.out.println(max);
 
-        BigInteger hashNumber = big1.mod(hash2);
+        //BigInteger hash2 = new BigInteger("max"); ///???????
+
+        BigInteger hashNumber = big1.mod(max);
 
         if((hashNumber.compareTo(brokerKeys.get(0).calculateKeys()) == 1) && (hashNumber.compareTo(brokerKeys.get(0).calculateKeys()) == -1)){
             return brokerKeys.get(1);
@@ -428,31 +434,39 @@ public class PublisherNode implements Publisher,Serializable{
 
     public static void main(String args[]){
         PublisherNode p = new PublisherNode('A', 'M', "localhost", 7654);
-        //PublisherNode p2 = new PublisherNode('M','Z',"localhost",7655);
+        PublisherNode p2 = new PublisherNode('M','Z',"localhost",8765);
         p.init();
+        p2.init();
 
+        ArrayList<PublisherNode> publishers = new ArrayList<>();
+        publishers.add(p);
+        publishers.add(p2);
 
-        try {
-            Socket broker = p.getSocket();
+        publishers.parallelStream().forEach((publisher) -> {
+            
 
-            ObjectOutputStream out = new ObjectOutputStream(broker.getOutputStream());
-            ObjectInputStream in = new ObjectInputStream(broker.getInputStream());
+            try {
+                Socket broker = p.getSocket();
 
-            //send ip, port, start and end to broker
-            out.writeUTF(p.getPublisherIP());
-            out.writeInt(p.getPublisherPort());
-            out.writeChar(p.getStart());
-            out.writeChar(p.getEnd());
+                ObjectOutputStream out = new ObjectOutputStream(broker.getOutputStream());
+                ObjectInputStream in = new ObjectInputStream(broker.getInputStream());
 
-            //send map to broker
-            out.writeObject(p.getArtistMap());
-            out.flush();
-            //p.push();
+                //send ip, port, start and end to broker
+                out.writeUTF(p.getPublisherIP());
+                out.writeInt(p.getPublisherPort());
+                out.writeChar(p.getStart());
+                out.writeChar(p.getEnd());
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+                //send map to broker
+                out.writeObject(p.getArtistMap());
+                out.flush();
+                //p.push();
 
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
         //p2.init();
     }
+
 }

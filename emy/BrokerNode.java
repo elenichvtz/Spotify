@@ -78,27 +78,27 @@ public class BrokerNode extends Thread implements Broker,Serializable {
     public BigInteger calculateKeys() {
 
         String s = ip + port;
-        System.out.println("S is..: "+s);
-        String k = ip + "7655";
-        System.out.println("K is..: "+k);
-        String n = ip + "7656";
+        //System.out.println("S is..: "+s);
+        //String k = ip + "8765";
+        //System.out.println("K is..: "+k);
+        //String n = ip + "9876";
 
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
-            MessageDigest md5 = MessageDigest.getInstance("MD5");
-            MessageDigest md2 = MessageDigest.getInstance("MD5");
+           // MessageDigest md5 = MessageDigest.getInstance("MD5");
+            //MessageDigest md2 = MessageDigest.getInstance("MD5");
             byte[] messageDigest = md.digest(s.getBytes());
 
-            byte[] messageDigests = md.digest(k.getBytes());
-            byte[] messageDigestss = md.digest(n.getBytes());
+            //byte[] messageDigests = md.digest(k.getBytes());
+            //byte[] messageDigestss = md.digest(n.getBytes());
 
             BigInteger no = new BigInteger(1, messageDigest);
-            BigInteger no2 = new BigInteger(1, messageDigests);
-            BigInteger no3 = new BigInteger(1, messageDigestss);
+            //BigInteger no2 = new BigInteger(1, messageDigests);
+            //BigInteger no3 = new BigInteger(1, messageDigestss);
 
-            System.out.println("No  is :"+no);
-            System.out.println("No2 is :"+no2);
-            System.out.println("No3 is :"+no3);
+            //System.out.println("No  is :"+no);
+            //System.out.println("No2 is :"+no2);
+            //System.out.println("No3 is :"+no3);
 
 
 
@@ -159,13 +159,15 @@ public class BrokerNode extends Thread implements Broker,Serializable {
     }
 
     @Override
-    public void pull(ArtistName artist) {
+    public void pull(ArtistName artist, String song) {
 
         if(mapreceived.containsKey(artistReceived.getArtistName())){
             System.out.println("it is exist");
 
         }
-        //if(mapreceived2)
+        /*if(mapreceived2){
+            do for mapreceived from second publisher
+        */
 
         //
         //υποθέτω με την κλήση του action απο το Actionforclients εχει αρχικοποιηθεί ήδη το in και out
@@ -237,54 +239,58 @@ public class BrokerNode extends Thread implements Broker,Serializable {
     public static void main(String args[]) throws IOException {
 
         BrokerNode b = new BrokerNode("localhost", 7654);
-        //Node b2 = new BrokerNode("localhost", 7655);
-        //BrokerNode b3 = new BrokerNode("localhost", 7656);
+        BrokerNode b2 = new BrokerNode("localhost", 8765);
+        BrokerNode b3 = new BrokerNode("localhost", 9876);
         b.init();
-        //b2.init();
-        //b3.init();
+        b2.init();
+        b3.init();
         b.setBrokers(b);
         System.out.println("Key is: "+b.calculateKeys());
         //List<Broker> p = b.getBrokers();
         //p.add(b);
         System.out.println(brokers.isEmpty());
-        //brokers.add(b2);
-        //brokers.add(b3);
+        brokers.add(b2);
+        brokers.add(b3);
         // socket object to receive incoming publisher
-        Socket publisher = b.getPublisherServerSocket().accept();
+        brokers.parallelStream().forEach((broker) -> {
+            broker.run();
 
-        synchronized (b) {
+            //Socket publisher = b.getPublisherServerSocket().accept();
 
-            System.out.println("A new publisher is connected: " + publisher);
+            synchronized (b) {
 
-            try {
-                //ObjectOutputStream out = new ObjectOutputStream(publisher.getOutputStream());
-                //ObjectInputStream in = new ObjectInputStream(publisher.getInputStream());
-                b.setOut(new ObjectOutputStream(publisher.getOutputStream()));
-                b.setIn(new ObjectInputStream(publisher.getInputStream()));
+                //System.out.println("A new publisher is connected: " + publisher);
 
-                //receive map, ip and port from publisher
-                String publisherip = b.in.readUTF();
-                System.out.println(publisherip);
-                int publisherport = b.in.readInt();
-                System.out.println(publisherport);
-                char start = b.in.readChar();
-                char end = b.in.readChar();
-                System.out.println(start + " & " + end);
+                try {
+                    Socket publisher = b.getPublisherServerSocket().accept();
+                    //ObjectOutputStream out = new ObjectOutputStream(publisher.getOutputStream());
+                    //ObjectInputStream in = new ObjectInputStream(publisher.getInputStream());
+                    b.setOut(new ObjectOutputStream(publisher.getOutputStream()));
+                    b.setIn(new ObjectInputStream(publisher.getInputStream()));
 
-                b.setMapReceived((Map<String, ArrayList<String>>)b.in.readObject());
-                System.out.println(b.getMapReceived().toString());
+                    //receive map, ip and port from publisher
+                    String publisherip = b.in.readUTF();
+                    System.out.println(publisherip);
+                    int publisherport = b.in.readInt();
+                    System.out.println(publisherport);
+                    char start = b.in.readChar();
+                    char end = b.in.readChar();
+                    System.out.println(start + " & " + end);
 
-                PublisherNode pn = new PublisherNode(start, end, publisherip, publisherport);
+                    b.setMapReceived((Map<String, ArrayList<String>>) b.in.readObject());
+                    System.out.println(b.getMapReceived().toString());
 
-                //out.writeObject(pn);
-                registeredPublishers.add(pn);
+                    PublisherNode pn = new PublisherNode(start, end, publisherip, publisherport);
+
+                    //out.writeObject(pn);
+                    registeredPublishers.add(pn);
 
 
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }/*finally {
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                }/*finally {
                 try {
                     in.close();
                     out.close();
@@ -294,18 +300,16 @@ public class BrokerNode extends Thread implements Broker,Serializable {
             }*/
 
 
-
-
-            //ArtistName k = b.getArtistReceived();
+                //ArtistName k = b.getArtistReceived();
             /*ActionsForPublishers action = new ActionsForPublishers(publisher, registeredPublishers);
             action.start();
             registeredPublishers.add(action.getPublisher());
             b.setMapReceived(action.getPublishermap());*/
-            System.out.println("Is map empty?"+(b.getMapReceived()).isEmpty());
+                System.out.println("Is map empty?" + (b.getMapReceived()).isEmpty());
 
-            //System.out.println(registeredPublishers.isEmpty());
+                //System.out.println(registeredPublishers.isEmpty());
 
-            while (true) {
+                while (true) {
 
                 /*if(b.getArtistReceived()!= null){
                     MusicFile f = new MusicFile(b.getArtistReceived().getArtistName(),null,null,null,null,0,0);
@@ -318,19 +322,19 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                         }
                     }
                 }*/
-                if (b.getArtistReceived()!= null){
-                    System.out.println(b.getArtistReceived());
-                    b.pull(b.getArtistReceived());
-                }
+                    if (b.getArtistReceived() != null) {
+                        System.out.println(b.getArtistReceived());
+                        //      b.pull(b.getArtistReceived());
+                    }
 
 
-                //running infinite loop for getting client request
-                try {
-                    // socket object to receive incoming consumer requests
-                    Socket consumer = b.getConsumerServerSocket().accept();
+                    //running infinite loop for getting client request
+                    try {
+                        // socket object to receive incoming consumer requests
+                        Socket consumer = b.getConsumerServerSocket().accept();
 
-                    b.setOut(new ObjectOutputStream(consumer.getOutputStream()));
-                    b.setIn(new ObjectInputStream(consumer.getInputStream()));
+                        b.setOut(new ObjectOutputStream(consumer.getOutputStream()));
+                        b.setIn(new ObjectInputStream(consumer.getInputStream()));
 
 
                     /*ActionsForConsumers action2 = new ActionsForConsumers(consumer, registeredUsers,(Map<String,ArrayList<String>>)b.getMapReceived());
@@ -341,59 +345,53 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                     System.out.println("Consumer list is empty?: " + registeredPublishers.isEmpty());
                     System.out.println("Artist received from action is"+b.getArtistReceived());
                     */
-                    String consumerip = b.in.readUTF();
-                    System.out.println("con " + consumerip);
-                    int consumerport = b.in.readInt();
-                    System.out.println(consumerport);
+                        String consumerip = b.in.readUTF();
+                        System.out.println("con " + consumerip);
+                        int consumerport = b.in.readInt();
+                        System.out.println(consumerport);
 
-                    ConsumerNode cn = new ConsumerNode(consumerip, consumerport);
+                        ConsumerNode cn = new ConsumerNode(consumerip, consumerport);
 
-                    //registeredUsers.add(cn);
-                    System.out.println(registeredUsers.isEmpty());
-                    ArtistName artistName = null;
-                    try {
-                        artistName = (ArtistName) b.in.readObject();
-                        System.out.println(artistName.toString()+" received from consumer");
-                        b.setArtistReceived(artistName);
-                        //artistreceived.setArtistName(artistName.toString());
-                    } catch (ClassNotFoundException e) {
+                        //registeredUsers.add(cn);
+                        System.out.println(registeredUsers.isEmpty());
+                        ArtistName artistName = null;
+                        try {
+                            artistName = (ArtistName) b.in.readObject();
+                            System.out.println(artistName.toString() + " received from consumer");
+                            b.setArtistReceived(artistName);
+                            //artistreceived.setArtistName(artistName.toString());
+                        } catch (ClassNotFoundException e) {
+                            e.printStackTrace();
+                        }
+
+                        if (b.getMapReceived().containsKey(b.getArtistReceived().getArtistName())) {
+                            System.out.println("it is exist");
+                        }
+                        Map<String, ArrayList<String>> mapreceived = b.getMapReceived();
+                        for (String name : mapreceived.keySet()) {
+                            //System.out.println("key is:" + name);
+                            if (name.toString().equals(b.getArtistReceived().getArtistName())) {
+                                System.out.println("Yes it is equal");
+                                b.out.writeObject(b.getMapReceived().get(name)); //πρεπει να στελνει μονο το arraylist αν το κλειδι ειναι αυτο που εστειλε ο consumer
+                                b.out.flush();
+                            }
+                        }
+
+                        /*if (Serializable.class.isInstance(b)) {
+                            System.out.println("it is serializable");
+                        } else {
+                            System.out.println("it is not serializable");
+                        }*/
+
+                        System.out.println("Assigning new thread for this client");
+
+
+                    } catch (IOException e) {
                         e.printStackTrace();
                     }
-
-                    if(b.getMapReceived().containsKey(b.getArtistReceived().getArtistName())){
-                        System.out.println("it is exist");
-                    }
-                    Map<String, ArrayList<String>> mapreceived = b.getMapReceived();
-                    for (String name: mapreceived.keySet()){
-                        System.out.println("key is:"+name);
-                        if (name.toString().equals(b.getArtistReceived().getArtistName())){
-                            System.out.println("Yes it is equal");
-                            b.out.writeObject(b.getMapReceived().get(name)); //πρεπει να στελνει μονο το arraylist αν το κλειδι ειναι αυτο που εστειλε ο consumer
-                            b.out.flush();
-                        }
-                    }
-
-                    if(Serializable.class.isInstance(b)){
-                        System.out.println("it is serializable");
-                    }else{
-                        System.out.println("it is not serializable");
-                    }
-
-
-                    b.out.writeObject(b);
-                    //b.out.flush();
-
-
-                    System.out.println("Assigning new thread for this client");
-
-
-
-
-                } catch (IOException e) {
-                    e.printStackTrace();
                 }
             }
-        }
+        });
 
     }
 }

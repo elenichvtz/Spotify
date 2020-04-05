@@ -39,12 +39,21 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
 
     @Override
     public void connect() {
-        while(!requestSocket.isConnected()) {
+        //while(!requestSocket.isConnected()) {
             try {
                 requestSocket = new Socket(this.ip, this.port);
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        //}
+    }
+
+    public void connect(int port){
+        try {
+            requestSocket = new Socket(this.ip, port+1);
+            System.out.println("Connected to a new Broker with port"+port);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -60,12 +69,15 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
                     PublisherNode p = new PublisherNode('A', 'M', "localhost", 7654);
                     //broker.getPublisherList().get(0).hashTopic(artist); //returns the Broker responsible for that artist
                     System.out.println("IS EMPTY?"+broker.getPublisherList().isEmpty());
-                    if(broker.equals(p.hashTopic(artist))){ //if current broker equals the one returned from hashtopic then
+                    System.out.println(broker.equals(p.hashTopic(artist)));
+
+                    if(broker.getBrokerPort() ==((p.hashTopic(artist)).getBrokerPort())){ //if current broker equals the one returned from hashtopic then
                         Socket brker = getSocket();
                         //ObjectOutputStream out = null;
 
                         try {
                             out = new ObjectOutputStream(brker.getOutputStream());
+                            in = new ObjectInputStream(brker.getInputStream());
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -92,7 +104,23 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
 
                         //broker.pull(artist);
                     }else {
-                        int newport = broker.getPublisherList().get(0).hashTopic(artist).getBrokerPort();
+
+
+                        int newport = p.hashTopic(artist).getBrokerPort();
+                        System.out.println("Port for right broker is: "+p.hashTopic(artist).getBrokerPort());
+                        System.out.println("Disconnecting...");
+                        disconnect(broker,artist);
+                        connect(newport);
+
+                        out.writeUTF(getConsumerIP());
+                        out.writeInt(getConsumerPort());
+                        out.writeObject(artist); //successfully sends artistName to BrokerNode
+                        out.flush();
+
+                        ArrayList<String> m = (ArrayList<String>)in.readObject();
+                        System.out.println("Map received from broker to consumer");
+                        System.out.println(m.toString());
+
                         //disconnect();....
                     }
                         //disconnect from random broker
