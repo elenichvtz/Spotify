@@ -3,7 +3,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ActionsForPublishers extends Thread {
 
@@ -11,6 +13,7 @@ public class ActionsForPublishers extends Thread {
     ObjectOutputStream out;
     List<PublisherNode> registeredPublishers = new ArrayList<>();
     PublisherNode pn;
+    Map<String,ArrayList<String>> publishermap = new HashMap<String, ArrayList<String>>();
 
 
     public ActionsForPublishers(Socket publisher, List<PublisherNode> registeredPublishers) {
@@ -27,6 +30,10 @@ public class ActionsForPublishers extends Thread {
         return pn;
     }
 
+    public Map getPublishermap() {
+        return publishermap;
+    }
+
     public void run() {
         try {
             //ObjectInputStream in = new ObjectInputStream(publisher.getInputStream());
@@ -40,7 +47,7 @@ public class ActionsForPublishers extends Thread {
             char end = in.readChar();
             System.out.println(start + " & " + end);
 
-            Object publishermap = in.readObject();
+            publishermap = (Map<String, ArrayList<String>>)in.readObject();
             System.out.println(publishermap.toString());
 
             pn = new PublisherNode(start, end, publisherip, publisherport);

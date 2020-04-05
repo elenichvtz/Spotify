@@ -9,5 +9,5 @@ public interface Publisher extends Node {
 
     public abstract void push(ArtistName artist,Value val);
 
-    public abstract void notifyFailure(Broker broker);
+    public abstract void notifyFailure(BrokerNode broker);
 }
