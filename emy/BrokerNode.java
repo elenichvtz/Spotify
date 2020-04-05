@@ -257,28 +257,28 @@ public class BrokerNode extends Thread implements Broker,Serializable {
 
             //Socket publisher = b.getPublisherServerSocket().accept();
 
-            synchronized (b) {
+            synchronized (broker) {
 
                 //System.out.println("A new publisher is connected: " + publisher);
 
                 try {
-                    Socket publisher = b.getPublisherServerSocket().accept();
+                    Socket publisher = broker.getPublisherServerSocket().accept();
                     //ObjectOutputStream out = new ObjectOutputStream(publisher.getOutputStream());
                     //ObjectInputStream in = new ObjectInputStream(publisher.getInputStream());
-                    b.setOut(new ObjectOutputStream(publisher.getOutputStream()));
-                    b.setIn(new ObjectInputStream(publisher.getInputStream()));
+                    broker.setOut(new ObjectOutputStream(publisher.getOutputStream()));
+                    broker.setIn(new ObjectInputStream(publisher.getInputStream()));
 
                     //receive map, ip and port from publisher
-                    String publisherip = b.in.readUTF();
+                    String publisherip = broker.in.readUTF();
                     System.out.println(publisherip);
-                    int publisherport = b.in.readInt();
+                    int publisherport = broker.in.readInt();
                     System.out.println(publisherport);
-                    char start = b.in.readChar();
-                    char end = b.in.readChar();
+                    char start = broker.in.readChar();
+                    char end = broker.in.readChar();
                     System.out.println(start + " & " + end);
 
-                    b.setMapReceived((Map<String, ArrayList<String>>) b.in.readObject());
-                    System.out.println(b.getMapReceived().toString());
+                    broker.setMapReceived((Map<String, ArrayList<String>>) broker.in.readObject());
+                    System.out.println(broker.getMapReceived().toString());
 
                     PublisherNode pn = new PublisherNode(start, end, publisherip, publisherport);
 

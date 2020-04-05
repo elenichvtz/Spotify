@@ -25,7 +25,7 @@ public class PublisherNode implements Publisher,Serializable{
     ServerSocket providerSocket = null;
     ObjectOutputStream out = null;
     ObjectInputStream in = null;
-    String path = "/Users/emiliadan/Downloads/distributed_project/dataset1";
+    String path = "C:\\Users\\eleni\\Downloads\\DS\\dataset1";
     char start;
     char end;
     String ip;
@@ -443,22 +443,21 @@ public class PublisherNode implements Publisher,Serializable{
         publishers.add(p2);
 
         publishers.parallelStream().forEach((publisher) -> {
-            
 
             try {
-                Socket broker = p.getSocket();
+                Socket broker = publisher.getSocket();
 
                 ObjectOutputStream out = new ObjectOutputStream(broker.getOutputStream());
                 ObjectInputStream in = new ObjectInputStream(broker.getInputStream());
 
                 //send ip, port, start and end to broker
-                out.writeUTF(p.getPublisherIP());
-                out.writeInt(p.getPublisherPort());
-                out.writeChar(p.getStart());
-                out.writeChar(p.getEnd());
+                out.writeUTF(publisher.getPublisherIP());
+                out.writeInt(publisher.getPublisherPort());
+                out.writeChar(publisher.getStart());
+                out.writeChar(publisher.getEnd());
 
                 //send map to broker
-                out.writeObject(p.getArtistMap());
+                out.writeObject(publisher.getArtistMap());
                 out.flush();
                 //p.push();
 
