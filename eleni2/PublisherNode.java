@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.io.Serializable;
+
 
 import static java.lang.Math.ceil;
 
@@ -25,7 +25,7 @@ public class PublisherNode implements Publisher, Serializable {
     ServerSocket providerSocket = null;
     ObjectOutputStream out = null;
     ObjectInputStream in = null;
-    String path = "C:\\Users\\eleni\\Downloads\\DS\\dataset1";
+    String path = "C:\\\\Users\\\\eleni\\\\Downloads\\\\DS\\\\dataset1";
     char start;
     char end;
     String ip;
@@ -143,19 +143,8 @@ public class PublisherNode implements Publisher, Serializable {
         //initialize sockets
         try {
             this.requestSocket = new Socket(this.ip, this.port);
-
-            this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
-
-            //send ip, port, start and end to broker
-            this.out.writeUTF(getPublisherIP());
-            this.out.writeInt(getPublisherPort());
-            this.out.writeChar(getStart());
-            this.out.writeChar(getEnd());
-
-            //send map to broker
-            this.out.writeObject(getArtistMap());
-            this.out.flush();
-
+            //this.in = new ObjectInputStream(this.requestSocket.getInputStream());
+            //this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -163,13 +152,9 @@ public class PublisherNode implements Publisher, Serializable {
         System.out.println("wait");
 
         try {
-            this.in = new ObjectInputStream(this.requestSocket.getInputStream());
-
-            //receive from broker
-            this.brokerkey = this.in.readObject();
-            System.out.println(this.brokerkey);
-
-        } catch (IOException | ClassNotFoundException e) {
+            this.providerSocket = new ServerSocket(this.port+2, 10);
+            //this.in = new ObjectInputStream(this.requestSocket.getInputStream());
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
@@ -181,24 +166,24 @@ public class PublisherNode implements Publisher, Serializable {
     }
 
     @Override
-    public Broker hashTopic(ArtistName artist) throws NoSuchAlgorithmException{
+    public BrokerNode hashTopic(ArtistName artist) throws NoSuchAlgorithmException{
         //Hashes the ArtistName
 
         MessageDigest sha = MessageDigest.getInstance("SHA-256");
         String name = artist.getArtistName();
 
         byte[] namehash = sha.digest(name.getBytes());
-        BigInteger big1 = new BigInteger(1,namehash); // 1 means positive
+        BigInteger big1 = new BigInteger(1,namehash); // 1 means positive BigInteger for hash(nameartist)
 
-        BigInteger max = getBrokers().get(0).calculateKeys();
+        BigInteger min = getBrokers().get(0).calculateKeys();
 
-        for(int i=1; i<=2; i++){                               //vriskoume to megalutero kleidi ton brokers
-            if ( getBrokers().get(i).calculateKeys().compareTo(max) > 1){
-                max = getBrokers().get(i).calculateKeys();
+        for(int i=1; i<=2; i++){                               //vriskoume to mikrotero kleidi ton brokers
+            if ( getBrokers().get(i).calculateKeys().compareTo(min) < 0 ){ //ΕΔΩ ΤΗΝ ΣΥΓΚΡιση την αλλαζω???  εβαλα < 0  βασικα πριν ηταν > 1
+                min = getBrokers().get(i).calculateKeys();
             }
         }
 
-        BigInteger hash2 = new BigInteger("max");
+        BigInteger hash2 = new BigInteger("max");// ΘΕΛΕΙ ΤΟ ΜΙΝ ΚΛΕΙΔΙ ΤΟΥ BROKER το απαντησε στο eclass
 
         BigInteger hashNumber = big1.mod(hash2);
 
@@ -275,6 +260,44 @@ public class PublisherNode implements Publisher, Serializable {
                                         e.printStackTrace();
                                     }
                                 }
+                                break; //so it doesn't need to check next if
+                            }
+
+                            if (mp3file.hasId3v2Tag()){
+                                ID3v2 id3v2Tag = mp3file.getId3v2Tag();
+                                if(val.getMusicfile().getArtistName().equals(id3v2Tag.getArtist()) && (val.getMusicfile().getTrackName().equals(id3v2Tag.getTrack()))) {
+                                    ByteArrayOutputStream byteout = new ByteArrayOutputStream();
+
+                                    File file2 = new File(foldercontents.concat("//").concat(songs.getFileName().toString()));
+                                    FileInputStream fis = new FileInputStream(file2);
+
+                                    byte[] chunk = new byte[chunk_size];
+                                    int numberOfChunks = (int)ceil(file2.length()/chunk_size);
+                                    try {
+                                        for (int readNum; (readNum = fis.read(chunk)) != -1; ) {
+                                            byteout.write(chunk, 0, readNum);
+                                            MusicFile musicfile = new MusicFile(id3v2Tag.getTitle(), id3v2Tag.getArtist(), id3v2Tag.getAlbum(),
+                                                    id3v2Tag.getGenreDescription(),chunk, counter,numberOfChunks);
+
+                                            counter++;
+                                            val.setMusicfile(musicfile);
+
+                                            //send chunk through socket
+                                            while(true) {
+                                                try {
+                                                    this.requestSocket = this.providerSocket.accept();
+                                                    //out.writeInt(numberOfChunks); // sends also the number of chunks??? not sure if neeeded
+                                                    this.out.writeObject(val);
+                                                    this.out.flush();
+                                                } catch (IOException e) {
+                                                    e.printStackTrace();
+                                                }
+                                            }
+                                        }
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
                             }
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -287,9 +310,7 @@ public class PublisherNode implements Publisher, Serializable {
         }
     }
 
-    public Object getBrokerKey () {
-        return this.brokerkey;
-    }
+    //public Object returnBrokerKey () { return this.brokerkey; }
 
     @Override
     public void connect() {
@@ -335,31 +356,50 @@ public class PublisherNode implements Publisher, Serializable {
     }
 
     @Override
-    public void notifyFailure(Broker broker){
+    public void notifyFailure(BrokerNode broker){
         //TODO: write code
         //not being the right publisher or not having the song/artist?????
     }
 
     public static void main(String args[]){
+        PublisherNode p = new PublisherNode('A', 'M', "localhost", 4321);
+        PublisherNode p2 = new PublisherNode('N', 'Z', "localhost", 7654);
+        p.init();
+        p2.init();
 
-        //while(true) {
-            PublisherNode p1 = new PublisherNode('A', 'M', "127.0.0.2", 4321);
-            p1.init();
+        ArrayList<PublisherNode> publishers = new ArrayList<>();
+        publishers.add(p);
+        publishers.add(p2);
 
-        try {
-            ObjectInputStream in = new ObjectInputStream(p1.getSocket().getInputStream());
-            ArtistName artistName = (ArtistName) in.readObject();
+        publishers.parallelStream().forEach((publisher) -> {
 
-            System.out.println(artistName.toString()+" received from broker");
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
+            try {
+                Socket broker = publisher.getSocket();
 
-        //broker list
+                ObjectOutputStream out = new ObjectOutputStream(broker.getOutputStream());
+                ObjectInputStream in = new ObjectInputStream(broker.getInputStream());
 
-         /*   PublisherNode p2 = new PublisherNode('N', 'Z', "127.0.0.8", 4321);
-            p2.init();*/
-        //}
+                //send ip, port, start and end to broker
+                out.writeUTF(publisher.getPublisherIP());
+                out.writeInt(publisher.getPublisherPort());
+                out.writeChar(publisher.getStart());
+                out.writeChar(publisher.getEnd());
+
+                //send map to broker
+                out.writeObject(publisher.getArtistMap());
+                out.flush();
+
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            //System.out.println("o "+brokers.get(0));
+
+            while (true){
+
+            }
+        });
+
 
     }
 }
