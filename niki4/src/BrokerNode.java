@@ -1,3 +1,4 @@
+import javax.sound.sampled.Port;
 import java.io.IOException;
 import java.io.*;
 import java.lang.reflect.Array;
@@ -21,7 +22,7 @@ public class BrokerNode extends Thread implements Broker,Serializable {
     ArtistName artistReceived= null;
 
     BigInteger key;
-    ArrayList<Publisher> publishers = new ArrayList<>();
+    //ArrayList<PublisherNode> publishers = new ArrayList<>();
     String ip;
     int port;
 
@@ -32,6 +33,13 @@ public class BrokerNode extends Thread implements Broker,Serializable {
     //we keep a list with the connected publishers and when we have a song request we check the artist name and go to the right publisher
     ArrayList<PublisherNode> registeredPublishers = new ArrayList<>();
     //ArrayList<ConsumerNode> registeredConsumers = new ArrayList<>(); //idk the use of this yet
+    //
+    ArrayList<ArtistName> artists = new ArrayList<>();
+    Map<Integer, ArrayList<ArtistName>> PortArtist = new HashMap<>(); //map that tells us which artists every port (broker) has
+
+    //marina
+    ArrayList<ArtistName> brokerArtist = new ArrayList<>(); //list with artists for this broker???
+
 
     BrokerNode(String ip, int port) {
         this.ip = ip;
@@ -52,7 +60,6 @@ public class BrokerNode extends Thread implements Broker,Serializable {
             e.printStackTrace();
         }
 
-
         try {
             this.consumer_providerSocket = new ServerSocket(this.port + 100, 10);
             System.out.println("broker - consumer providerSocket connect");
@@ -63,43 +70,6 @@ public class BrokerNode extends Thread implements Broker,Serializable {
 
         this.key = calculateKeys();
         BrokerKeys.put(this, key);
-
-        /*try {
-            this.consumer_requestSocket = this.consumer_providerSocket.accept();
-            //this.in = new ObjectInputStream(this.publisher_requestSocket.getInputStream());
-            //this.out = new ObjectOutputStream(this.publisher_requestSocket.getOutputStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
-
-        //System.out.println(registeredPublishers.isEmpty());
-
-        //send key to publisher
-        /*try {
-            this.out.writeObject(this.key);
-            this.out.flush();
-            System.out.println(this.key);
-            System.out.println("flush");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        try {
-            this.consumer_requestSocket = new Socket(this.ip, this.port+1);
-            this.out = new ObjectOutputStream(this.consumer_requestSocket.getOutputStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        //send key to consumer
-        try {
-            this.out.writeObject(this.key);
-            this.out.flush();
-            System.out.println(this.key);
-            System.out.println("flushed");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
     }
 
 
@@ -112,6 +82,46 @@ public class BrokerNode extends Thread implements Broker,Serializable {
     public void setBrokers(BrokerNode b) {
         ListOfBrokers.add(b);
     }
+
+    /*public ArrayList<ArtistName> matchArtists (){
+        for every artist
+        hashTopic(artist).
+
+        //we call hashtopic and get the port of the broker that is returned
+        //we put <that port, artist> in PortArtist
+    }*/
+
+    //marina
+    @Override
+    public Map<Integer, ArrayList<ArtistName>> findBroker(List<BrokerNode> brokers) throws NoSuchAlgorithmException {
+
+        for(Map.Entry<ArtistName,ArrayList<String>> entry1 : registeredPublishers.get(0).getArtistMap().entrySet()) {
+
+
+            for (Map.Entry<Integer, ArrayList<ArtistName>> entry : PortArtist.entrySet()) {
+                if (registeredPublishers.get(0).hashTopic(entry1.getKey()).port == brokers.get(0).port) {
+                    brokerArtist.add(entry1.getKey());
+                    PortArtist.put(brokers.get(0).port, brokerArtist);
+                }
+                if (registeredPublishers.get(0).hashTopic(entry1.getKey()).port == brokers.get(1).port) {
+                    brokerArtist.add(entry1.getKey());
+                    PortArtist.put(brokers.get(1).port, brokerArtist);
+                }
+                if (registeredPublishers.get(0).hashTopic(entry1.getKey()).port == brokers.get(2).port) {
+                    brokerArtist.add(entry1.getKey());
+                    PortArtist.put(brokers.get(2).port, brokerArtist);
+                }
+            }
+        }
+        return PortArtist;
+    }
+
+    //marina
+    public Map<Integer, ArrayList<ArtistName>> getBrokerMap() throws NoSuchAlgorithmException {
+        PortArtist = findBroker(ListOfBrokers);
+        return PortArtist;
+    }
+
 
 
     @Override
@@ -133,6 +143,13 @@ public class BrokerNode extends Thread implements Broker,Serializable {
     public void connect() {
         try {
             this.publisher_requestSocket = this.publisher_providerSocket.accept();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try{
+            /////////////////
+            this.consumer_requestSocket = this.consumer_providerSocket.accept();
+            PortArtist.put(this.consumer_providerSocket.getLocalPort(), artists);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -166,6 +183,8 @@ public class BrokerNode extends Thread implements Broker,Serializable {
     public void notifyPublisher(String name) {
         //Θα ενημερωνει ο broker τον καθε publisher για ποια κλειδια ειναι υπευθυνοι (για ποιο ευρος τιμων)
 
+        //mhpws
+
         try {
             out = new ObjectOutputStream(this.publisher_requestSocket.getOutputStream());
             out.writeInt(calculateKeys().intValue());
@@ -197,62 +216,6 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                 }
             }
         }
-
-
-
-
-
-        //υποθέτω με την κλήση του action απο το Actionforclients εχει αρχικοποιηθεί ήδη το in και out
-
-        /*try {
-            in = new ObjectInputStream(this.publisher_requestSocket.getInputStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
-
-        /*for(int i=0; i<registeredPublishers.size();i++) {
-            for (String name : registeredPublishers.get(i).getArtistMap().keySet()){
-
-                if(artist.getArtistName().equals())
-            }
-        }*/
-
-    }
-
-    public void setArtistReceived(ArtistName artistReceived) {
-        this.artistReceived = artistReceived;
-    }
-
-    public ArtistName getArtistReceived() {
-        return artistReceived;
-    }
-
-    public List<PublisherNode> getPublisherList() {
-        return registeredPublishers;
-    }
-
-    public ServerSocket getPublisherServerSocket() {
-        return this.publisher_providerSocket;
-    }
-
-    public Socket getPublisherSocket() {
-        return this.publisher_requestSocket;
-    }
-
-    public ServerSocket getConsumerServerSocket() {
-        return this.consumer_providerSocket;
-    }
-
-    public Socket getConsumerSocket() {
-        return this.consumer_requestSocket;
-    }
-
-    public String getBrokerIP() {
-        return this.ip;
-    }
-
-    public int getBrokerPort() {
-        return this.port;
     }
 
     public static void main(String args[]) throws IOException {

@@ -31,7 +31,7 @@ public class PublisherNode implements Publisher, Serializable{
     int port;
     Object brokerkey;
 
-    Map<String,ArrayList<String>> artistMap = new HashMap<String, ArrayList<String>>();
+    Map<ArtistName,ArrayList<String>> artistMap = new HashMap<ArtistName, ArrayList<String>>(); //map with artists and their songs
 
     PublisherNode(char start,char end, String ip, int port){
         this.start = start;
@@ -40,7 +40,7 @@ public class PublisherNode implements Publisher, Serializable{
         this.port = port;
     }
 
-    public Map<String,ArrayList<String>> getArtistMap() {
+    public Map<ArtistName,ArrayList<String>> getArtistMap() {
         return this.artistMap;
     }
 
@@ -73,6 +73,8 @@ public class PublisherNode implements Publisher, Serializable{
                                         if (mp3file.hasId3v2Tag()) {
                                             //System.out.println("YES FOR ID2");
                                             ID3v2 id3v2Tag = mp3file.getId3v2Tag();
+
+                                            ArtistName artist = new ArtistName(id3v2Tag.getArtist());
                                             //System.out.println("Name of artist with tag version 2 is " + id3v2Tag.getArtist());
 
                                             if (id3v2Tag.getArtist()!=null && !id3v2Tag.getArtist().isBlank()) {
@@ -84,11 +86,11 @@ public class PublisherNode implements Publisher, Serializable{
 
                                                         ArrayList<String> playlist = new ArrayList<String>();
                                                         playlist.add(id3v2Tag.getTitle());
-                                                        this.artistMap.put(id3v2Tag.getArtist(), playlist);
+                                                        this.artistMap.put(artist, playlist);
                                                     } else {
                                                         ArrayList<String> playlist2 = this.artistMap.get(id3v2Tag.getArtist());
                                                         playlist2.add(id3v2Tag.getTitle());
-                                                        this.artistMap.put(id3v2Tag.getArtist(), playlist2);
+                                                        this.artistMap.put(artist, playlist2);
                                                     }
                                                 }
                                             }
@@ -97,13 +99,15 @@ public class PublisherNode implements Publisher, Serializable{
                                                 playlist3.add(id3v2Tag.getTitle());
                                                 id3v2Tag.setArtist("Unknown");
                                                 //System.out.println(id3v2Tag.getArtist());
-                                                this.artistMap.put(id3v2Tag.getArtist(),playlist3);
+                                                this.artistMap.put(artist,playlist3);
                                             }
                                         }
 
                                         if (mp3file.hasId3v1Tag()) {
                                             ID3v1 id3v1Tag = mp3file.getId3v1Tag();
                                             //System.out.println("YES");
+
+                                            ArtistName artist = new ArtistName(id3v1Tag.getArtist());
 
                                             if(id3v1Tag.getArtist()!=null && !id3v1Tag.getArtist().isBlank()) {
                                                 if ((id3v1Tag.getArtist().charAt(0) >= this.start && id3v1Tag.getArtist().charAt(0) <= this.end)) { //if artist already exists
@@ -112,11 +116,11 @@ public class PublisherNode implements Publisher, Serializable{
                                                         // playlist.add(id3v1Tag.getTitle());
                                                         ArrayList<String> playlist = this.artistMap.get(id3v1Tag.getArtist());
                                                         playlist.add(id3v1Tag.getTitle());
-                                                        this.artistMap.put(id3v1Tag.getArtist(), playlist);
+                                                        this.artistMap.put(artist, playlist);
                                                     } else {
                                                         ArrayList<String> playlist2 = new ArrayList<String>();
                                                         playlist2.add(id3v1Tag.getTitle());
-                                                        this.artistMap.put(id3v1Tag.getArtist(), playlist2);
+                                                        this.artistMap.put(artist, playlist2);
                                                     }
                                                 }
                                             }
@@ -125,7 +129,7 @@ public class PublisherNode implements Publisher, Serializable{
                                                 playlist3.add(id3v1Tag.getTitle());
                                                 id3v1Tag.setArtist("Unknown");
                                                 //System.out.println(id3v1Tag.getArtist());
-                                                this.artistMap.put(id3v1Tag.getArtist(),playlist3);
+                                                this.artistMap.put(artist,playlist3);
                                             }
                                         }
                                     } catch (InvalidDataException | UnsupportedTagException e) {
@@ -175,7 +179,7 @@ public class PublisherNode implements Publisher, Serializable{
     }
 
     @Override
-    public Broker hashTopic(ArtistName artist) throws NoSuchAlgorithmException{
+    public BrokerNode hashTopic(ArtistName artist) throws NoSuchAlgorithmException{
         //Hashes the ArtistName
 
         MessageDigest sha = MessageDigest.getInstance("SHA-256");
@@ -212,9 +216,9 @@ public class PublisherNode implements Publisher, Serializable{
 
         boolean exist = false;
         //getArtistMap();
-        for (String name: getArtistMap().keySet()){
+        for (ArtistName name: getArtistMap().keySet()){
 
-            if( name.equals(artist.toString())) {
+            if(name.equals(artist.toString())) {
                 exist = true;
             }
         }
