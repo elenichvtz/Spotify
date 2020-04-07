@@ -302,7 +302,6 @@ public class BrokerNode extends Thread implements Broker,Serializable, Runnable 
 
                         PublisherNode pn = new PublisherNode(start, end, publisherip, publisherport);
 
-                        //out.writeObject(pn);
                         registeredPublishers.add(pn);
 
                     } catch (IOException e) {
@@ -318,12 +317,14 @@ public class BrokerNode extends Thread implements Broker,Serializable, Runnable 
 
                 //System.out.println(registeredPublishers.isEmpty());
 
+            //System.out.println("art size1 "+art.size());
+
                 while (true) {
 
-                    if (broker.getArtistReceived() != null) {
+                    /*if (broker.getArtistReceived() != null) {
                         System.out.println(broker.getArtistReceived());
                         //      b.pull(b.getArtistReceived());
-                    }
+                    }*/
 
                     Thread c = new Thread(){
                         public void run() {
@@ -335,6 +336,8 @@ public class BrokerNode extends Thread implements Broker,Serializable, Runnable 
 
                                 broker.setOut(new ObjectOutputStream(consumer.getOutputStream()));
                                 broker.setIn(new ObjectInputStream(consumer.getInputStream()));
+
+                                //broker.out.writeInt(broker.getBrokerPort());
 
                                 String consumerip = broker.in.readUTF();
                                 System.out.println("con " + consumerip);
@@ -355,21 +358,35 @@ public class BrokerNode extends Thread implements Broker,Serializable, Runnable 
                                     e.printStackTrace();
                                 }
 
-                                if (broker.getMapReceived().containsKey(broker.getArtistReceived().getArtistName())) {
-                                    System.out.println("it is exist");
-                                }
-                                Map<String, ArrayList<String>> mapreceived = broker.getMapReceived();
-                                for (String name : mapreceived.keySet()) {
-                                    //System.out.println("key is:" + name);
-                                    if (name.toString().equals(broker.getArtistReceived().getArtistName())) {
-                                        System.out.println("Yes it is equal");
-                                        broker.out.writeObject(b.getMapReceived().get(name)); //πρεπει να στελνει μονο το arraylist αν το κλειδι ειναι αυτο που εστειλε ο consumer
-                                        broker.out.flush();
+                                //find the broker who has the artist
+                                //return the port to consumer even if its mine
+
+                                System.out.println("yep "+registeredPublishers.get(0).hashTopic(artistName).getBrokerPort());
+
+
+                                if(registeredPublishers.get(0).hashTopic(artistName).getBrokerPort() == broker.getBrokerPort()) {
+
+                                    broker.out.writeInt(registeredPublishers.get(0).hashTopic(artistName).getBrokerPort());
+
+                                    if (broker.getMapReceived().containsKey(broker.getArtistReceived().getArtistName())) {
+                                        System.out.println("it is exist");
+                                    }
+                                    Map<String, ArrayList<String>> mapreceived = broker.getMapReceived();
+                                    for (String name : mapreceived.keySet()) {
+                                        //System.out.println("key is:" + name);
+                                        if (name.toString().equals(broker.getArtistReceived().getArtistName())) {
+                                            System.out.println("Yes it is equal");
+                                            broker.out.writeObject(broker.getMapReceived().get(name)); //πρεπει να στελνει μονο το arraylist αν το κλειδι ειναι αυτο που εστειλε ο consumer
+                                            broker.out.flush();
+                                        }
                                     }
                                 }
+                                else {
 
+                                    broker.out.writeInt(registeredPublishers.get(0).hashTopic(artistName).getBrokerPort());
+                                }
 
-                            } catch (IOException e) {
+                            } catch (IOException | NoSuchAlgorithmException e) {
                                 e.printStackTrace();
                             }
                         }};

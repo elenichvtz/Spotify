@@ -25,7 +25,8 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
     public void init() {
         try {
             this.requestSocket = new Socket(this.ip, this.port+1);
-            //this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
+            this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
+            this.in = new ObjectInputStream(this.requestSocket.getInputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -41,7 +42,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
     public void connect() {
         //while(!requestSocket.isConnected()) {
             try {
-                requestSocket = new Socket(this.ip, this.port);
+                this.requestSocket = new Socket(this.ip, this.port);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -50,8 +51,8 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
 
     public void connect(int port){
         try {
-            requestSocket = new Socket(this.ip, port+1);
-            System.out.println("Connected to a new Broker with port"+port);
+            this.requestSocket = new Socket(this.ip, port+1);
+            System.out.println("Connected to a new Broker with port "+port);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -59,83 +60,47 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
 
     @Override
     public void disconnect() {
+        try {
+            this.requestSocket.close();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
 
     }
 
     @Override
     public void register(BrokerNode broker, ArtistName artist) {
 
-                try {
-                    PublisherNode p = new PublisherNode('A', 'M', "localhost", 7654);
-                    //broker.getPublisherList().get(0).hashTopic(artist); //returns the Broker responsible for that artist
-                    System.out.println("IS EMPTY?"+broker.getPublisherList().isEmpty());
-                    System.out.println(broker.equals(p.hashTopic(artist)));
+        try {
+            System.out.println("Inside register");
+            this.out.writeUTF(this.ip);
+            this.out.writeInt(this.port);
+            this.out.writeObject(artist); //successfully sends artistName to BrokerNode
+            this.out.flush();
 
-                    if(broker.getBrokerPort() ==((p.hashTopic(artist)).getBrokerPort())){ //if current broker equals the one returned from hashtopic then
-                        Socket brker = getSocket();
-                        //ObjectOutputStream out = null;
+            //na pairnei apo ton borker to port pou prepei na syndethei
+            int brokerport = this.in.readInt();
 
-                        try {
-                            out = new ObjectOutputStream(brker.getOutputStream());
-                            in = new ObjectInputStream(brker.getInputStream());
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        //Object list = in.readObject();
-                        //send ip and port to broker
-                        try {
-                            System.out.println("Inside register");
-                            out.writeUTF(getConsumerIP());
-                            out.writeInt(getConsumerPort());
-                            out.writeObject(artist); //successfully sends artistName to BrokerNode
-                            out.flush();
+            System.out.println(brokerport + " broker");
 
-                            ArrayList<String> m = (ArrayList<String>)in.readObject();
-                            System.out.println("Map received from broker to consumer");
-                            System.out.println(m.toString());
+            //na kanei connect(port apo broker)
+            connect(brokerport);
 
-                            //sends song
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+            ArrayList<String> m = (ArrayList<String>) this.in.readObject();
 
-                        //η λιστα με τα τραγουδια του artist επιστρεφεται στον consumer
-                        this.listofsongs = (ArrayList<String>) in.readObject();
+            System.out.println("Map received from broker to consumer");
 
-                        //broker.pull(artist);
-                    }else {
+            System.out.println(m.toString());
 
-                        int newport = p.hashTopic(artist).getBrokerPort();
-                        System.out.println("Port for right broker is: "+p.hashTopic(artist).getBrokerPort());
-                        System.out.println("Disconnecting...");
-                        disconnect(broker,artist);
-                        connect(newport);
+            //η λιστα με τα τραγουδια του artist επιστρεφεται στον consumer
+            this.listofsongs = (ArrayList<String>) in.readObject();
 
-                        out.writeUTF(getConsumerIP());
-                        out.writeInt(getConsumerPort());
-                        out.writeObject(artist); //successfully sends artistName to BrokerNode
-                        out.flush();
-
-                        ArrayList<String> m = (ArrayList<String>)in.readObject();
-                        System.out.println("Map received from broker to consumer");
-                        System.out.println(m.toString());
-
-                        //disconnect();....
-                    }
-                        //disconnect from random broker
-                    //get port from correct broker
-                    //connect with the correct broker
-
-                    //else an den einai sostos o broker
-
-                } catch (NoSuchAlgorithmException | ClassNotFoundException | IOException e) {
-                    e.printStackTrace();
-                }
-
-
-
-
+            //sends song
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
     }
+
 
     @Override
     public void disconnect(BrokerNode broker, ArtistName artist) {
@@ -183,8 +148,11 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
 
         ConsumerNode cn = new ConsumerNode("localhost", 7654);
         cn.init();
+
+        BrokerNode b = new BrokerNode("localhost", cn.getConsumerPort());
+
+
         ArtistName artistName = new ArtistName("Komiku");
-        BrokerNode b = new BrokerNode("localhost", 7654);
 
         cn.register(b,artistName); //υποτιθεται οτι η λιστα με τους μπροκερσ πρεπει να ειναι γεματη
 

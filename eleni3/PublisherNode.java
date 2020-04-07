@@ -10,10 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 import static java.lang.Math.ceil;
@@ -190,7 +187,7 @@ public class PublisherNode implements Publisher,Serializable{
         return brokers;
     }
 
-    @Override
+    /*@Override
     public BrokerNode hashTopic(ArtistName artist) throws NoSuchAlgorithmException{
         MessageDigest sha = MessageDigest.getInstance("SHA-256");
         String name = artist.getArtistName();
@@ -228,41 +225,61 @@ public class PublisherNode implements Publisher,Serializable{
 
 
 
-    }
+    }*/
 
-    /*@Override
+    @Override
     public BrokerNode hashTopic(ArtistName artist) throws NoSuchAlgorithmException{
-        //Hashes the ArtistName
-
         MessageDigest sha = MessageDigest.getInstance("SHA-256");
         String name = artist.getArtistName();
 
         byte[] namehash = sha.digest(name.getBytes());
         BigInteger big1 = new BigInteger(1,namehash); // 1 means positive BigInteger for hash(nameartist)
 
-        BigInteger max = getBrokers().get(0).calculateKeys();
+        BigInteger max = new BigInteger("-1");
 
-        for(int i=1; i<=2; i++){                               //vriskoume to megalutero kleidi ton brokers
-            if ( getBrokers().get(i).calculateKeys().compareTo(max) > 1){
-                max = getBrokers().get(i).calculateKeys();
+        if(brokerKeys.size() == 0){
+            updateList();
+        }
+
+
+        for (int i=0; i< brokerKeys.size(); i++){
+            if (brokerKeys.get(i).calculateKeys().compareTo(max) == 1){
+                max = brokerKeys.get(i).calculateKeys();
+
             }
         }
 
-        BigInteger hash2 = new BigInteger("max");// ΘΕΛΕΙ ΤΟ ΜΙΝ ΚΛΕΙΔΙ ΤΟΥ BROKER το απαντησε στο eclass
+        ArrayList<BigInteger> keys = new ArrayList<>();
+        for (int i =0;i<brokerKeys.size();i++){
+            keys.add(brokerKeys.get(i).calculateKeys());
 
-        BigInteger hashNumber = big1.mod(hash2);
-        //brokerMap
+        }
 
-        if((hashNumber.compareTo(getBrokers().get(0).calculateKeys()) == -1) && (hashNumber.compareTo(getBrokers().get(2).calculateKeys())==1)){
-            return getBrokers().get(0);
+        Collections.sort(keys);
+        ArrayList<BrokerNode> brokerNodes = new ArrayList<>();
+
+        for(int i =0 ;i<keys.size();i++){
+            for(int j =0;j<brokerKeys.size();j++){
+                if((keys.get(i)).compareTo(brokerKeys.get(j).calculateKeys()) == 0){
+
+                    brokerNodes.add(brokerKeys.get(j));
+
+                }
+            }
         }
-        else if(hashNumber.compareTo(getBrokers().get(1).calculateKeys()) == -1) {
-            return getBrokers().get(1);
+
+        BigInteger hashNumber = big1.mod(max);
+
+        if((hashNumber.compareTo(keys.get(0)) == 1) && (hashNumber.compareTo(keys.get(1)) == -1)){
+            return brokerNodes.get(1);
+
         }
-        else{
-            return getBrokers().get(2);
+        if((hashNumber.compareTo(keys.get(1)) == 1) && (hashNumber.compareTo(keys.get(2)) == -1)){
+            return brokerNodes.get(2);
+
         }
-    }*/
+        return brokerNodes.get(0);
+    }
 
     public void push(ArtistName artist,Value val) { //stin main tou publisher
 
