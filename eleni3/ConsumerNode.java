@@ -79,12 +79,21 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
             this.out.flush();
 
             //na pairnei apo ton borker to port pou prepei na syndethei
+
             int brokerport = this.in.readInt();
 
-            System.out.println(brokerport + " broker");
+            System.out.println(brokerport + " is the correct broker port.");
+            System.out.println("Disconnecting...");
+            disconnect(broker,artist);
 
             //na kanei connect(port apo broker)
-            connect(brokerport);
+            System.out.println("yo2");
+            connect(brokerport);                      //problem
+
+            this.out.writeUTF(this.ip);
+            this.out.writeInt(this.port);
+            this.out.writeObject(artist); //successfully sends artistName to BrokerNode EDO VGAZEI ERROR TORA
+            this.out.flush();
 
             ArrayList<String> m = (ArrayList<String>) this.in.readObject();
 

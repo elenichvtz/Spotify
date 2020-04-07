@@ -329,7 +329,6 @@ public class BrokerNode extends Thread implements Broker,Serializable, Runnable 
                     Thread c = new Thread(){
                         public void run() {
 
-                            //System.out.println("Assigning new thread for this client");
                             try {
                                 // socket object to receive incoming consumer requests
                                 Socket consumer = broker.getConsumerServerSocket().accept();
@@ -365,6 +364,7 @@ public class BrokerNode extends Thread implements Broker,Serializable, Runnable 
 
 
                                 if(registeredPublishers.get(0).hashTopic(artistName).getBrokerPort() == broker.getBrokerPort()) {
+                                    System.out.println("Yessss");
 
                                     broker.out.writeInt(registeredPublishers.get(0).hashTopic(artistName).getBrokerPort());
 
@@ -383,7 +383,13 @@ public class BrokerNode extends Thread implements Broker,Serializable, Runnable 
                                 }
                                 else {
 
-                                    broker.out.writeInt(registeredPublishers.get(0).hashTopic(artistName).getBrokerPort());
+                                    System.out.println("Noooo "+registeredPublishers.get(0).hashTopic(artistName).getBrokerPort());
+
+                                    System.out.println("yo");
+                                    int port = registeredPublishers.get(0).hashTopic(artistName).getBrokerPort();
+                                    broker.out.writeInt(port);
+                                    broker.out.flush();
+                                    System.out.println("yooo");
                                 }
 
                             } catch (IOException | NoSuchAlgorithmException e) {
