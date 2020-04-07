@@ -78,6 +78,7 @@ public class BrokerNode extends Thread implements Broker,Serializable {
         return ListOfBrokers;
     }
 
+    public int getBrokerPort() { return this.port; }
 
     public void setBrokers(BrokerNode b) {
         ListOfBrokers.add(b);
