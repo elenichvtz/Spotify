@@ -145,14 +145,6 @@ public class PublisherNode implements Publisher, Serializable{
             e.printStackTrace();
         }
 
-        //
-        //Open up server socket and wait for broker to request a song.
-        //then call push (on that broker)
-
-        //find the right broker
-        //send request for connection with that broker = open client socket on the same port
-
-
         //initialize sockets
         try {
             this.requestSocket = new Socket(this.ip, this.port);
@@ -162,7 +154,7 @@ public class PublisherNode implements Publisher, Serializable{
             e.printStackTrace();
         }
 
-        System.out.println("wait");
+        //System.out.println("wait");
 
         try {
             this.providerSocket = new ServerSocket(this.port+2, 10);
@@ -214,14 +206,22 @@ public class PublisherNode implements Publisher, Serializable{
 
     public void push(ArtistName artist,Value val) {
 
-        boolean exist = false;
-        //getArtistMap();
-        for (ArtistName name: getArtistMap().keySet()){
-
-            if(name.equals(artist.toString())) {
-                exist = true;
-            }
+        if(!getArtistMap().containsKey(artist)){
+            System.out.println("Artist doesn't exist.");
+            return;
         }
+
+        try {
+            int newPort = this.hashTopic(artist).getBrokerPort(); //find the right broker (using hashTopic) and save his port
+            this.setPublisherPort(newPort); //change publisher's port so that it connects to the right broker
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+
+
+
+        //get the streams??
+        //(inside the loops) write the chunk on that stream
 
         File f = null;
         BufferedReader reader = null;
@@ -267,9 +267,19 @@ public class PublisherNode implements Publisher, Serializable{
                                             counter++;
                                             val.setMusicfile(musicfile);
 
+                                            //niki
                                             //send chunk through socket
                                             while(true) {
                                                 try {
+                                                    this.requestSocket = this.providerSocket.accept();
+                                                    out = new ObjectOutputStream(this.requestSocket.getOutputStream());
+                                                    out.writeObject(val);
+                                                    out.flush();
+
+                                                } catch (IOException e) {
+                                                    e.printStackTrace();
+                                                }
+                                                /*try {
                                                     //
                                                     //this.requestSocket = this.providerSocket.accept();
                                                     //this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());  //initialize out
@@ -277,7 +287,7 @@ public class PublisherNode implements Publisher, Serializable{
                                                     this.out.flush();
                                                 } catch (IOException e) {
                                                     e.printStackTrace();
-                                                }
+                                                }*/
                                             }
                                         }
                                     } catch (IOException e) {
@@ -306,8 +316,20 @@ public class PublisherNode implements Publisher, Serializable{
                                             counter++;
                                             val.setMusicfile(musicfile);
 
+                                            //niki
                                             //send chunk through socket
                                             while(true) {
+                                                try {
+                                                    this.requestSocket = this.providerSocket.accept();
+                                                    out = new ObjectOutputStream(this.requestSocket.getOutputStream());
+                                                    out.writeObject(val);
+                                                    out.flush();
+
+                                                } catch (IOException e) {
+                                                    e.printStackTrace();
+                                                }
+
+                                            /*while(true) {
                                                 try {
                                                     //
                                                     //this.requestSocket = this.providerSocket.accept();
@@ -316,7 +338,7 @@ public class PublisherNode implements Publisher, Serializable{
                                                     this.out.flush();
                                                 } catch (IOException e) {
                                                     e.printStackTrace();
-                                                }
+                                                }*/
                                             }
                                         }
                                     } catch (IOException e) {
