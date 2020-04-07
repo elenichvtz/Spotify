@@ -260,11 +260,9 @@ public class BrokerNode extends Thread implements Broker,Serializable, Runnable 
         b3.init();
         b.setBrokers(b);
         System.out.println("Key is: "+b.calculateKeys());
-        //List<Broker> p = b.getBrokers();
-        //p.add(b);
+
         System.out.println(brokers.isEmpty());
-        //brokers.add(b2);
-        //brokers.add(b3);
+
 
         b2.setBrokers(b2);
         b3.setBrokers(b3);
@@ -280,12 +278,14 @@ public class BrokerNode extends Thread implements Broker,Serializable, Runnable 
 
             //Socket publisher = b.getPublisherServerSocket().accept();
 
-                //System.out.println("A new publisher is connected: " + publisher);
 
             Thread t1 = new Thread(){
                 public void run() {
                     try {
                         Socket publisher = broker.getPublisherServerSocket().accept();
+
+                        System.out.println("A new publisher is connected: " + publisher);
+
                         //ObjectOutputStream out = new ObjectOutputStream(publisher.getOutputStream());
                         //ObjectInputStream in = new ObjectInputStream(publisher.getInputStream());
                         broker.setOut(new ObjectOutputStream(publisher.getOutputStream()));
@@ -322,60 +322,9 @@ public class BrokerNode extends Thread implements Broker,Serializable, Runnable 
                     System.out.println("Is map empty?" + (broker.getMapReceived()).isEmpty());
                 }};
 
-            Thread t2 = new Thread(){
-                public void run() {
-                    try {
-                        Socket publisher = broker.getPublisherServerSocket().accept();
-                        //ObjectOutputStream out = new ObjectOutputStream(publisher.getOutputStream());
-                        //ObjectInputStream in = new ObjectInputStream(publisher.getInputStream());
-
-
-                        //for(int i=0; i<2; i++) {
-
-                            broker.setOut(new ObjectOutputStream(publisher.getOutputStream()));
-                           broker.setIn(new ObjectInputStream(publisher.getInputStream()));
-
-                            //receive map, ip and port from publisher
-                            String publisherip = broker.in.readUTF();
-                            System.out.println(publisherip);
-                            int publisherport = broker.in.readInt();
-                            System.out.println(publisherport);
-                            char start = broker.in.readChar();
-                            char end = broker.in.readChar();
-                            System.out.println(start + " & " + end);
-
-                            broker.setMapReceived((Map<String, ArrayList<String>>) broker.in.readObject());
-
-                        art.put(publisherport, broker.getMapReceived());
-
-                            System.out.println(broker.getBrokerPort() + " " + broker.getMapReceived().toString());
-
-                        System.out.println("art size "+art.size());
-
-                            PublisherNode pn = new PublisherNode(start, end, publisherip, publisherport);
-
-                            //out.writeObject(pn);
-                            registeredPublishers.add(pn);
-                        //}
-
-
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (ClassNotFoundException e) {
-                        e.printStackTrace();
-                    }
-
-                    System.out.println("Is map empty?" + (broker.getMapReceived()).isEmpty());
-
-                    System.out.println();
-                }};
-
             t1.start();
-            t2.start();
 
                 //System.out.println(registeredPublishers.isEmpty());
-
-
 
                 while (true) {
 
@@ -397,15 +346,6 @@ public class BrokerNode extends Thread implements Broker,Serializable, Runnable 
                                 broker.setOut(new ObjectOutputStream(consumer.getOutputStream()));
                                 broker.setIn(new ObjectInputStream(consumer.getInputStream()));
 
-
-                    /*ActionsForConsumers action2 = new ActionsForConsumers(consumer, registeredUsers,(Map<String,ArrayList<String>>)b.getMapReceived());
-                    action2.start();
-                    System.out.println("A new consumer is connected: " + consumer);
-                    registeredUsers.add(action2.getConsumer());
-                    b.setArtistReceived(action2.getArtistreceived());
-                    System.out.println("Consumer list is empty?: " + registeredPublishers.isEmpty());
-                    System.out.println("Artist received from action is"+b.getArtistReceived());
-                    */
                                 String consumerip = broker.in.readUTF();
                                 System.out.println("con " + consumerip);
                                 int consumerport = broker.in.readInt();
@@ -438,11 +378,6 @@ public class BrokerNode extends Thread implements Broker,Serializable, Runnable 
                                     }
                                 }
 
-                        /*if (Serializable.class.isInstance(b)) {
-                            System.out.println("it is serializable");
-                        } else {
-                            System.out.println("it is not serializable");
-                        }*/
 
 
                             } catch (IOException e) {
