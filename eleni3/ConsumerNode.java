@@ -104,7 +104,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
 
                         //broker.pull(artist);
                     }else {
-                        
+
                         int newport = p.hashTopic(artist).getBrokerPort();
                         System.out.println("Port for right broker is: "+p.hashTopic(artist).getBrokerPort());
                         System.out.println("Disconnecting...");

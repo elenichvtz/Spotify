@@ -328,7 +328,7 @@ public class BrokerNode extends Thread implements Broker,Serializable, Runnable 
                     Thread c = new Thread(){
                         public void run() {
 
-                            System.out.println("Assigning new thread for this client");
+                            //System.out.println("Assigning new thread for this client");
                             try {
                                 // socket object to receive incoming consumer requests
                                 Socket consumer = broker.getConsumerServerSocket().accept();
@@ -369,11 +369,11 @@ public class BrokerNode extends Thread implements Broker,Serializable, Runnable 
                                 }
 
 
-
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
                         }};
+                    c.start();
                 }
         });
 
