@@ -66,7 +66,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
     public void register(BrokerNode broker, ArtistName artist) {
 
                 try {
-                    PublisherNode p = new PublisherNode('A', 'M', "localhost", 9876);
+                    PublisherNode p = new PublisherNode('A', 'M', "localhost", 7654);
                     //broker.getPublisherList().get(0).hashTopic(artist); //returns the Broker responsible for that artist
                     System.out.println("IS EMPTY?"+broker.getPublisherList().isEmpty());
                     System.out.println(broker.equals(p.hashTopic(artist)));
@@ -104,8 +104,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
 
                         //broker.pull(artist);
                     }else {
-
-
+                        
                         int newport = p.hashTopic(artist).getBrokerPort();
                         System.out.println("Port for right broker is: "+p.hashTopic(artist).getBrokerPort());
                         System.out.println("Disconnecting...");

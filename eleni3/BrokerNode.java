@@ -204,14 +204,6 @@ public class BrokerNode extends Thread implements Broker,Serializable, Runnable 
         return this.mapreceived;
     }
 
-    public void setMapReceived2(Map map){
-        this.mapreceived2 = map;
-    }
-
-    public Map getMapReceived2() {
-        return this.mapreceived2;
-    }
-
     public void setArtistReceived(ArtistName artistReceived) {
         this.artistReceived = artistReceived;
     }
@@ -319,7 +311,7 @@ public class BrokerNode extends Thread implements Broker,Serializable, Runnable 
                         e.printStackTrace();
                     }
 
-                    System.out.println("Is map empty?" + (broker.getMapReceived()).isEmpty());
+                    System.out.println("Is map empty? " + (broker.getMapReceived()).isEmpty());
                 }};
 
             t1.start();
@@ -332,8 +324,6 @@ public class BrokerNode extends Thread implements Broker,Serializable, Runnable 
                         System.out.println(broker.getArtistReceived());
                         //      b.pull(b.getArtistReceived());
                     }
-
-
 
                     Thread c = new Thread(){
                         public void run() {
