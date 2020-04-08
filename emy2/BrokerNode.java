@@ -217,8 +217,54 @@ public class BrokerNode extends Thread implements Broker,Serializable {
         }
     }
 
-
     @Override
+    public void pull(ArtistName artist, Value value, ConsumerNode con, PublisherNode pub) {
+
+
+        try {
+            out.writeUTF(con.getConsumerIP());
+            out.writeInt(con.getConsumerPort());
+            out.writeObject(value); //successfully sends artistName to BrokerNode
+            out.flush();
+            in = new ObjectInputStream(publisher_requestSocket.getInputStream());
+            MusicFile ch = (MusicFile) in.readObject();
+
+            ArrayList<MusicFile> song = new ArrayList<>(); //lista pou tha exei ola ta chunks tou tragoudiou
+            if (in.equals("0")) { // song doesn't exist
+                out.writeUTF(con.getConsumerIP());
+                out.writeInt(con.getConsumerPort());
+                out.writeObject("Choose another song"); //successfully sends artistName to BrokerNode
+                out.flush();
+            } else {   // song  exists
+                song.add(ch);
+                Value val = new Value(ch);//
+                do { // mexri na parei ol ta chunks tou kommatiou
+                    //traba next chunk
+                    in = new ObjectInputStream(publisher_requestSocket.getInputStream());
+                    ch = (MusicFile) in.readObject();
+                    val.setMusicfile(ch);
+                    out.writeUTF(con.getConsumerIP());
+                    out.writeInt(con.getConsumerPort());
+                    out.writeObject(ch); //successfully sends artistName to BrokerNode
+                    out.flush();
+                    song.add(ch);
+                } while (ch.getChunkId() < ch.getTotalChunks());
+                /*out.writeUTF(con.getConsumerIP());
+                out.writeInt(con.getConsumerPort());
+                out.writeObject(song); //successfully sends artistName to BrokerNode
+                out.flush();*/
+
+            }
+
+
+            //sends song
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    /*@Override η δικια μου pull (Emy's pull)
     public void pull(ArtistName artist, String song) {
 
         if(mapreceived.containsKey(artistReceived.getArtistName())){
@@ -243,7 +289,7 @@ public class BrokerNode extends Thread implements Broker,Serializable {
             }
         } // να ελεγχει και το δευτερο μαπ απο τον δευτερο publisher
 
-    }
+    }*/
 
     public Map<Integer, ArrayList<ArtistName>> getEmy() {
         return emy;
@@ -315,7 +361,7 @@ public class BrokerNode extends Thread implements Broker,Serializable {
         System.out.println(brokers.isEmpty());
         brokers.add(b2);
         brokers.add(b3);
-        List<Map<String,ArrayList<String>>> tom = new ArrayList<>();
+        Map<Integer, Map<String, ArrayList<String>>> art = new HashMap<>();
 
         brokers.parallelStream().forEach((broker) -> {
                 try {
@@ -336,13 +382,13 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                     System.out.println("Current broker port is: "+broker.getBrokerPort());
 
                     broker.setMapReceived((Map<String, ArrayList<String>>) broker.in.readObject());
+                    art.put(publisherport, broker.getMapReceived()); //add in art the maps received
                     System.out.println(broker.getMapReceived().toString());
 
-                    tom.add(broker.getMapReceived());
+                    //tom.add(broker.getMapReceived());
 
                     PublisherNode pn = new PublisherNode(start, end, publisherip, publisherport);
                     registeredPublishers.add(pn);
-
 
 
                     System.out.println("Updating list with artist done");
@@ -382,7 +428,7 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                         //broker.out.writeInt(broker.getBrokerPort());
 
                         String consumerip = broker.in.readUTF();
-                        System.out.println("con " + consumerip);
+                        System.out.println("conumer ip is " + consumerip);
                         int consumerport = broker.in.readInt();
                         System.out.println(consumerport);
 
@@ -414,14 +460,29 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                             if (broker.getMapReceived().containsKey(broker.getArtistReceived().getArtistName())) {
                                 System.out.println("it is exist");
                             }
+
                             Map<String, ArrayList<String>> mapreceived = broker.getMapReceived();
-                            for (String name : mapreceived.keySet()) {
-                                //System.out.println("key is:" + name);
-                                if (name.toString().equals(broker.getArtistReceived().getArtistName())) {
-                                    System.out.println("Yes it is equal");
-                                    broker.out.writeObject(broker.getMapReceived().get(name)); //πρεπει να στελνει μονο το arraylist αν το κλειδι ειναι αυτο που εστειλε ο consumer
-                                    broker.out.flush();
+                            boolean f = false;
+                            for (Map.Entry<Integer,  Map<String, ArrayList<String>>> entry : art.entrySet()) {
+
+                                //entry.getValue();
+                                Map<String, ArrayList<String>> k = entry.getValue();
+                                for(Map.Entry<String, ArrayList<String>> entry2 : k.entrySet()){
+
+                                    //System.out.println("key is:" + name);
+                                    System.out.println(broker.getArtistReceived().getArtistName());
+                                    if (entry2.getKey().equals(broker.getArtistReceived().getArtistName()) && entry2.getKey() != null) {
+                                        f = true;
+                                        System.out.println("Yes it is equal");
+                                        System.out.println(entry2.getValue().toString());
+                                        ArrayList<String> songs = entry2.getValue();
+                                        broker.out.writeObject(songs); //πρεπει να στελνει μονο το arraylist αν το κλειδι ειναι αυτο που εστειλε ο consumer
+                                        broker.out.flush();
+                                        break;
+                                    }
                                 }
+                                if (f){break;}
+
                             }
                         }
                         else {
@@ -438,6 +499,7 @@ public class BrokerNode extends Thread implements Broker,Serializable {
 
 
                         }
+                        System.out.println("END");
 
                     } catch (IOException | NoSuchAlgorithmException e) {
                         e.printStackTrace();

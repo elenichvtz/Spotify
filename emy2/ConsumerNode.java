@@ -54,7 +54,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
         try {
             requestSocket = new Socket(this.ip, port+1);
             this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
-            //this.in = new ObjectInputStream(this.requestSocket.getInputStream());
+            this.in = new ObjectInputStream(this.requestSocket.getInputStream());
             System.out.println("Connected to a new Broker with port "+port);
         } catch (IOException e) {
             e.printStackTrace();
@@ -80,14 +80,16 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
             //na pairnei apo ton borker to port pou prepei na syndethei
 
             int brokerport = this.in.readInt();
+            if(brokerport != broker.getBrokerPort()) {
 
-            System.out.println(brokerport + " is the correct broker port.");
-            System.out.println("Disconnecting...");
-            disconnect(broker,artist);
+                System.out.println(brokerport + " is the correct broker port.");
+                System.out.println("Disconnecting...");
+                disconnect(broker, artist);
 
-            //na kanei connect(port apo broker)
-            System.out.println("yo2");
-            connect(brokerport);
+                //na kanei connect(port apo broker)
+                System.out.println("yo2");
+                connect(brokerport);
+            }
 
             this.out.writeUTF(this.ip);
             System.out.println("yo");
@@ -97,13 +99,13 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
             this.out.writeObject(artist); //successfully sends artistName to BrokerNode
             this.out.flush();
             System.out.println("yo");
-            this.in = new ObjectInputStream(this.requestSocket.getInputStream());
+            //this.in = new ObjectInputStream(this.requestSocket.getInputStream());
 
-            ArrayList<String> m = (ArrayList<String>) this.in.readObject();  //problem
+            //ArrayList<String> m = (ArrayList<String>) this.in.readObject();  //problem
 
             System.out.println("Map received from broker to consumer");
 
-            System.out.println(m.toString());
+            //System.out.println(m.toString());
 
             //η λιστα με τα τραγουδια του artist επιστρεφεται στον consumer
             this.listofsongs = (ArrayList<String>) in.readObject();
