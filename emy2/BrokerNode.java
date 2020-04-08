@@ -217,54 +217,8 @@ public class BrokerNode extends Thread implements Broker,Serializable {
         }
     }
 
+
     @Override
-    public void pull(ArtistName artist, Value value, ConsumerNode con, PublisherNode pub) {
-
-
-        try {
-            out.writeUTF(con.getConsumerIP());
-            out.writeInt(con.getConsumerPort());
-            out.writeObject(value); //successfully sends artistName to BrokerNode
-            out.flush();
-            in = new ObjectInputStream(publisher_requestSocket.getInputStream());
-            MusicFile ch = (MusicFile) in.readObject();
-
-            ArrayList<MusicFile> song = new ArrayList<>(); //lista pou tha exei ola ta chunks tou tragoudiou
-            if (in.equals("0")) { // song doesn't exist
-                out.writeUTF(con.getConsumerIP());
-                out.writeInt(con.getConsumerPort());
-                out.writeObject("Choose another song"); //successfully sends artistName to BrokerNode
-                out.flush();
-            } else {   // song  exists
-                song.add(ch);
-                Value val = new Value(ch);//
-                do { // mexri na parei ol ta chunks tou kommatiou
-                    //traba next chunk
-                    in = new ObjectInputStream(publisher_requestSocket.getInputStream());
-                    ch = (MusicFile) in.readObject();
-                    val.setMusicfile(ch);
-                    out.writeUTF(con.getConsumerIP());
-                    out.writeInt(con.getConsumerPort());
-                    out.writeObject(ch); //successfully sends artistName to BrokerNode
-                    out.flush();
-                    song.add(ch);
-                } while (ch.getChunkId() < ch.getTotalChunks());
-                /*out.writeUTF(con.getConsumerIP());
-                out.writeInt(con.getConsumerPort());
-                out.writeObject(song); //successfully sends artistName to BrokerNode
-                out.flush();*/
-
-            }
-
-
-            //sends song
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
-
-
-    /*@Override η δικια μου pull (Emy's pull)
     public void pull(ArtistName artist, String song) {
 
         if(mapreceived.containsKey(artistReceived.getArtistName())){
@@ -289,7 +243,7 @@ public class BrokerNode extends Thread implements Broker,Serializable {
             }
         } // να ελεγχει και το δευτερο μαπ απο τον δευτερο publisher
 
-    }*/
+    }
 
     public Map<Integer, ArrayList<ArtistName>> getEmy() {
         return emy;
@@ -455,7 +409,7 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                         if(registeredPublishers.get(0).hashTopic(artistName).getBrokerPort() == broker.getBrokerPort()) {
                             System.out.println("Yessss");
 
-                            broker.out.writeInt(registeredPublishers.get(0).hashTopic(artistName).getBrokerPort());
+                            //broker.out.writeInt(registeredPublishers.get(0).hashTopic(artistName).getBrokerPort());
 
                             if (broker.getMapReceived().containsKey(broker.getArtistReceived().getArtistName())) {
                                 System.out.println("it is exist");
@@ -475,15 +429,20 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                                         f = true;
                                         System.out.println("Yes it is equal");
                                         System.out.println(entry2.getValue().toString());
-                                        ArrayList<String> songs = entry2.getValue();
+                                        List<String> songs = entry2.getValue();
+
                                         broker.out.writeObject(songs); //πρεπει να στελνει μονο το arraylist αν το κλειδι ειναι αυτο που εστειλε ο consumer
                                         broker.out.flush();
+                                        String song = broker.in.readUTF();
+
+                                        broker.pull(broker.getArtistReceived(),song);
                                         break;
                                     }
                                 }
                                 if (f){break;}
 
                             }
+
                         }
                         else {
 
@@ -499,6 +458,7 @@ public class BrokerNode extends Thread implements Broker,Serializable {
 
 
                         }
+
                         System.out.println("END");
 
                     } catch (IOException | NoSuchAlgorithmException e) {

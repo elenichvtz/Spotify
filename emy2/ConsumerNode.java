@@ -89,26 +89,29 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
                 //na kanei connect(port apo broker)
                 System.out.println("yo2");
                 connect(brokerport);
+
+
             }
 
             this.out.writeUTF(this.ip);
             System.out.println("yo");
             this.out.writeInt(this.port);
             System.out.println("yo");
-            out.flush();
+            //out.flush();
             this.out.writeObject(artist); //successfully sends artistName to BrokerNode
             this.out.flush();
-            System.out.println("yo");
+            //System.out.println("yo");
             //this.in = new ObjectInputStream(this.requestSocket.getInputStream());
 
-            //ArrayList<String> m = (ArrayList<String>) this.in.readObject();  //problem
 
-            System.out.println("Map received from broker to consumer");
-
-            //System.out.println(m.toString());
 
             //η λιστα με τα τραγουδια του artist επιστρεφεται στον consumer
-            this.listofsongs = (ArrayList<String>) in.readObject();
+            this.listofsongs = (ArrayList<String>)in.readObject();
+            System.out.println("Map received from broker to consumer");
+            System.out.println(listofsongs.toString());
+            String song = "Champ de tournesol";
+            out.writeUTF(song);
+
 
             //sends song
         } catch (IOException | ClassNotFoundException e) {

@@ -29,7 +29,7 @@ public class PublisherNode implements Publisher,Serializable{
     char end;
     String ip;
     int port;
-    Object brokerkey;
+
 
     int BrokerPort1 = 7654;
     int BrokerPort2 = 8765;
@@ -440,10 +440,10 @@ public class PublisherNode implements Publisher,Serializable{
         ArrayList<PublisherNode> publishers = new ArrayList<>();
         publishers.add(p);
         publishers.add(p2);
-
+        ArtistName artistReceived = null;
         publishers.parallelStream().forEach((publisher) -> {
 
-
+        while(true) {
             try {
                 Socket broker = publisher.getSocket();
 
@@ -460,7 +460,7 @@ public class PublisherNode implements Publisher,Serializable{
                 publisher.out.writeObject(publisher.getArtistMap());
                 publisher.out.flush();
 
-
+                if(artistReceived!= null) {
                 /*try {
                     ArtistName artist = (ArtistName) in.readObject(); // pull
                     Value value = (Value)in.readObject();
@@ -468,11 +468,13 @@ public class PublisherNode implements Publisher,Serializable{
                 } catch (ClassNotFoundException e) {
                     e.printStackTrace();
                 }*/
-                //p.push();
-
+                    //p.push();
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
+        }
         });
     }
 
