@@ -433,7 +433,9 @@ public class BrokerNode extends Thread implements Broker,Serializable {
 
                                         broker.out.writeObject(songs); //πρεπει να στελνει μονο το arraylist αν το κλειδι ειναι αυτο που εστειλε ο consumer
                                         broker.out.flush();
+
                                         String song = broker.in.readUTF();
+                                        System.out.println("song finally received from consumer: "+song);
 
                                         broker.pull(broker.getArtistReceived(),song);
                                         break;
@@ -446,7 +448,7 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                         }
                         else {
 
-                            System.out.println("Noooo"+registeredPublishers.get(0).hashTopic(artistName).getBrokerPort());
+                            System.out.println("Noooo "+registeredPublishers.get(0).hashTopic(artistName).getBrokerPort());
 
                             System.out.println("yo");
                             int port = registeredPublishers.get(0).hashTopic(artistName).getBrokerPort();
