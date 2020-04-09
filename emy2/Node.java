@@ -8,9 +8,4 @@ public interface Node extends Serializable {
 
     public abstract void init(); //change
 
-    public abstract List <BrokerNode> getBrokers();
-
-    public abstract void connect();
-    public abstract void disconnect();
-
 }
