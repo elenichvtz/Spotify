@@ -291,6 +291,8 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                                         System.out.println(entry2.getValue().toString());
                                         List<String> songs = entry2.getValue();
 
+                                        broker.out.writeInt(broker.port);
+
                                         broker.out.writeObject(songs);
                                         broker.out.flush();
                                         String song = broker.in.readUTF();

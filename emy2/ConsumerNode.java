@@ -61,15 +61,16 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
 
                 System.out.println("yo2");
                 connect(brokerport);
+
+                this.out.writeUTF(this.ip);
+                System.out.println("yo");
+                this.out.writeInt(this.port);
+                System.out.println("yo");
+
+                this.out.writeObject(artist); //successfully sends artistName to BrokerNode
+                this.out.flush();
+
             }
-
-            this.out.writeUTF(this.ip);
-            System.out.println("yo");
-            this.out.writeInt(this.port);
-            System.out.println("yo");
-
-            this.out.writeObject(artist); //successfully sends artistName to BrokerNode
-            this.out.flush();
 
             //liat of songs of the requested artist
             this.listofsongs = (ArrayList<String>)in.readObject();
