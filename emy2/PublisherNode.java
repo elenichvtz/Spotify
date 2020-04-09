@@ -24,7 +24,9 @@ public class PublisherNode implements Publisher,Serializable{
     ServerSocket providerSocket = null;
     ObjectOutputStream out = null;
     ObjectInputStream in = null;
-    String path = "C:\\Users\\eleni\\Downloads\\DS\\dataset1";
+    ObjectOutputStream out2 = null;
+    ObjectInputStream in2 = null;
+    String path = "/Users/emiliadan/Downloads/distributed_project/dataset1";
     char start;
     char end;
     String ip;
@@ -152,8 +154,6 @@ public class PublisherNode implements Publisher,Serializable{
         }
 
 
-
-
         System.out.println("wait");
 
         try {
@@ -276,112 +276,132 @@ public class PublisherNode implements Publisher,Serializable{
             try (DirectoryStream<Path> dirPaths = Files.newDirectoryStream(dirPath)) { //stores the folders ex. "Comedy"  in the zip
                 for (Path file : dirPaths) { //for every folder in path
                     if (Files.isDirectory(file)) {
-                        Path CurrentFolderContent = Paths.get(path.concat("//").concat(file.getFileName().toString()));
+                        Path CurrentFolderContent = Paths.get(path.concat("/").concat(file.getFileName().toString()));
+                        System.out.println("Push "+CurrentFolderContent.getFileName());
                         try (DirectoryStream<Path> currentsongs = Files.newDirectoryStream(CurrentFolderContent)) {//the songs in the current folder
-                            boolean l = false;
-                            for (Path songs : currentsongs) {
-                                String foldercontents = path.concat("//").concat(file.getFileName().toString());
-                                try {
-                                    String songname = songs.getFileName().toString(); //return the name of the song in string
-                                    Mp3File mp3file = null;
-                                    try {
-                                        mp3file = new Mp3File(foldercontents.concat("//").concat(songs.getFileName().toString()));
-                                        System.out.println("Inside push...");
-                                    } catch (UnsupportedTagException e) {
-                                        e.printStackTrace();
-                                    } catch (InvalidDataException e) {
-                                        e.printStackTrace();
-                                    }
+                            if (!currentsongs.toString().startsWith(".")) {
+                                boolean l = false;
+                                for (Path songs : currentsongs) {
+                                    System.out.println(songs.getFileName());
+                                    if (!songs.getFileName().toString().startsWith(".")) {
+                                        String foldercontents = path.concat("/").concat(file.getFileName().toString());
 
-                                    if (mp3file.hasId3v1Tag()) {
-                                        ID3v1 id3v1Tag = mp3file.getId3v1Tag();
-                                        //System.out.println(val.getMusicfile().getArtistName());
-                                        //System.out.println(val.getMusicfile().getArtistName().equals(id3v1Tag.getArtist()));
-                                        //System.out.println(id3v1Tag.getArtist());
-                                        System.out.println(id3v1Tag.getArtist()+ " "+id3v1Tag.getTitle());
-                                        System.out.println("Is id3v1 "+val.getMusicfile().getTrackName());
-                                        if (val.getMusicfile().getArtistName().equals(id3v1Tag.getArtist()) && (val.getMusicfile().getTrackName().equals(id3v1Tag.getTitle()))) {
-                                            System.out.println("Found the song");
-                                            l = true;
-                                            ByteArrayOutputStream byteout = new ByteArrayOutputStream();
-
-                                            File file2 = new File(foldercontents.concat("//").concat(songs.getFileName().toString()));
-                                            FileInputStream fis = new FileInputStream(file2);
-
-                                            byte[] chunk = new byte[chunk_size];
-                                            int numberOfChunks = (int) ceil(file2.length() / chunk_size);
+                                        try {
+                                            String songname = songs.getFileName().toString(); //return the name of the song in string
+                                            Mp3File mp3file = null;
                                             try {
-                                                for (int readNum; (readNum = fis.read(chunk)) != -1; ) {
-                                                    byteout.write(chunk, 0, readNum);
-                                                    MusicFile musicfile = new MusicFile(id3v1Tag.getTitle(), id3v1Tag.getArtist(), id3v1Tag.getAlbum(),
-                                                            id3v1Tag.getGenreDescription(), chunk, counter, numberOfChunks);
-
-                                                    counter++;
-                                                    val.setMusicfile(musicfile);
-
-                                                    //send chunk through socket
-                                                    while (true) {
-                                                        try {
-                                                            this.requestSocket = this.providerSocket.accept();
-                                                            //this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());  //initialize out
-                                                            this.out.writeObject(val);
-                                                            this.out.flush();
-                                                        } catch (IOException e) {
-                                                            e.printStackTrace();
-                                                        }
-                                                    }
-                                                }
-                                            } catch (IOException e) {
+                                                mp3file = new Mp3File(foldercontents.concat("//").concat(songs.getFileName().toString()));
+                                                System.out.println("Inside push...");
+                                            } catch (UnsupportedTagException e) {
+                                                e.printStackTrace();
+                                            } catch (InvalidDataException e) {
                                                 e.printStackTrace();
                                             }
-                                        }
-                                        break; //so it doesn't need to check next if
-                                    }
 
-                                    if (mp3file.hasId3v2Tag()) {
-                                        ID3v2 id3v2Tag = mp3file.getId3v2Tag();
-                                        System.out.println(id3v2Tag.getArtist()+ " "+id3v2Tag.getTitle());
+                                            if (mp3file.hasId3v1Tag()) {
+                                                System.out.println("Id3v1");
+                                                ID3v1 id3v1Tag = mp3file.getId3v1Tag();
+                                                //System.out.println("Our artist is: "+val.getMusicfile().getArtistName());
+                                                //System.out.println("Are they equal? "+val.getMusicfile().getArtistName().equals(id3v1Tag.getArtist()));
+                                                //System.out.println("The current artist found "+id3v1Tag.getArtist());
+                                                //System.out.println(id3v1Tag.getArtist()+ " song is : "+id3v1Tag.getTitle());
+                                                //System.out.println("Is id3v1 "+val.getMusicfile().getTrackName());
+                                                if (val.getMusicfile().getArtistName().equals(id3v1Tag.getArtist()) && (val.getMusicfile().getTrackName().equals(id3v1Tag.getTitle()))) {
+                                                    System.out.println("Found the song2");
+                                                    l = true;
+                                                    ByteArrayOutputStream byteout = new ByteArrayOutputStream();
 
-                                        if (val.getMusicfile().getArtistName().equals(id3v2Tag.getArtist()) && (val.getMusicfile().getTrackName().equals(id3v2Tag.getTitle()))) {
-                                            ByteArrayOutputStream byteout = new ByteArrayOutputStream();
+                                                    File file2 = new File(foldercontents.concat("//").concat(songs.getFileName().toString()));
+                                                    FileInputStream fis = new FileInputStream(file2);
+                                                    System.out.println("yo");
+                                                    byte[] chunk = new byte[chunk_size];
+                                                    int numberOfChunks = (int) ceil(file2.length() / chunk_size);
+                                                    System.out.println("yo");
+                                                    try {
+                                                        for (int readNum; (readNum = fis.read(chunk)) != -1; ) {
+                                                            byteout.write(chunk, 0, readNum);
+                                                            MusicFile musicfile = new MusicFile(id3v1Tag.getTitle(), id3v1Tag.getArtist(), id3v1Tag.getAlbum(),
+                                                                    id3v1Tag.getGenreDescription(), chunk, counter, numberOfChunks);
 
-                                            File file2 = new File(foldercontents.concat("//").concat(songs.getFileName().toString()));
-                                            FileInputStream fis = new FileInputStream(file2);
+                                                            counter++;
+                                                            System.out.println("yo");
+                                                            val.setMusicfile(musicfile);
 
-                                            byte[] chunk = new byte[chunk_size];
-                                            int numberOfChunks = (int) ceil(file2.length() / chunk_size);
-                                            try {
-                                                for (int readNum; (readNum = fis.read(chunk)) != -1; ) {
-                                                    byteout.write(chunk, 0, readNum);
-                                                    MusicFile musicfile = new MusicFile(id3v2Tag.getTitle(), id3v2Tag.getArtist(), id3v2Tag.getAlbum(),
-                                                            id3v2Tag.getGenreDescription(), chunk, counter, numberOfChunks);
-
-                                                    counter++;
-                                                    val.setMusicfile(musicfile);
-
-                                                    //send chunk through socket
-                                                    while (true) {
-                                                        try {
-                                                            this.requestSocket = this.providerSocket.accept();
-                                                            out.writeInt(numberOfChunks); // sends also the number of chunks??? not sure if neeeded
-                                                            this.out.writeObject(val);
-                                                            this.out.flush();
-                                                        } catch (IOException e) {
-                                                            e.printStackTrace();
+                                                            //send chunk through socket
+                                                            while (true) {
+                                                                System.out.println("yo");
+                                                                try {
+                                                                    //this.requestSocket = this.providerSocket.accept();
+                                                                    this.out.writeInt(numberOfChunks);
+                                                                    //this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());  //initialize out
+                                                                    this.out.writeObject(val);
+                                                                    this.out.flush();
+                                                                } catch (IOException e) {
+                                                                    e.printStackTrace();
+                                                                }
+                                                            }
                                                         }
+                                                    } catch (IOException e) {
+                                                        e.printStackTrace();
                                                     }
                                                 }
-                                            } catch (IOException e) {
-                                                e.printStackTrace();
+                                                break; //so it doesn't need to check next if
                                             }
+
+                                            if (mp3file.hasId3v2Tag()) {
+                                                ID3v2 id3v2Tag = mp3file.getId3v2Tag();
+                                                System.out.println("Id3v2");
+                                                //System.out.println("Are they equal? "+val.getMusicfile().getArtistName().equals(id3v2Tag.getArtist()));
+                                                //System.out.println("The current artist found "+id3v2Tag.getArtist());
+                                                //System.out.println(id3v2Tag.getArtist()+ " song is : "+id3v2Tag.getTitle());
+                                                //System.out.println("Is id3v1 "+val.getMusicfile().getTrackName());
+
+                                                if (val.getMusicfile().getArtistName().equals(id3v2Tag.getArtist()) && (val.getMusicfile().getTrackName().equals(id3v2Tag.getTitle()))) {
+                                                    System.out.println("Found the song");
+                                                    ByteArrayOutputStream byteout = new ByteArrayOutputStream();
+                                                    System.out.println("yo");
+                                                    File file2 = new File(foldercontents.concat("//").concat(songs.getFileName().toString()));
+                                                    FileInputStream fis = new FileInputStream(file2);
+                                                    System.out.println("yo");
+                                                    byte[] chunk = new byte[chunk_size];
+                                                    int numberOfChunks = (int) ceil(file2.length() / chunk_size);
+                                                    System.out.println("yo");
+                                                    try {
+                                                        for (int readNum; (readNum = fis.read(chunk)) != -1; ) {
+                                                            byteout.write(chunk, 0, readNum);
+                                                            MusicFile musicfile = new MusicFile(id3v2Tag.getTitle(), id3v2Tag.getArtist(), id3v2Tag.getAlbum(),
+                                                                    id3v2Tag.getGenreDescription(), chunk, counter, numberOfChunks);
+
+                                                            counter++;
+                                                            val.setMusicfile(musicfile);
+                                                            System.out.println("yo");
+
+                                                            //send chunk through socket
+                                                            while (true) {
+                                                                try {
+                                                                    //this.requestSocket = this.providerSocket.accept();
+                                                                    out.writeInt(numberOfChunks); // sends also the number of chunks??? not sure if neeeded
+                                                                    this.out.writeObject(val);
+                                                                    this.out.flush();
+                                                                } catch (IOException e) {
+                                                                    e.printStackTrace();
+                                                                }
+                                                            }
+                                                        }
+                                                        System.out.println("yo end");
+                                                    } catch (IOException e) {
+                                                        e.printStackTrace();
+                                                    }
+                                                }
+                                            }
+                                        } catch (IOException e) {
+                                            e.printStackTrace();
                                         }
                                     }
-                                } catch (IOException e) {
-                                    e.printStackTrace();
                                 }
-                            }
-                            if(l){
-                                break;
+                                if (l) {
+                                    break;
+                                }
                             }
                         }
                     }
@@ -476,9 +496,12 @@ public class PublisherNode implements Publisher,Serializable{
 
                 System.out.println("Waiting...");
                 try {
-                    ArtistName artist = (ArtistName) publisher.in.readObject(); // pull
+                    publisher.requestSocket = publisher.providerSocket.accept();
+                    publisher.out2 = new ObjectOutputStream(publisher.requestSocket.getOutputStream());
+                    publisher.in2 = new ObjectInputStream(publisher.requestSocket.getInputStream());
+                    ArtistName artist = (ArtistName) publisher.in2.readObject(); // pull
                     System.out.println("Artist received from broker is: "+artist);
-                    Value value = (Value)publisher.in.readObject();
+                    Value value = (Value)publisher.in2.readObject();
                     System.out.println("Value received from broker is: "+value.getMusicfile().getTrackName());
                     System.out.println("Port of broker that will use push is :"+publisher.getPublisherPort());
                     publisher.push(artist,value);

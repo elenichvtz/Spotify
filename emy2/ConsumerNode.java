@@ -109,9 +109,8 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
             this.listofsongs = (ArrayList<String>)in.readObject();
             System.out.println("Map received from broker to consumer");
             System.out.println(listofsongs.toString());
-            String song = "Champ de tournesol";
-            this.out.writeUTF(song);
-            this.out.flush();
+            String song = "Bleu";
+            out.writeUTF(song);
 
             out.flush();
 
