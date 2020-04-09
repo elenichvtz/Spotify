@@ -113,6 +113,8 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
             this.out.writeUTF(song);
             this.out.flush();
 
+            out.flush();
+
 
             //sends song
         } catch (IOException | ClassNotFoundException e) {

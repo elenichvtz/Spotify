@@ -20,11 +20,14 @@ public class BrokerNode extends Thread implements Broker,Serializable {
     Socket consumer_requestSocket;
     ObjectOutputStream out = null;
     ObjectInputStream in = null;
+    ObjectOutputStream out2 = null;
+    ObjectInputStream in2 = null;
     ArtistName artistReceived= null;
     Map<String, ArrayList<String>> mapreceived = new HashMap<String, ArrayList<String>>();
     Map<String, ArrayList<String>> mapreceived2 = new HashMap<String, ArrayList<String>>();
     ArrayList<ArtistName>  myartists = new ArrayList<>();
     Map<Integer, ArrayList<ArtistName>> emy = new HashMap<>();
+    Map<Integer, Map<String, ArrayList<String>>> art2 = new HashMap<>();
 
     BigInteger key;
     ArrayList<Publisher> publishers = new ArrayList<>();
@@ -220,45 +223,58 @@ public class BrokerNode extends Thread implements Broker,Serializable {
 
     @Override
     public void pull(ArtistName artist, String song) {
+        System.out.println("Inside pull....");
+        /*for (Map.Entry<Integer,  Map<String, ArrayList<String>>> entry : art2.entrySet()) {
 
-        if(mapreceived.containsKey(artistReceived.getArtistName())){
-            System.out.println("it exists");
-            MusicFile f = new MusicFile(song,artist.getArtistName(),null,null,null,0,0);
-            Value value = new Value(f);
-            try {
-                this.out.writeObject(artist);
-                this.out.writeObject(value);
+            //entry.getValue();
+            Map<String, ArrayList<String>> k = entry.getValue();
+            for (Map.Entry<String, ArrayList<String>> entry2 : k.entrySet()) {
+                if(entry2.getKey().equals(artistReceived.getArtistName())) {*/
+                    System.out.println("it exists");
+                    MusicFile f = new MusicFile(song, artist.getArtistName(), null, null, null, 0, 0);
+                    Value value = new Value(f);
+                    try {
+                        this.out2.writeObject(artist);
+                        this.out2.writeObject(value);
+                        this.out2.flush();
 
-                int numOfchunks = in.readInt();
-                try {
-                    for (int i = 1; i <= numOfchunks;i++) {
-                        Value chunk = new Value((MusicFile) in.readObject());
-                        out.writeObject(chunk);
+                        int numOfchunks = in2.readInt();
+                        try {
+                            for (int i = 1; i <= numOfchunks; i++) {
+                                Value chunk = new Value((MusicFile) in.readObject());
+                                out.writeObject(chunk);
+                            }
+                        } catch (ClassNotFoundException e) {
+                            e.printStackTrace();
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } // να ελεγχει και το δευτερο μαπ απο τον δευτερο publisher
+                //}
+            //}
+        //}
+        //} // να ελεγχει και το δευτερο μαπ απο τον δευτερο publisher
 
-    }
-
-    public Map<Integer, ArrayList<ArtistName>> getEmy() {
-        return emy;
-    }
-
-    public void setEmy(Map<Integer, ArrayList<ArtistName>> emy) {
-        this.emy = emy;
     }
 
     public void setOut(ObjectOutputStream out){this.out = out;}
 
     public void setIn(ObjectInputStream in) {this.in = in;}
 
+    public void setOut2(ObjectOutputStream out){this.out2 = out;}
+
+    public void setIn2(ObjectInputStream in) {this.in2 = in;}
+
     public void setMapReceived(Map<String,ArrayList<String>> map){
         this.mapreceived = map;
+    }
+
+    public void setArt(Map<Integer, Map<String, ArrayList<String>>> art2) {
+        this.art2 = art2;
+    }
+
+    public Map<Integer, Map<String, ArrayList<String>>> getArt() {
+        return art2;
     }
 
     public Map getMapReceived() {
@@ -322,21 +338,22 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                     Socket publisher = broker.getPublisherServerSocket().accept();
                     //ObjectOutputStream out = new ObjectOutputStream(publisher.getOutputStream());
                     //ObjectInputStream in = new ObjectInputStream(publisher.getInputStream());
-                    broker.setOut(new ObjectOutputStream(publisher.getOutputStream()));
-                    broker.setIn(new ObjectInputStream(publisher.getInputStream()));
+                    broker.setOut2(new ObjectOutputStream(publisher.getOutputStream()));
+                    broker.setIn2(new ObjectInputStream(publisher.getInputStream()));
 
                     //receive map, ip and port from publisher
-                    String publisherip = broker.in.readUTF();
+                    String publisherip = broker.in2.readUTF();
                     System.out.println(publisherip);
-                    int publisherport = broker.in.readInt();
+                    int publisherport = broker.in2.readInt();
                     System.out.println(publisherport);
-                    char start = broker.in.readChar();
-                    char end = broker.in.readChar();
+                    char start = broker.in2.readChar();
+                    char end = broker.in2.readChar();
                     System.out.println(start + " & " + end);
                     System.out.println("Current broker port is: "+broker.getBrokerPort());
 
-                    broker.setMapReceived((Map<String, ArrayList<String>>) broker.in.readObject());
+                    broker.setMapReceived((Map<String, ArrayList<String>>) broker.in2.readObject());
                     art.put(publisherport, broker.getMapReceived()); //add in art the maps received
+                    broker.setArt(art);
                     System.out.println(broker.getMapReceived().toString());
 
                     //tom.add(broker.getMapReceived());
@@ -435,7 +452,7 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                                         broker.out.flush();
 
                                         String song = broker.in.readUTF();
-                                        System.out.println("song finally received from consumer: "+song);
+                                        System.out.println("Song received : "+song);
 
                                         broker.pull(broker.getArtistReceived(),song);
                                         break;
