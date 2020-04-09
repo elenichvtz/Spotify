@@ -109,7 +109,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
             this.listofsongs = (ArrayList<String>)in.readObject();
             System.out.println("Map received from broker to consumer");
             System.out.println(listofsongs.toString());
-            String song = "Bleu";
+            String song = "Champ de tournesol";
             out.writeUTF(song);
 
             out.flush();
@@ -210,13 +210,17 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
     @Override
     public void playData(ArtistName artist, Value val){
         int chunks = 0;
+        System.out.println("Inside play data");
         ArrayList<Value> pieces = new ArrayList<>();
         try {
+            System.out.println("yo");
             chunks = in.readInt(); // or do...while()
             for (int i = 1; i <= chunks;i++) {
-                Value value = new Value((MusicFile) in.readObject());
+                System.out.println("yo2");
+                Value value = (Value) in.readObject();
                 pieces.add(value); //αποθηκευει τοπικα τα chunks
             }
+            System.out.println(pieces.toString());
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -248,6 +252,9 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
         BrokerNode b = new BrokerNode("localhost", 7654);
 
         cn.register(b,artistName); //υποτιθεται οτι η λιστα με τους μπροκερσ πρεπει να ειναι γεματη
+        MusicFile ms = new MusicFile(null,null,null,null,null,0,0);
+        Value value = new Value(ms);
+        cn.playData(artistName,value);
 
 /*
         Socket broker = cn.getSocket();

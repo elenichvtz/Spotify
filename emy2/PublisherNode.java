@@ -274,13 +274,14 @@ public class PublisherNode implements Publisher,Serializable{
 
             Path dirPath = Paths.get(path);
             try (DirectoryStream<Path> dirPaths = Files.newDirectoryStream(dirPath)) { //stores the folders ex. "Comedy"  in the zip
+                boolean found2 = false;
                 for (Path file : dirPaths) { //for every folder in path
                     if (Files.isDirectory(file)) {
                         Path CurrentFolderContent = Paths.get(path.concat("/").concat(file.getFileName().toString()));
                         System.out.println("Push "+CurrentFolderContent.getFileName());
                         try (DirectoryStream<Path> currentsongs = Files.newDirectoryStream(CurrentFolderContent)) {//the songs in the current folder
                             if (!currentsongs.toString().startsWith(".")) {
-                                boolean l = false;
+                                boolean found = false;
                                 for (Path songs : currentsongs) {
                                     System.out.println(songs.getFileName());
                                     if (!songs.getFileName().toString().startsWith(".")) {
@@ -308,7 +309,7 @@ public class PublisherNode implements Publisher,Serializable{
                                                 //System.out.println("Is id3v1 "+val.getMusicfile().getTrackName());
                                                 if (val.getMusicfile().getArtistName().equals(id3v1Tag.getArtist()) && (val.getMusicfile().getTrackName().equals(id3v1Tag.getTitle()))) {
                                                     System.out.println("Found the song2");
-                                                    l = true;
+                                                    found = true;
                                                     ByteArrayOutputStream byteout = new ByteArrayOutputStream();
 
                                                     File file2 = new File(foldercontents.concat("//").concat(songs.getFileName().toString()));
@@ -316,6 +317,7 @@ public class PublisherNode implements Publisher,Serializable{
                                                     System.out.println("yo");
                                                     byte[] chunk = new byte[chunk_size];
                                                     int numberOfChunks = (int) ceil(file2.length() / chunk_size);
+                                                    this.out2.writeInt(numberOfChunks);
                                                     System.out.println("yo");
                                                     try {
                                                         for (int readNum; (readNum = fis.read(chunk)) != -1; ) {
@@ -332,10 +334,10 @@ public class PublisherNode implements Publisher,Serializable{
                                                                 System.out.println("yo");
                                                                 try {
                                                                     //this.requestSocket = this.providerSocket.accept();
-                                                                    this.out.writeInt(numberOfChunks);
+
                                                                     //this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());  //initialize out
-                                                                    this.out.writeObject(val);
-                                                                    this.out.flush();
+                                                                    this.out2.writeObject(val);
+                                                                    this.out2.flush();
                                                                 } catch (IOException e) {
                                                                     e.printStackTrace();
                                                                 }
@@ -345,7 +347,7 @@ public class PublisherNode implements Publisher,Serializable{
                                                         e.printStackTrace();
                                                     }
                                                 }
-                                                break; //so it doesn't need to check next if
+
                                             }
 
                                             if (mp3file.hasId3v2Tag()) {
@@ -358,6 +360,8 @@ public class PublisherNode implements Publisher,Serializable{
 
                                                 if (val.getMusicfile().getArtistName().equals(id3v2Tag.getArtist()) && (val.getMusicfile().getTrackName().equals(id3v2Tag.getTitle()))) {
                                                     System.out.println("Found the song");
+                                                    found = true;
+
                                                     ByteArrayOutputStream byteout = new ByteArrayOutputStream();
                                                     System.out.println("yo");
                                                     File file2 = new File(foldercontents.concat("//").concat(songs.getFileName().toString()));
@@ -365,9 +369,11 @@ public class PublisherNode implements Publisher,Serializable{
                                                     System.out.println("yo");
                                                     byte[] chunk = new byte[chunk_size];
                                                     int numberOfChunks = (int) ceil(file2.length() / chunk_size);
-                                                    System.out.println("yo");
+                                                    out2.writeInt(numberOfChunks);
+                                                    out2.flush();
+                                                    System.out.println("yo " +numberOfChunks);
                                                     try {
-                                                        for (int readNum; (readNum = fis.read(chunk)) != -1; ) {
+                                                        for (int readNum; (readNum = fis.read(chunk)) != -1;  ) {
                                                             byteout.write(chunk, 0, readNum);
                                                             MusicFile musicfile = new MusicFile(id3v2Tag.getTitle(), id3v2Tag.getArtist(), id3v2Tag.getAlbum(),
                                                                     id3v2Tag.getGenreDescription(), chunk, counter, numberOfChunks);
@@ -377,16 +383,16 @@ public class PublisherNode implements Publisher,Serializable{
                                                             System.out.println("yo");
 
                                                             //send chunk through socket
-                                                            while (true) {
+                                                            //while (true) {
                                                                 try {
                                                                     //this.requestSocket = this.providerSocket.accept();
-                                                                    out.writeInt(numberOfChunks); // sends also the number of chunks??? not sure if neeeded
-                                                                    this.out.writeObject(val);
-                                                                    this.out.flush();
+                                                                    //out.writeInt(numberOfChunks); // sends also the number of chunks??? not sure if neeeded
+                                                                    this.out2.writeObject(val);
+                                                                    this.out2.flush();
                                                                 } catch (IOException e) {
                                                                     e.printStackTrace();
                                                                 }
-                                                            }
+                                                            //}
                                                         }
                                                         System.out.println("yo end");
                                                     } catch (IOException e) {
@@ -398,14 +404,21 @@ public class PublisherNode implements Publisher,Serializable{
                                             e.printStackTrace();
                                         }
                                     }
+                                    if (found) {
+                                        found2 = true;
+                                        break;
+                                    }
                                 }
-                                if (l) {
-                                    break;
-                                }
+
                             }
                         }
                     }
+                    if (found2) {
+
+                        break;
+                    }
                 }
+
             } catch (IOException e) {
                 e.printStackTrace();
             }

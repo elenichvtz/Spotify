@@ -264,10 +264,14 @@ public class BrokerNode extends Thread implements Broker,Serializable {
             this.out3.writeObject(value);
             this.out3.flush();
             int numOfchunks = in3.readInt();
+            out.writeInt(numOfchunks);
+            out.flush();
+            System.out.println("Chunks to receive from publisher are: "+numOfchunks);
             try {
                 for (int i = 1; i <= numOfchunks; i++) {
-                    Value chunk = new Value((MusicFile) in3.readObject());
-                    out2.writeObject(chunk);
+                    //MusicFile m = (MusicFile) in3.readObject();
+                    Value chunk = (Value)in3.readObject();
+                    out.writeObject(chunk);
                     System.out.println("Ola good");
                 }
             } catch (ClassNotFoundException e) {
