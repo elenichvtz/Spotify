@@ -297,7 +297,13 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                                         System.out.println(entry2.getValue().toString());
                                         List<String> songs = entry2.getValue();
 
-                                        broker.out.writeInt(broker.port);
+                                        if(!broker.p) {
+                                            broker.out.writeInt(broker.port);
+                                            System.out.println("Executed");
+
+
+                                        }
+                                        broker.p = false;
 
                                         broker.out.writeObject(songs);
                                         broker.out.flush();
@@ -326,6 +332,8 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                             System.out.println("yo");
                             broker.out.close();
                             broker.in.close();
+                            broker.p = true;
+
                         }
 
                         System.out.println("END");
