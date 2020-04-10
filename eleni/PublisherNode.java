@@ -15,7 +15,7 @@ import java.util.*;
 
 import static java.lang.Math.ceil;
 
-//Client
+//Client & Server
 public class PublisherNode implements Publisher,Serializable{
 
     Socket requestSocket = null;
