@@ -53,22 +53,17 @@ public class PublisherNode implements Publisher,Serializable{
 
     @Override
     public synchronized void init(){
-        File f = null;
-        BufferedReader reader = null;
 
         Path dirPath = Paths.get(path);
-        //System.out.println(dirPath.getFileName());
         try (DirectoryStream<Path> dirPaths = Files.newDirectoryStream(dirPath)) {
             for (Path file : dirPaths) { //for every folder in path
                 if (Files.isDirectory(file)) {
-                    //System.out.println(file.getName(3).toString());
                     Path CurrentFolderContent = Paths.get(path.concat("/").concat(file.getFileName().toString()));
                     System.out.println(CurrentFolderContent.getFileName());
 
                     try (DirectoryStream<Path> currentsongs = Files.newDirectoryStream(CurrentFolderContent)) {//the songs in the current folder
                         if (!currentsongs.toString().startsWith(".")) {
                             for (Path songs : currentsongs) {
-                                String foldercontents = path.concat("/").concat(file.getFileName().toString());
 
                                 if (!songs.getFileName().toString().startsWith(".")) {
                                     try {
@@ -76,17 +71,11 @@ public class PublisherNode implements Publisher,Serializable{
                                         Mp3File mp3file = new Mp3File(songs);
 
                                         if (mp3file.hasId3v2Tag()) {
-                                            //System.out.println("YES FOR ID2");
                                             ID3v2 id3v2Tag = mp3file.getId3v2Tag();
-                                            //System.out.println("Name of artist with tag version 2 is " + id3v2Tag.getArtist());
-
                                             if (id3v2Tag.getArtist()!=null && !id3v2Tag.getArtist().isBlank()) {
                                                 if (id3v2Tag.getArtist().charAt(0) >= this.start && id3v2Tag.getArtist().charAt(0) <= this.end) {
 
-                                                    //System.out.println(id3v2Tag.getArtist());
-                                                    //System.out.println(artistMap.get(id3v2Tag.getArtist()));
                                                     if (!this.artistMap.containsKey(id3v2Tag.getArtist())) {
-
                                                         ArrayList<String> playlist = new ArrayList<String>();
                                                         playlist.add(id3v2Tag.getTitle());
                                                         this.artistMap.put(id3v2Tag.getArtist(), playlist);
@@ -101,20 +90,17 @@ public class PublisherNode implements Publisher,Serializable{
                                                 ArrayList<String> playlist3 = new ArrayList<String>();
                                                 playlist3.add(id3v2Tag.getTitle());
                                                 id3v2Tag.setArtist("Unknown");
-                                                //System.out.println(id3v2Tag.getArtist());
                                                 this.artistMap.put(id3v2Tag.getArtist(),playlist3);
                                             }
                                         }
 
                                         if (mp3file.hasId3v1Tag()) {
                                             ID3v1 id3v1Tag = mp3file.getId3v1Tag();
-                                            //System.out.println("YES");
 
                                             if(id3v1Tag.getArtist()!=null && !id3v1Tag.getArtist().isBlank()) {
                                                 if ((id3v1Tag.getArtist().charAt(0) >= this.start && id3v1Tag.getArtist().charAt(0) <= this.end)) { //if artist already exists
 
                                                     if (this.artistMap.containsKey(id3v1Tag.getArtist())) {
-                                                        // playlist.add(id3v1Tag.getTitle());
                                                         ArrayList<String> playlist = this.artistMap.get(id3v1Tag.getArtist());
                                                         playlist.add(id3v1Tag.getTitle());
                                                         this.artistMap.put(id3v1Tag.getArtist(), playlist);
@@ -129,7 +115,6 @@ public class PublisherNode implements Publisher,Serializable{
                                                 ArrayList<String> playlist3 = new ArrayList<String>();
                                                 playlist3.add(id3v1Tag.getTitle());
                                                 id3v1Tag.setArtist("Unknown");
-                                                //System.out.println(id3v1Tag.getArtist());
                                                 this.artistMap.put(id3v1Tag.getArtist(),playlist3);
                                             }
                                         }
@@ -154,29 +139,17 @@ public class PublisherNode implements Publisher,Serializable{
             e.printStackTrace();
         }
 
-        /*try {
-            this.requestSocket = new Socket(this.ip, BrokerPort1);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        try {
-            this.requestSocket = new Socket(this.ip, BrokerPort2);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
-
         System.out.println("wait");
 
         try {
             this.providerSocket = new ServerSocket(this.port+2, 10);
-            //this.in = new ObjectInputStream(this.requestSocket.getInputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }
 
     }
     public void updateList(){
-        BrokerNode b = new BrokerNode("localhost",BrokerPort1); //na to ksanadw
+        BrokerNode b = new BrokerNode("localhost",BrokerPort1);
         brokerKeys.add(b);
         BrokerNode b2 = new BrokerNode("localhost",BrokerPort2);
         brokerKeys.add(b2);
@@ -187,7 +160,6 @@ public class PublisherNode implements Publisher,Serializable{
     public BigInteger findMax(){
         BigInteger max = new BigInteger("-1");
 
-
         for (int i=0; i< brokerKeys.size(); i++){
             if (brokerKeys.get(i).calculateKeys().compareTo(max) > 1){
                 max = brokerKeys.get(i).calculateKeys();
@@ -195,7 +167,6 @@ public class PublisherNode implements Publisher,Serializable{
         }
         return max;
     }
-
 
     @Override
     public BrokerNode hashTopic(ArtistName artist) throws NoSuchAlgorithmException{
@@ -213,9 +184,7 @@ public class PublisherNode implements Publisher,Serializable{
 
 
         for (int i=0; i< brokerKeys.size(); i++){
-            //brokerKeys.get(i).calculateKeys();
             if (brokerKeys.get(i).calculateKeys().compareTo(max) == 1){
-                //System.out.println(brokerKeys.get(i).calculateKeys());
                 max = brokerKeys.get(i).calculateKeys();
 
             }
@@ -233,60 +202,36 @@ public class PublisherNode implements Publisher,Serializable{
         for(int i =0 ;i<keys.size();i++){
             for(int j =0;j<brokerKeys.size();j++){
                 if((keys.get(i)).compareTo(brokerKeys.get(j).calculateKeys()) == 0){
-
                     brokerNodes.add(brokerKeys.get(j));
-
                 }
             }
         }
 
-
-        //System.out.println("Printing brokerNode: "+brokerNodes.toString());
-        //System.out.println("keys is order: "+keys.toString());
-
-        //System.out.println(max);
-
-        //BigInteger hash2 = new BigInteger("max"); ///???????
-
         BigInteger hashNumber = big1.mod(max);
-        //System.out.println("Adding key to arraylist: "+hashNumber);
-        //System.out.println("Hash of artist with max key is: "+hashNumber);
-
-
-        //System.out.println(hashNumber.compareTo(brokerKeys.get(0).calculateKeys()) == 1);
 
         if((hashNumber.compareTo(keys.get(0)) == 1) && (hashNumber.compareTo(keys.get(1)) == -1)){
-            //System.out.println("yes goes to 2nd: "+brokerKeys.get(1).getBrokerPort());
-
             return brokerNodes.get(1);
-
         }
         if((hashNumber.compareTo(keys.get(1)) == 1)&& (hashNumber.compareTo(keys.get(2)) == -1)){
             return brokerNodes.get(2);
-
         }
-        //System.out.println("yes goes to 2nd: "+brokerKeys.get(0).getBrokerPort());
         return brokerNodes.get(0);
-
     }
 
 
     public void push(ArtistName artist,Value val) { //stin main tou publisher
 
-
-            File f = null;
-            BufferedReader reader = null;
             int chunk_size = 512 * 1024;
             int counter = 1;
 
             Path dirPath = Paths.get(path);
-            try (DirectoryStream<Path> dirPaths = Files.newDirectoryStream(dirPath)) { //stores the folders ex. "Comedy"  in the zip
+            try (DirectoryStream<Path> dirPaths = Files.newDirectoryStream(dirPath)) { //stores the folders ex. "Comedy"
                 boolean found2 = false;
                 for (Path file : dirPaths) { //for every folder in path
                     if (Files.isDirectory(file)) {
                         Path CurrentFolderContent = Paths.get(path.concat("/").concat(file.getFileName().toString()));
                         System.out.println("Push "+CurrentFolderContent.getFileName());
-                        try (DirectoryStream<Path> currentsongs = Files.newDirectoryStream(CurrentFolderContent)) {//the songs in the current folder
+                        try (DirectoryStream<Path> currentsongs = Files.newDirectoryStream(CurrentFolderContent)) { //the songs in the current folder
                             if (!currentsongs.toString().startsWith(".")) {
                                 boolean found = false;
                                 for (Path songs : currentsongs) {
@@ -295,7 +240,6 @@ public class PublisherNode implements Publisher,Serializable{
                                         String foldercontents = path.concat("/").concat(file.getFileName().toString());
 
                                         try {
-                                            String songname = songs.getFileName().toString(); //return the name of the song in string
                                             Mp3File mp3file = null;
                                             try {
                                                 mp3file = new Mp3File(foldercontents.concat("//").concat(songs.getFileName().toString()));
@@ -309,11 +253,6 @@ public class PublisherNode implements Publisher,Serializable{
                                             if (mp3file.hasId3v1Tag()) {
                                                 System.out.println("Id3v1");
                                                 ID3v1 id3v1Tag = mp3file.getId3v1Tag();
-                                                //System.out.println("Our artist is: "+val.getMusicfile().getArtistName());
-                                                //System.out.println("Are they equal? "+val.getMusicfile().getArtistName().equals(id3v1Tag.getArtist()));
-                                                //System.out.println("The current artist found "+id3v1Tag.getArtist());
-                                                //System.out.println(id3v1Tag.getArtist()+ " song is : "+id3v1Tag.getTitle());
-                                                //System.out.println("Is id3v1 "+val.getMusicfile().getTrackName());
                                                 if (val.getMusicfile().getArtistName().equals(id3v1Tag.getArtist()) && (val.getMusicfile().getTrackName().equals(id3v1Tag.getTitle()))) {
                                                     System.out.println("Found the song2");
                                                     found = true;
@@ -341,32 +280,23 @@ public class PublisherNode implements Publisher,Serializable{
                                                             val.setMusicfile(musicfile);
 
                                                             //send chunk through socket
-
-                                                                System.out.println("yo");
-                                                                try {
-
-                                                                    this.out2.writeObject(val);
-                                                                    this.out2.flush();
-
-                                                                } catch (IOException e) {
-                                                                    e.printStackTrace();
-                                                                }
-
+                                                            System.out.println("yo");
+                                                            try {
+                                                                this.out2.writeObject(val);
+                                                                this.out2.flush();
+                                                            } catch (IOException e) {
+                                                                e.printStackTrace();
+                                                            }
                                                         }
                                                     } catch (IOException e) {
                                                         e.printStackTrace();
                                                     }
                                                 }
-
                                             }
 
                                             if (mp3file.hasId3v2Tag()) {
                                                 ID3v2 id3v2Tag = mp3file.getId3v2Tag();
                                                 System.out.println("Id3v2");
-                                                //System.out.println("Are they equal? "+val.getMusicfile().getArtistName().equals(id3v2Tag.getArtist()));
-                                                //System.out.println("The current artist found "+id3v2Tag.getArtist());
-                                                //System.out.println(id3v2Tag.getArtist()+ " song is : "+id3v2Tag.getTitle());
-                                                //System.out.println("Is id3v1 "+val.getMusicfile().getTrackName());
 
                                                 if (val.getMusicfile().getArtistName().equals(id3v2Tag.getArtist()) && (val.getMusicfile().getTrackName().equals(id3v2Tag.getTitle()))) {
                                                     System.out.println("Found the song");
@@ -383,8 +313,8 @@ public class PublisherNode implements Publisher,Serializable{
                                                     out2.writeInt(numberOfChunks);
                                                     out2.flush();
                                                     System.out.println("yo " +numberOfChunks);
-                                                    try {
 
+                                                    try {
                                                         for (int readNum; (readNum = fis.read(chunk)) != -1;  ) {
                                                             byteout.write(chunk, 0, readNum);
                                                             MusicFile musicfile = new MusicFile(id3v2Tag.getTitle(), id3v2Tag.getArtist(), id3v2Tag.getAlbum(),
@@ -393,7 +323,6 @@ public class PublisherNode implements Publisher,Serializable{
                                                             chunk = new byte[chunk_size];
                                                             counter++;
                                                             System.out.println("Counter is "+counter+" in music if it is "+musicfile.getChunkId());
-
 
                                                             System.out.println("Value id is "+val.getMusicfile().getChunkId());
                                                             System.out.println("yo");
@@ -423,12 +352,10 @@ public class PublisherNode implements Publisher,Serializable{
                                         break;
                                     }
                                 }
-
                             }
                         }
                     }
                     if (found2) {
-
                         break;
                     }
                 }
@@ -436,15 +363,10 @@ public class PublisherNode implements Publisher,Serializable{
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
     }
 
     public Socket getSocket() {
         return this.requestSocket;
-    }
-
-    public ServerSocket getServerSocket() {
-        return this.providerSocket;
     }
 
     public String getPublisherIP() {
@@ -498,10 +420,6 @@ public class PublisherNode implements Publisher,Serializable{
                 //send map to broker
                 publisher.out.writeObject(publisher.getArtistMap());
                 publisher.out.flush();
-
-                //send to broker3 as well
-
-
 
                 System.out.println("Waiting...");
 

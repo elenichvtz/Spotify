@@ -1,5 +1,3 @@
-import java.util.List;
-import java.io.*;
 
 public interface Consumer extends Node {
 

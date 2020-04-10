@@ -69,7 +69,6 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
 
                 this.out.writeObject(artist); //successfully sends artistName to BrokerNode
                 this.out.flush();
-
             }
 
             //liat of songs of the requested artist
@@ -106,7 +105,6 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
         int chunks = 0;
         System.out.println("Inside play data");
         ArrayList<Value> pieces = new ArrayList<>();
-
 
         try {
             System.out.println("yo");

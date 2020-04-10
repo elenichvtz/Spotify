@@ -1,12 +1,10 @@
-import java.util.List;
-import java.io.*;
+import java.io.Serializable;
 
 public class ArtistName implements Serializable{
     String artistName;
 
     ArtistName(String artistName){
         this.artistName = artistName;
-
     }
 
     public void setArtistName(String artistName) {
