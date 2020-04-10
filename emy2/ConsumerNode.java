@@ -1,13 +1,8 @@
-import com.mpatric.mp3agic.InvalidDataException;
-import com.mpatric.mp3agic.Mp3File;
-import com.mpatric.mp3agic.UnsupportedTagException;
-
 import java.io.*;
 import java.net.*;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.List;
 import java.io.Serializable;
+import java.util.Scanner;
 
 //Client
 public class ConsumerNode extends Thread implements Consumer,Serializable {
@@ -18,7 +13,6 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
     String ip;
     int port;
     ArrayList<String> listofsongs = new ArrayList<String>();
-    List<PublisherNode> Publishers = new ArrayList<PublisherNode>();
 
     ConsumerNode(String ip, int port) {
         this.ip = ip;
@@ -31,27 +25,9 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
             this.requestSocket = new Socket(this.ip, this.port+1);
             this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
             this.in = new ObjectInputStream(this.requestSocket.getInputStream());
-            //this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-    }
-
-    @Override
-    public List<BrokerNode> getBrokers() {
-        return null;
-    }
-
-    @Override
-    public void connect() {
-        //while(!requestSocket.isConnected()) {
-            try {
-                requestSocket = new Socket(this.ip, this.port+1);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        //}
     }
 
     public void connect(int port){
@@ -66,13 +42,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
     }
 
     @Override
-    public void disconnect() {
-
-    }
-
-    @Override
     public void register(BrokerNode broker, ArtistName artist) {
-
 
         try {
             System.out.println("Inside register");
@@ -81,16 +51,14 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
             this.out.writeObject(artist); //successfully sends artistName to BrokerNode
             this.out.flush();
 
-            //na pairnei apo ton borker to port pou prepei na syndethei
-
             int brokerport = this.in.readInt();
+
             if(brokerport != broker.getBrokerPort()) {
 
                 System.out.println(brokerport + " is the correct broker port.");
                 System.out.println("Disconnecting...");
                 disconnect(broker, artist);
 
-                //na kanei connect(port apo broker)
                 System.out.println("yo2");
                 connect(brokerport);
 
@@ -98,38 +66,34 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
                 System.out.println("yo");
                 this.out.writeInt(this.port);
                 System.out.println("yo");
-                //out.flush();
+
                 this.out.writeObject(artist); //successfully sends artistName to BrokerNode
                 this.out.flush();
-                //System.out.println("yo");
-                //this.in = new ObjectInputStream(this.requestSocket.getInputStream());
 
             }
 
-            //η λιστα με τα τραγουδια του artist επιστρεφεται στον consumer
+            //liat of songs of the requested artist
             this.listofsongs = (ArrayList<String>)in.readObject();
             System.out.println("Map received from broker to consumer");
             System.out.println(listofsongs.toString());
-            //String song = "River Meditation";
-            //String song = "Champ de tournesol";
-            String song = "Bleu";
+
+            System.out.println("Pick a song: ");
+
+            Scanner userInput = new Scanner(System.in);
+            String song = userInput.nextLine();
+
             out.writeUTF(song);
 
             out.flush();
 
-
-            //sends song
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
-
-
     }
 
     @Override
     public void disconnect(BrokerNode broker, ArtistName artist) {
         try {
-
             this.requestSocket.close();
 
         } catch (IOException e) {
@@ -146,8 +110,8 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
 
         try {
             System.out.println("yo");
-            chunks = in.readInt(); // or do...while()
-            FileOutputStream fileOuputStream = new FileOutputStream("/Users/emiliadan/Downloads/distributed_project/songReceived3.mp3");
+            chunks = in.readInt();
+            FileOutputStream fileOuputStream = new FileOutputStream("C:\\Users\\eleni\\Downloads\\DS\\songReceived3.mp3");
 
             for (int i = 1; i <= chunks;i++) {
                 System.out.println("yo2");
@@ -156,45 +120,31 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
                 fileOuputStream.write(value.getMusicfile().getMusicFileExtract());
                 fileOuputStream.flush();
 
-                pieces.add(value); //αποθηκευει τοπικα τα chunks
+                pieces.add(value); //saves chunks locally
             }
             System.out.println(pieces.toString());
-        } catch (IOException | ClassNotFoundException /*| UnsupportedTagException | InvalidDataException*/ e) {
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
-    }
-
-    public ArrayList<String> getListofSongs() { return this.listofsongs; }
-
-    public void setBrokers(BrokerNode b) { //ισως να μην χρειαστει
-        brokers.add(b);
-    }
-
-    public Socket getSocket() {
-        return this.requestSocket;
-    }
-
-    public String getConsumerIP() {
-        return this.ip;
-    }
-
-    public int getConsumerPort() {
-        return this.port;
     }
 
     public static void main(String args[]){
 
         ConsumerNode cn = new ConsumerNode("localhost", 7654);
         cn.init();
-        //ArtistName artistName = new ArtistName("Jason Shaw");
-        ArtistName artistName = new ArtistName("Komiku");
+
+        System.out.println("Pick an artist: ");
+        Scanner userInput = new Scanner(System.in);
+        String artist = userInput.nextLine();
+
+        ArtistName artistName = new ArtistName(artist);
         BrokerNode b = new BrokerNode("localhost", 7654);
 
-        cn.register(b,artistName); //υποτιθεται οτι η λιστα με τους μπροκερσ πρεπει να ειναι γεματη
+        cn.register(b, artistName);
+
         MusicFile ms = new MusicFile(null,null,null,null,null,0,0);
         Value value = new Value(ms);
+
         cn.playData(artistName,value);
-
-
     }
 }
