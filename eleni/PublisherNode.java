@@ -72,7 +72,7 @@ public class PublisherNode implements Publisher,Serializable{
 
                                         if (mp3file.hasId3v2Tag()) {
                                             ID3v2 id3v2Tag = mp3file.getId3v2Tag();
-                                            if (id3v2Tag.getArtist()!=null && !id3v2Tag.getArtist().isBlank()) {
+                                            if (id3v2Tag.getArtist()!=null && !id3v2Tag.getArtist().isBlank() && id3v2Tag.getTitle()!=null && !id3v2Tag.getTitle().isBlank()) {
                                                 if (id3v2Tag.getArtist().charAt(0) >= this.start && id3v2Tag.getArtist().charAt(0) <= this.end) {
 
                                                     if (!this.artistMap.containsKey(id3v2Tag.getArtist())) {
@@ -98,7 +98,7 @@ public class PublisherNode implements Publisher,Serializable{
                                         if (mp3file.hasId3v1Tag()) {
                                             ID3v1 id3v1Tag = mp3file.getId3v1Tag();
 
-                                            if(id3v1Tag.getArtist()!=null && !id3v1Tag.getArtist().isBlank()) {
+                                            if(id3v1Tag.getArtist()!=null && !id3v1Tag.getArtist().isBlank() && id3v1Tag.getTitle()!=null && !id3v1Tag.getTitle().isBlank()) {
                                                 if ((id3v1Tag.getArtist().charAt(0) >= this.start && id3v1Tag.getArtist().charAt(0) <= this.end)) { //if artist already exists
 
                                                     if (this.artistMap.containsKey(id3v1Tag.getArtist())) {
