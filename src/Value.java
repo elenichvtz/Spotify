@@ -1,14 +1,11 @@
 import java.io.Serializable;
-import java.util.List;
-import java.io.*;
 
-public class Value implements Serializable{
+public class Value implements Serializable {
 
     MusicFile musicfile;
 
     Value(MusicFile musicFile){
         this.musicfile = musicFile;
-
     }
 
     public void setMusicfile(MusicFile musicfile) {
