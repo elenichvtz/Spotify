@@ -376,16 +376,13 @@ public class PublisherNode implements Publisher,Serializable{
     }
 
     public static void main(String args[]){
-        
+
         PublisherNode p = new PublisherNode('A', 'M', "localhost", 7654);
         PublisherNode p2 = new PublisherNode('M','Z',"localhost",8765);
         p.init();
         p2.init();
         p.updateList();
         p2.updateList();
-
-        System.out.println(p.getArtistMap().toString());
-        System.out.println(p2.getArtistMap().toString());
 
         ArrayList<PublisherNode> publishers = new ArrayList<>();
         publishers.add(p);
