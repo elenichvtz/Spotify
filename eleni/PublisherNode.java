@@ -72,7 +72,7 @@ public class PublisherNode implements Publisher,Serializable{
 
                                         if (mp3file.hasId3v2Tag()) {
                                             ID3v2 id3v2Tag = mp3file.getId3v2Tag();
-                                            if (id3v2Tag.getArtist()!=null && !id3v2Tag.getArtist().isBlank()) {
+                                            if (id3v2Tag.getArtist()!=null && !id3v2Tag.getArtist().isBlank() && id3v2Tag.getAlbumArtist()!=null && !id3v2Tag.getAlbumArtist().isBlank() && id3v2Tag.getTitle()!=null && !id3v2Tag.getTitle().isBlank()) {
                                                 if (id3v2Tag.getArtist().charAt(0) >= this.start && id3v2Tag.getArtist().charAt(0) <= this.end) {
 
                                                     if (!this.artistMap.containsKey(id3v2Tag.getArtist())) {
@@ -86,18 +86,19 @@ public class PublisherNode implements Publisher,Serializable{
                                                     }
                                                 }
                                             }
-                                            else if((id3v2Tag.getArtist()==null || id3v2Tag.getArtist().isBlank()) && ('U'>= this.start && 'U'<=this.end)) {
+                                            else if(((id3v2Tag.getArtist()==null || id3v2Tag.getArtist().isBlank()) && ('U'>= this.start && 'U'<=this.end)) && id3v2Tag.getTitle()!=null && !id3v2Tag.getTitle().isBlank()) {
                                                 ArrayList<String> playlist3 = new ArrayList<String>();
                                                 playlist3.add(id3v2Tag.getTitle());
                                                 id3v2Tag.setArtist("Unknown");
-                                                this.artistMap.put(id3v2Tag.getArtist(),playlist3);
+                                                id3v2Tag.setAlbumArtist("Unknown");
+                                                this.artistMap.put(id3v2Tag.getAlbumArtist(),playlist3);
                                             }
                                         }
 
                                         if (mp3file.hasId3v1Tag()) {
                                             ID3v1 id3v1Tag = mp3file.getId3v1Tag();
 
-                                            if(id3v1Tag.getArtist()!=null && !id3v1Tag.getArtist().isBlank()) {
+                                            if(id3v1Tag.getArtist()!=null && !id3v1Tag.getArtist().isBlank() && id3v1Tag.getTitle()!=null && !id3v1Tag.getTitle().isBlank()) {
                                                 if ((id3v1Tag.getArtist().charAt(0) >= this.start && id3v1Tag.getArtist().charAt(0) <= this.end)) { //if artist already exists
 
                                                     if (this.artistMap.containsKey(id3v1Tag.getArtist())) {
@@ -111,7 +112,7 @@ public class PublisherNode implements Publisher,Serializable{
                                                     }
                                                 }
                                             }
-                                            else if(id3v1Tag.getArtist()==null && ('U'>= this.start && 'U'<=this.end)) {
+                                            else if((id3v1Tag.getArtist()==null || id3v1Tag.getArtist().isBlank()) && ('U'>= this.start && 'U'<=this.end) && id3v1Tag.getTitle()!=null && !id3v1Tag.getTitle().isBlank()) {
                                                 ArrayList<String> playlist3 = new ArrayList<String>();
                                                 playlist3.add(id3v1Tag.getTitle());
                                                 id3v1Tag.setArtist("Unknown");
