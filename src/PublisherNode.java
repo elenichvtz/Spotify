@@ -83,7 +83,6 @@ public class PublisherNode implements Publisher,Serializable{
                                                     if (!this.artistMap.containsKey(id3v2Tag.getArtist())) {
                                                         ArrayList<String> playlist = new ArrayList<>();
                                                         if(!playlist.contains(id3v2Tag.getTitle())) { playlist.add(id3v2Tag.getTitle()); }
-                                                        //playlist.add(id3v2Tag.getTitle());
                                                         this.artistMap.put(id3v2Tag.getArtist(), playlist);
                                                     } else {
                                                         ArrayList<String> playlist2 = this.artistMap.get(id3v2Tag.getArtist());
