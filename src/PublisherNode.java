@@ -81,8 +81,9 @@ public class PublisherNode implements Publisher,Serializable{
                                                 if (id3v2Tag.getArtist().charAt(0) >= this.start && id3v2Tag.getArtist().charAt(0) <= this.end) {
 
                                                     if (!this.artistMap.containsKey(id3v2Tag.getArtist())) {
-                                                        ArrayList<String> playlist = new ArrayList<String>();
-                                                        playlist.add(id3v2Tag.getTitle());
+                                                        ArrayList<String> playlist = new ArrayList<>();
+                                                        if(!playlist.contains(id3v2Tag.getTitle())) { playlist.add(id3v2Tag.getTitle()); }
+                                                        //playlist.add(id3v2Tag.getTitle());
                                                         this.artistMap.put(id3v2Tag.getArtist(), playlist);
                                                     } else {
                                                         ArrayList<String> playlist2 = this.artistMap.get(id3v2Tag.getArtist());
@@ -125,7 +126,7 @@ public class PublisherNode implements Publisher,Serializable{
 
                                                     if (this.artistMap.containsKey(id3v1Tag.getArtist())) {
                                                         ArrayList<String> playlist = this.artistMap.get(id3v1Tag.getArtist());
-                                                        playlist.add(id3v1Tag.getTitle());
+                                                        if(!playlist.contains(id3v1Tag.getTitle())) { playlist.add(id3v1Tag.getTitle()); }
                                                         this.artistMap.put(id3v1Tag.getArtist(), playlist);
                                                     } else {
                                                         ArrayList<String> playlist2 = new ArrayList<String>();

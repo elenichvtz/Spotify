@@ -73,6 +73,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
             }
 
             exist = in.readInt();
+
             if(exist == 1) {
 
                 //liat of songs of the requested artist
@@ -88,11 +89,10 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
                 out.writeUTF(song);
 
                 out.flush();
-            }else{
+            }
+            else{
                 System.out.println("The Artist you searched doesn't exist.");
                 System.out.println("Please try again.");
-
-
             }
 
         } catch (IOException | ClassNotFoundException e) {
@@ -149,6 +149,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
         BrokerNode b = new BrokerNode("localhost", 7654);
 
         cn.register(b, artistName);
+
         while(cn.exist == 0){
             System.out.println("Pick an artist: ");
             userInput = new Scanner(System.in);
