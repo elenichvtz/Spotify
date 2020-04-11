@@ -244,116 +244,120 @@ public class BrokerNode extends Thread implements Broker,Serializable {
 
             while (true) {
 
+                // socket object to receive incoming consumer requests
+                Socket consumer = null;
                 try {
-                    // socket object to receive incoming consumer requests
-                    Socket consumer = broker.getConsumerServerSocket().accept();
+                    consumer = broker.getConsumerServerSocket().accept();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
-                    broker.setOut(new ObjectOutputStream(consumer.getOutputStream()));
-                    broker.setIn(new ObjectInputStream(consumer.getInputStream()));
-
-                    String consumerip = broker.in.readUTF();
-                    System.out.println("conumer ip is " + consumerip);
-                    int consumerport = broker.in.readInt();
-                    System.out.println("consumer port is "+consumerport);
-
-                    ConsumerNode cn = new ConsumerNode(consumerip, consumerport);
-
-                    registeredUsers.add(cn);
-
-                    System.out.println(registeredUsers.isEmpty());
-
-                    ArtistName artistName = null;
+                Socket finalConsumer = consumer;
+                Thread consumer_thread = new Thread(() -> {
                     try {
-                        artistName = (ArtistName) broker.in.readObject();
-                        System.out.println(artistName.toString() + " received from consumer");
-                        broker.setArtistReceived(artistName);
-                    } catch (ClassNotFoundException e) {
-                        e.printStackTrace();
-                    }
 
+                        broker.setOut(new ObjectOutputStream(finalConsumer.getOutputStream()));
+                        broker.setIn(new ObjectInputStream(finalConsumer.getInputStream()));
 
+                        String consumerip = broker.in.readUTF();
+                        System.out.println("conumer ip is " + consumerip);
+                        int consumerport = broker.in.readInt();
+                        System.out.println("consumer port is " + consumerport);
 
-                    System.out.println("yep "+registeredPublishers.get(0).hashTopic(artistName).getBrokerPort());
+                        ConsumerNode cn = new ConsumerNode(consumerip, consumerport);
 
+                        registeredUsers.add(cn);
 
-                    if(registeredPublishers.get(0).hashTopic(artistName).getBrokerPort() == broker.getBrokerPort()) {
-                        System.out.println("Yessss");
+                        System.out.println(registeredUsers.isEmpty());
 
-                        if (broker.getMapReceived().containsKey(broker.getArtistReceived().getArtistName())) {
-                            System.out.println("it is exist");
-                        }     //den xreiazetai
+                        ArtistName artistName = null;
+                        try {
+                            artistName = (ArtistName) broker.in.readObject();
+                            System.out.println(artistName.toString() + " received from consumer");
+                            broker.setArtistReceived(artistName);
+                        } catch (ClassNotFoundException e) {
+                            e.printStackTrace();
+                        }
 
-                        boolean f = false;
+                        System.out.println("yep " + registeredPublishers.get(0).hashTopic(artistName).getBrokerPort());
 
+                        if (registeredPublishers.get(0).hashTopic(artistName).getBrokerPort() == broker.getBrokerPort()) {
+                            System.out.println("Yessss");
 
-                        for (Map.Entry<Integer,  Map<String, ArrayList<String>>> entry : art.entrySet()) {
+                            if (broker.getMapReceived().containsKey(broker.getArtistReceived().getArtistName())) {
+                                System.out.println("it is exist");
+                            }
 
-                            Map<String, ArrayList<String>> k = entry.getValue();
+                            boolean f = false;
 
-                            for(Map.Entry<String, ArrayList<String>> entry2 : k.entrySet()) {
+                            for (Map.Entry<Integer, Map<String, ArrayList<String>>> entry : art.entrySet()) {
 
-                                if (entry2.getKey() != null) {
+                                Map<String, ArrayList<String>> k = entry.getValue();
 
-                                    System.out.println("key is:" + entry2.getKey());
-                                    System.out.println(broker.getArtistReceived().getArtistName());
-                                    if (entry2.getKey().equals(broker.getArtistReceived().getArtistName()) && entry2.getKey() != null) {
-                                        f = true;
-                                        exist = true;
-                                        System.out.println("Yes it is equal");
-                                        System.out.println(entry2.getValue().toString());
-                                        List<String> songs = entry2.getValue();
-                                        System.out.println("P is" + broker.p);
-                                        if (!broker.p) {
-                                            broker.out.writeInt(broker.port);
-                                            System.out.println("Executed");
+                                for (Map.Entry<String, ArrayList<String>> entry2 : k.entrySet()) {
+
+                                    if (entry2.getKey() != null) {
+
+                                        System.out.println("key is:" + entry2.getKey());
+                                        System.out.println(broker.getArtistReceived().getArtistName());
+                                        if (entry2.getKey().equals(broker.getArtistReceived().getArtistName()) && entry2.getKey() != null) {
+                                            f = true;
+                                            exist = true;
+                                            System.out.println("Yes it is equal");
+                                            System.out.println(entry2.getValue().toString());
+                                            List<String> songs = entry2.getValue();
+                                            System.out.println("P is" + broker.p);
+                                            if (!broker.p) {
+                                                broker.out.writeInt(broker.port);
+                                                System.out.println("Executed");
+                                            }
+
+                                            broker.p = false;
+
+                                            broker.out.writeInt(1);
+
+                                            broker.out.writeObject(songs);
+                                            broker.out.flush();
+
+                                            String song = broker.in.readUTF();
+
+                                            System.out.println("Song received : " + song);
+                                            System.out.println(art.size());
+
+                                            broker.pull(broker.getArtistReceived(), song);
+                                            break;
                                         }
-
-                                        broker.p = false;
-
-                                        broker.out.writeInt(1);
-
-                                        broker.out.writeObject(songs); //στελνει την λιστα με τα τραγουδια του καλλιτεχνη που ζητησε
-                                        broker.out.flush();
-
-                                        String song = broker.in.readUTF();//δεχεται το τραγουδι που θελει ο Consumer
-
-                                        System.out.println("Song received : " + song);
-                                        System.out.println(art.size());
-
-                                        broker.pull(broker.getArtistReceived(), song);
+                                    }
+                                    if (f) {
                                         break;
                                     }
                                 }
-                                if (f) {
-                                    break;
-                                }
                             }
-                        }
-                        if(!exist){
-                            System.out.println("Inside doesn't exist");
-                            broker.out.writeInt(0);
+                            if (!exist) {
+                                System.out.println("Inside doesn't exist");
+                                broker.out.writeInt(0);
+                                broker.out.flush();
+                            }
+                        } else {
+                            System.out.println("Noooo " + registeredPublishers.get(0).hashTopic(artistName).getBrokerPort());
+
+                            System.out.println("yo");
+                            int port = registeredPublishers.get(0).hashTopic(artistName).getBrokerPort();
+                            broker.out.writeInt(port);
                             broker.out.flush();
-
+                            System.out.println("yo");
+                            broker.out.close();
+                            broker.in.close();
+                            broker.p = true;
                         }
+
+                        System.out.println("END");
+
+                    } catch (IOException | NoSuchAlgorithmException e) {
+                        e.printStackTrace();
                     }
-                    else {
-                        System.out.println("Noooo "+registeredPublishers.get(0).hashTopic(artistName).getBrokerPort());
-
-                        System.out.println("yo");
-                        int port = registeredPublishers.get(0).hashTopic(artistName).getBrokerPort();
-                        broker.out.writeInt(port);
-                        broker.out.flush();
-                        System.out.println("yo");
-                        broker.out.close();
-                        broker.in.close();
-                        broker.p = true;
-                    }
-
-                    System.out.println("END");
-
-                } catch (IOException | NoSuchAlgorithmException e) {
-                    e.printStackTrace();
-                }
+                });
+                consumer_thread.start();
             }
         });
     }

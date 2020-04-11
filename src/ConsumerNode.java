@@ -76,7 +76,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
 
             if(exist == 1) {
 
-                //liat of songs of the requested artist
+                //list of songs of the requested artist
                 this.listofsongs = (ArrayList<String>) in.readObject();
                 System.out.println("Map received from broker to consumer");
                 System.out.println(listofsongs.toString());
