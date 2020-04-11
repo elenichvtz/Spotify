@@ -91,7 +91,12 @@ public class PublisherNode implements Publisher,Serializable{
                                                 playlist3.add(id3v2Tag.getTitle());
                                                 id3v2Tag.setArtist("Unknown");
                                                 id3v2Tag.setAlbumArtist("Unknown");
-                                                this.artistMap.put(id3v2Tag.getArtist(),playlist3);
+                                                if(!this.artistMap.containsKey("Unknown")) { this.artistMap.put(id3v2Tag.getArtist(),playlist3); }
+                                                else {
+                                                    ArrayList<String> temp = this.artistMap.get("Unknown");
+                                                    temp.add(id3v2Tag.getTitle());
+                                                    this.artistMap.put(id3v2Tag.getArtist(),playlist3);
+                                                }
                                             }
                                         }
 
@@ -116,7 +121,12 @@ public class PublisherNode implements Publisher,Serializable{
                                                 ArrayList<String> playlist3 = new ArrayList<String>();
                                                 playlist3.add(id3v1Tag.getTitle());
                                                 id3v1Tag.setArtist("Unknown");
-                                                this.artistMap.put(id3v1Tag.getArtist(),playlist3);
+                                                if(!this.artistMap.containsKey("Unknown")) { this.artistMap.put(id3v1Tag.getArtist(),playlist3); }
+                                                else {
+                                                    ArrayList<String> temp = this.artistMap.get("Unknown");
+                                                    temp.add(id3v1Tag.getTitle());
+                                                    this.artistMap.put(id3v1Tag.getArtist(),playlist3);
+                                                }
                                             }
                                         }
                                     } catch (InvalidDataException | UnsupportedTagException e) {
