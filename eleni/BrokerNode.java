@@ -284,36 +284,42 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                         for (Map.Entry<Integer,  Map<String, ArrayList<String>>> entry : art.entrySet()) {
 
                             Map<String, ArrayList<String>> k = entry.getValue();
-                            for(Map.Entry<String, ArrayList<String>> entry2 : k.entrySet()){
 
-                                System.out.println("key is:" + entry2.getKey());
-                                System.out.println(broker.getArtistReceived().getArtistName());
-                                if (entry2.getKey().equals(broker.getArtistReceived().getArtistName()) && entry2.getKey() != null) {
-                                    f = true;
-                                    System.out.println("Yes it is equal");
-                                    System.out.println(entry2.getValue().toString());
-                                    List<String> songs = entry2.getValue();
-                                    System.out.println("P is"+broker.p);
-                                    if(!broker.p) {
-                                        broker.out.writeInt(broker.port);
-                                        System.out.println("Executed");
+                            for(Map.Entry<String, ArrayList<String>> entry2 : k.entrySet()) {
+
+                                if (entry2.getKey() != null) {
+
+                                    System.out.println("key is:" + entry2.getKey());
+                                    System.out.println(broker.getArtistReceived().getArtistName());
+                                    if (entry2.getKey().equals(broker.getArtistReceived().getArtistName()) && entry2.getKey() != null) {
+                                        f = true;
+                                        System.out.println("Yes it is equal");
+                                        System.out.println(entry2.getValue().toString());
+                                        List<String> songs = entry2.getValue();
+                                        System.out.println("P is" + broker.p);
+                                        if (!broker.p) {
+                                            broker.out.writeInt(broker.port);
+                                            System.out.println("Executed");
+                                        }
+
+                                        broker.p = false;
+
+                                        broker.out.writeObject(songs);
+                                        broker.out.flush();
+
+                                        String song = broker.in.readUTF();
+
+                                        System.out.println("Song received : " + song);
+                                        System.out.println(art.size());
+
+                                        broker.pull(broker.getArtistReceived(), song);
+                                        break;
                                     }
-
-                                    broker.p = false;
-
-                                    broker.out.writeObject(songs);
-                                    broker.out.flush();
-
-                                    String song = broker.in.readUTF();
-
-                                    System.out.println("Song received : "+song);
-                                    System.out.println(art.size());
-
-                                    broker.pull(broker.getArtistReceived(),song);
+                                }
+                                if (f) {
                                     break;
                                 }
                             }
-                            if (f){break;}
                         }
                     }
                     else {
