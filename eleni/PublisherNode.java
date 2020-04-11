@@ -86,7 +86,7 @@ public class PublisherNode implements Publisher,Serializable{
                                                     }
                                                 }
                                             }
-                                            else if((id3v2Tag.getArtist()==null || id3v2Tag.getArtist().isBlank()) && ('U'>= this.start && 'U'<=this.end)) {
+                                            else if((id3v2Tag.getArtist()==null || id3v2Tag.getArtist().isBlank()) && id3v2Tag.getTitle()!=null && !id3v2Tag.getTitle().isBlank() && ('U'>= this.start && 'U'<=this.end)) {
                                                 ArrayList<String> playlist3 = new ArrayList<String>();
                                                 playlist3.add(id3v2Tag.getTitle());
                                                 id3v2Tag.setArtist("Unknown");
@@ -112,7 +112,7 @@ public class PublisherNode implements Publisher,Serializable{
                                                     }
                                                 }
                                             }
-                                            else if(id3v1Tag.getArtist()==null && ('U'>= this.start && 'U'<=this.end)) {
+                                            else if((id3v1Tag.getArtist()==null || id3v1Tag.getArtist().isBlank()) && id3v1Tag.getTitle()!=null && !id3v1Tag.getTitle().isBlank() && ('U'>= this.start && 'U'<=this.end)) {
                                                 ArrayList<String> playlist3 = new ArrayList<String>();
                                                 playlist3.add(id3v1Tag.getTitle());
                                                 id3v1Tag.setArtist("Unknown");
