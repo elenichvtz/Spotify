@@ -168,17 +168,6 @@ public class PublisherNode implements Publisher,Serializable{
         brokerKeys.add(b3);
     }
 
-    public BigInteger findMax(){
-        BigInteger max = new BigInteger("-1");
-
-        for (int i=0; i< brokerKeys.size(); i++){
-            if (brokerKeys.get(i).calculateKeys().compareTo(max) > 1){
-                max = brokerKeys.get(i).calculateKeys();
-            }
-        }
-        return max;
-    }
-
     @Override
     public BrokerNode hashTopic(ArtistName artist) throws NoSuchAlgorithmException{
         MessageDigest sha = MessageDigest.getInstance("SHA-256");
@@ -230,7 +219,7 @@ public class PublisherNode implements Publisher,Serializable{
     }
 
 
-    public void push(ArtistName artist,Value val) { //stin main tou publisher
+    public void push(ArtistName artist,Value val) {
 
             int chunk_size = 512 * 1024;
             int counter = 1;
