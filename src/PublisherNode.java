@@ -25,8 +25,10 @@ public class PublisherNode implements Publisher,Serializable{
     ObjectInputStream in = null;
     ObjectOutputStream out2 = null;
     ObjectInputStream in2 = null;
+    static boolean already = false;
+    static boolean send = false;
 
-    String path = "C:\\Users\\eleni\\Downloads\\DS\\dataset1";
+    String path = "/Users/emiliadan/Downloads/distributed_project/dataset1";
 
     char start;
     char end;
@@ -64,25 +66,28 @@ public class PublisherNode implements Publisher,Serializable{
                     try (DirectoryStream<Path> currentsongs = Files.newDirectoryStream(CurrentFolderContent)) {//the songs in the current folder
                         if (!currentsongs.toString().startsWith(".")) {
                             for (Path songs : currentsongs) {
-                                System.out.println("Song is: "+songs.getFileName());
+
+                                System.out.println("Song is: " + songs.getFileName());
+                                System.out.println(this.artistMap.keySet().toString());
 
                                 if (!songs.getFileName().toString().startsWith(".")) {
                                     try {
 
                                         Mp3File mp3file = new Mp3File(songs);
-                                        ID3v2 id3v2Tag;
+                                        //ID3v2 id3v2Tag;
                                         if (mp3file.hasId3v2Tag()) {
+                                            already = true;
                                             System.out.println("Has id3v2");
 
-                                            id3v2Tag = mp3file.getId3v2Tag();
-                                            System.out.println("Is artist not null?: "+(id3v2Tag.getArtist()!=null));
-                                            if (id3v2Tag.getArtist()!=null && !id3v2Tag.getArtist().isBlank() && id3v2Tag.getTitle()!=null && !id3v2Tag.getTitle().isBlank()) {
-                                                System.out.println("Inside if");
+                                            ID3v2 id3v2Tag = mp3file.getId3v2Tag();
+                                            //System.out.println("Is artist not null?: "+(id3v2Tag.getArtist()!=null));
+                                            if (id3v2Tag.getArtist() != null && !id3v2Tag.getArtist().isBlank() && id3v2Tag.getTitle() != null && !id3v2Tag.getTitle().isBlank()) {
+                                                //System.out.println("Inside if");
                                                 if (id3v2Tag.getArtist().charAt(0) >= this.start && id3v2Tag.getArtist().charAt(0) <= this.end) {
 
                                                     if (!this.artistMap.containsKey(id3v2Tag.getArtist())) {
-                                                        ArrayList<String> playlist = new ArrayList<>();
-                                                        if(!playlist.contains(id3v2Tag.getTitle())) { playlist.add(id3v2Tag.getTitle()); }
+                                                        ArrayList<String> playlist = new ArrayList<String>();
+                                                        playlist.add(id3v2Tag.getTitle());
                                                         this.artistMap.put(id3v2Tag.getArtist(), playlist);
                                                     } else {
                                                         ArrayList<String> playlist2 = this.artistMap.get(id3v2Tag.getArtist());
@@ -90,50 +95,54 @@ public class PublisherNode implements Publisher,Serializable{
                                                         this.artistMap.put(id3v2Tag.getArtist(), playlist2);
                                                     }
                                                 }
-                                            }
-                                            else if((id3v2Tag.getArtist()==null || id3v2Tag.getArtist().isBlank()) && id3v2Tag.getTitle()!=null && !id3v2Tag.getTitle().isBlank() && ('U'>= this.start && 'U'<=this.end)) {
+                                            } else if ((id3v2Tag.getArtist() == null || id3v2Tag.getArtist().isBlank()) && id3v2Tag.getTitle() != null && !id3v2Tag.getTitle().isBlank() && ('U' >= this.start && 'U' <= this.end)) {
+                                                //ArrayList<String> playlist3 = new ArrayList<String>();
                                                 System.out.println("Inside else");
-                                                System.out.println("Setted artist to: "+id3v2Tag.getAlbumArtist());
+                                                //playlist3.add(id3v2Tag.getTitle());
                                                 id3v2Tag.setAlbumArtist("Unknown");
-                                                if(!this.artistMap.containsKey("Unknown")) {
+                                                //System.out.println("Setted artist to: "+id3v2Tag.getAlbumArtist());
+                                                id3v2Tag.setAlbumArtist("Unknown");
+                                                if (!this.artistMap.containsKey("Unknown")) {
                                                     ArrayList<String> playlist3 = new ArrayList<String>();
                                                     playlist3.add(id3v2Tag.getTitle());
-                                                    this.artistMap.put("Unknown",playlist3);
-                                                    System.out.println(this.artistMap.toString());
-                                                    System.out.println("Inside second if");
-                                                }
-                                                else {
+                                                    this.artistMap.put("Unknown", playlist3);
+                                                    //System.out.println(this.artistMap.toString());
+                                                    //System.out.println("Inside second if");
+                                                } else {
                                                     ArrayList<String> temp = this.artistMap.get("Unknown");
                                                     temp.add(id3v2Tag.getTitle());
-                                                    this.artistMap.put("Unknown",temp);
-                                                    System.out.println("Inside second else");
+                                                    this.artistMap.put("Unknown", temp);
+                                                    //System.out.println("Inside second else");
                                                 }
                                             }
-                                        }
-                                        else{
-                                            id3v2Tag = new ID3v24Tag();
-                                            mp3file.setId3v2Tag(id3v2Tag);
 
                                         }
-
-                                        if (mp3file.hasId3v1Tag()) {
+                                        if (mp3file.hasId3v1Tag() && already != true) {
+                                            System.out.println(this.artistMap.keySet().toString());
                                             System.out.println("Has id3v1");
                                             ID3v1 id3v1Tag = mp3file.getId3v1Tag();
-
+                                            System.out.println(this.artistMap.keySet().toString());
                                             if (id3v1Tag.getArtist() != null && !id3v1Tag.getArtist().isBlank() && id3v1Tag.getTitle() != null && !id3v1Tag.getTitle().isBlank()) {
                                                 if ((id3v1Tag.getArtist().charAt(0) >= this.start && id3v1Tag.getArtist().charAt(0) <= this.end)) { //if artist already exists
+                                                    System.out.println("Publisher to take the song is: "+this.port);
 
-                                                    if (this.artistMap.containsKey(id3v1Tag.getArtist())) {
-                                                        ArrayList<String> playlist = this.artistMap.get(id3v1Tag.getArtist());
-                                                        if(!playlist.contains(id3v1Tag.getTitle())) { playlist.add(id3v1Tag.getTitle()); }
+                                                    if (!this.artistMap.containsKey(id3v1Tag.getArtist())) {
+                                                        System.out.println("Inside if");
+                                                        System.out.println("Artist is: "+id3v1Tag.getArtist());
+                                                        System.out.println("Title is: "+id3v1Tag.getTitle());
+                                                        ArrayList<String> playlist = new ArrayList<String>();
+                                                        //System.out.println(playlist.toString());
+                                                        playlist.add(id3v1Tag.getTitle());
                                                         this.artistMap.put(id3v1Tag.getArtist(), playlist);
                                                     } else {
-                                                        ArrayList<String> playlist2 = new ArrayList<String>();
-                                                        playlist2.add(id3v1Tag.getTitle());
-                                                        this.artistMap.put(id3v1Tag.getArtist(), playlist2);
+                                                        System.out.println("Inside else");
+                                                        ArrayList<String> playlist3 = this.artistMap.get(id3v1Tag.getArtist());
+                                                        playlist3.add(id3v1Tag.getTitle());
+                                                        this.artistMap.put(id3v1Tag.getArtist(), playlist3);
                                                     }
                                                 }
                                             } else if ((id3v1Tag.getArtist() == null || id3v1Tag.getArtist().isBlank()) && id3v1Tag.getTitle() != null && !id3v1Tag.getTitle().isBlank() && ('U' >= this.start && 'U' <= this.end)) {
+
 
                                                 id3v1Tag.setArtist("Unknown");
                                                 if (!this.artistMap.containsKey("Unknown")) {
@@ -253,7 +262,7 @@ public class PublisherNode implements Publisher,Serializable{
                             if (!currentsongs.toString().startsWith(".")) {
                                 boolean found = false;
                                 for (Path songs : currentsongs) {
-                                    System.out.println(songs.getFileName());
+                                    //System.out.println(songs.getFileName());
                                     if (!songs.getFileName().toString().startsWith(".")) {
                                         String foldercontents = path.concat("/").concat(file.getFileName().toString());
 
@@ -261,7 +270,7 @@ public class PublisherNode implements Publisher,Serializable{
                                             Mp3File mp3file = null;
                                             try {
                                                 mp3file = new Mp3File(foldercontents.concat("//").concat(songs.getFileName().toString()));
-                                                System.out.println("Inside push...");
+                                                //System.out.println("Inside push...");
                                             } catch (UnsupportedTagException e) {
                                                 e.printStackTrace();
                                             } catch (InvalidDataException e) {
@@ -269,21 +278,22 @@ public class PublisherNode implements Publisher,Serializable{
                                             }
 
                                             if (mp3file.hasId3v1Tag()) {
-                                                System.out.println("Id3v1");
+                                                //System.out.println("Id3v1");
                                                 ID3v1 id3v1Tag = mp3file.getId3v1Tag();
                                                 if (val.getMusicfile().getArtistName().equals(id3v1Tag.getArtist()) && (val.getMusicfile().getTrackName().equals(id3v1Tag.getTitle()))) {
                                                     System.out.println("Found the song2");
+
                                                     found = true;
                                                     ByteArrayOutputStream byteout = new ByteArrayOutputStream();
 
                                                     File file2 = new File(foldercontents.concat("//").concat(songs.getFileName().toString()));
                                                     FileInputStream fis = new FileInputStream(file2);
-                                                    System.out.println("yo");
+                                                    //System.out.println("yo");
                                                     byte[] chunk = new byte[chunk_size];
                                                     int numberOfChunks = (int) ceil((float)file2.length() / chunk_size);
-                                                    System.out.println("file length is "+file2.length()+" file/chunk is : "+(file2.length() / chunk_size));
+                                                    //System.out.println("file length is "+file2.length()+" file/chunk is : "+(file2.length() / chunk_size));
                                                     this.out2.writeInt(numberOfChunks);
-                                                    System.out.println("yo");
+                                                    //System.out.println("yo");
                                                     try {
 
                                                         for (int readNum; (readNum = fis.read(chunk)) != -1; ) {
@@ -298,9 +308,9 @@ public class PublisherNode implements Publisher,Serializable{
                                                             val.setMusicfile(musicfile);
 
                                                             //send chunk through socket
-                                                            System.out.println("yo");
+                                                            //System.out.println("yo");
                                                             try {
-                                                                this.out2.writeObject(val);
+                                                                this.out2.writeObject(musicfile);
                                                                 this.out2.flush();
                                                             } catch (IOException e) {
                                                                 e.printStackTrace();
@@ -312,50 +322,50 @@ public class PublisherNode implements Publisher,Serializable{
                                                 }
                                             }
 
-                                            if (mp3file.hasId3v2Tag()) {
+                                            if (mp3file.hasId3v2Tag() && found != true) {
                                                 ID3v2 id3v2Tag = mp3file.getId3v2Tag();
                                                 System.out.println("Id3v2");
 
                                                 if ((val.getMusicfile().getArtistName().equals(id3v2Tag.getArtist()) && (val.getMusicfile().getTrackName().equals(id3v2Tag.getTitle()))) || ((id3v2Tag.getArtist() == null) && (val.getMusicfile().getTrackName().equals(id3v2Tag.getTitle())))) {
-                                                    System.out.println("Found the song");
+                                                    //System.out.println("Found the song");
                                                     found = true;
 
                                                     ByteArrayOutputStream byteout = new ByteArrayOutputStream();
-                                                    System.out.println("yo");
+                                                    //System.out.println("yo");
                                                     File file2 = new File(foldercontents.concat("//").concat(songs.getFileName().toString()));
                                                     FileInputStream fis = new FileInputStream(file2);
-                                                    System.out.println("yo");
+                                                    //System.out.println("yo");
                                                     byte[] chunk = new byte[chunk_size];
                                                     int numberOfChunks = (int) ceil((float)file2.length() / chunk_size);
-                                                    System.out.println("file length is "+file2.length()+" file/chunk is : "+((float)file2.length() / chunk_size));
+                                                    //System.out.println("file length is "+file2.length()+" file/chunk is : "+((float)file2.length() / chunk_size));
                                                     out2.writeInt(numberOfChunks);
                                                     out2.flush();
-                                                    System.out.println("yo " +numberOfChunks);
+                                                    //System.out.println("yo " +numberOfChunks);
 
                                                     try {
                                                         for (int readNum; (readNum = fis.read(chunk)) != -1;  ) {
                                                             byteout.write(chunk, 0, readNum);
                                                             MusicFile musicfile = new MusicFile(id3v2Tag.getTitle(), id3v2Tag.getArtist(), id3v2Tag.getAlbum(),
                                                                     id3v2Tag.getGenreDescription(), chunk, counter, numberOfChunks);
-                                                            System.out.println(musicfile.getMusicFileExtract());
+                                                            //System.out.println(musicfile.getMusicFileExtract());
                                                             chunk = new byte[chunk_size];
                                                             counter++;
-                                                            System.out.println("Counter is "+counter+" in music if it is "+musicfile.getChunkId());
+                                                            //System.out.println("Counter is "+counter+" in music if it is "+musicfile.getChunkId());
 
-                                                            System.out.println("Value id is "+val.getMusicfile().getChunkId());
-                                                            System.out.println("yo");
+                                                            //System.out.println("Value id is "+val.getMusicfile().getChunkId());
+                                                            //System.out.println("yo");
 
                                                             try {
                                                                 this.out2.writeObject(musicfile);
-                                                                System.out.println("Value id is ..."+val.getMusicfile().getChunkId());
+                                                                //System.out.println("Value id is ..."+val.getMusicfile().getChunkId());
                                                                 this.out2.flush();
-                                                                System.out.println("Chunk send");
+                                                                //System.out.println("Chunk send");
                                                             } catch (IOException e) {
                                                                 e.printStackTrace();
                                                             }
 
                                                         }
-                                                        System.out.println("yo end");
+                                                        //System.out.println("yo end");
                                                     } catch (IOException e) {
                                                         e.printStackTrace();
                                                     }
