@@ -13,10 +13,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
     String ip;
     int port;
     ArrayList<String> listofsongs = new ArrayList<String>();
-<<<<<<< HEAD
     int exist;
-=======
->>>>>>> 1a5485e15b0c1489b9da79a65ef8c6dba14197ed
 
     ConsumerNode(String ip, int port) {
         this.ip = ip;
@@ -54,7 +51,6 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
             this.out.writeInt(this.port);
             this.out.writeObject(artist); //successfully sends artistName to BrokerNode
             this.out.flush();
-<<<<<<< HEAD
 
             int brokerport = this.in.readInt();
 
@@ -98,42 +94,6 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
 
 
             }
-=======
-
-            int brokerport = this.in.readInt();
-
-            if(brokerport != broker.getBrokerPort()) {
-
-                System.out.println(brokerport + " is the correct broker port.");
-                System.out.println("Disconnecting...");
-                disconnect(broker, artist);
-
-                System.out.println("yo2");
-                connect(brokerport);
-
-                this.out.writeUTF(this.ip);
-                System.out.println("yo");
-                this.out.writeInt(this.port);
-                System.out.println("yo");
-
-                this.out.writeObject(artist); //successfully sends artistName to BrokerNode
-                this.out.flush();
-            }
-
-            //liat of songs of the requested artist
-            this.listofsongs = (ArrayList<String>)in.readObject();
-            System.out.println("Map received from broker to consumer");
-            System.out.println(listofsongs.toString());
-
-            System.out.println("Pick a song: ");
-
-            Scanner userInput = new Scanner(System.in);
-            String song = userInput.nextLine();
-
-            out.writeUTF(song);
-
-            out.flush();
->>>>>>> 1a5485e15b0c1489b9da79a65ef8c6dba14197ed
 
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -159,11 +119,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
         try {
             System.out.println("yo");
             chunks = in.readInt();
-<<<<<<< HEAD
-            FileOutputStream fileOuputStream = new FileOutputStream("/Users/emiliadan/Downloads/distributed_project/songReceived3.mp3");
-=======
             FileOutputStream fileOuputStream = new FileOutputStream("songReceived.mp3");
->>>>>>> 1a5485e15b0c1489b9da79a65ef8c6dba14197ed
 
             for (int i = 1; i <= chunks;i++) {
                 System.out.println("yo2");
@@ -193,7 +149,6 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
         BrokerNode b = new BrokerNode("localhost", 7654);
 
         cn.register(b, artistName);
-<<<<<<< HEAD
         while(cn.exist == 0){
             System.out.println("Pick an artist: ");
             userInput = new Scanner(System.in);
@@ -203,8 +158,6 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
             cn.connect(b.port);
             cn.register(b,artistName);
         }
-=======
->>>>>>> 1a5485e15b0c1489b9da79a65ef8c6dba14197ed
 
         MusicFile ms = new MusicFile(null,null,null,null,null,0,0);
         Value value = new Value(ms);
