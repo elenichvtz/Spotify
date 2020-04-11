@@ -167,6 +167,7 @@ public class PublisherNode implements Publisher,Serializable{
             e.printStackTrace();
         }
     }
+
     public void updateList(){
         BrokerNode b = new BrokerNode("localhost",BrokerPort1);
         brokerKeys.add(b);
@@ -349,25 +350,15 @@ public class PublisherNode implements Publisher,Serializable{
         }
     }
 
-    public Socket getSocket() {
-        return this.requestSocket;
-    }
+    public Socket getSocket() { return this.requestSocket; }
 
-    public String getPublisherIP() {
-        return this.ip;
-    }
+    public String getPublisherIP() { return this.ip; }
 
-    public int getPublisherPort() {
-        return this.port;
-    }
+    public int getPublisherPort() { return this.port; }
 
-    public char getStart() {
-        return this.start;
-    }
+    public char getStart() { return this.start; }
 
-    public char getEnd() {
-        return this.end;
-    }
+    public char getEnd() { return this.end; }
 
     @Override
     public void notifyFailure(BrokerNode broker){
