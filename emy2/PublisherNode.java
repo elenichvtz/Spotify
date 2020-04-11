@@ -70,11 +70,11 @@ public class PublisherNode implements Publisher,Serializable{
                                     try {
 
                                         Mp3File mp3file = new Mp3File(songs);
-
+                                        ID3v2 id3v2Tag;
                                         if (mp3file.hasId3v2Tag()) {
                                             System.out.println("Has id3v2");
 
-                                            ID3v2 id3v2Tag = mp3file.getId3v2Tag();
+                                            id3v2Tag = mp3file.getId3v2Tag();
                                             System.out.println("Is artist not null?: "+(id3v2Tag.getArtist()!=null));
                                             if (id3v2Tag.getArtist()!=null && !id3v2Tag.getArtist().isBlank() && id3v2Tag.getTitle()!=null && !id3v2Tag.getTitle().isBlank()) {
                                                 System.out.println("Inside if");
@@ -112,13 +112,17 @@ public class PublisherNode implements Publisher,Serializable{
                                                     System.out.println("Inside second else");
                                                 }
                                             }
+                                        }else{
+                                            id3v2Tag = new ID3v24Tag();
+                                            mp3file.setId3v2Tag(id3v2Tag);
+
                                         }
 
                                         if (mp3file.hasId3v1Tag()) {
                                             System.out.println("Has id3v1");
                                             ID3v1 id3v1Tag = mp3file.getId3v1Tag();
 
-                                            if(id3v1Tag.getArtist()!=null && !id3v1Tag.getArtist().isBlank() && id3v1Tag.getTitle()!=null && !id3v1Tag.getTitle().isBlank()) {
+                                            if (id3v1Tag.getArtist() != null && !id3v1Tag.getArtist().isBlank() && id3v1Tag.getTitle() != null && !id3v1Tag.getTitle().isBlank()) {
                                                 if ((id3v1Tag.getArtist().charAt(0) >= this.start && id3v1Tag.getArtist().charAt(0) <= this.end)) { //if artist already exists
 
                                                     if (this.artistMap.containsKey(id3v1Tag.getArtist())) {
@@ -131,20 +135,18 @@ public class PublisherNode implements Publisher,Serializable{
                                                         this.artistMap.put(id3v1Tag.getArtist(), playlist2);
                                                     }
                                                 }
-                                            }
-                                            else if((id3v1Tag.getArtist()==null || id3v1Tag.getArtist().isBlank()) && id3v1Tag.getTitle()!=null && !id3v1Tag.getTitle().isBlank() && ('U'>= this.start && 'U'<=this.end)) {
+                                            } else if ((id3v1Tag.getArtist() == null || id3v1Tag.getArtist().isBlank()) && id3v1Tag.getTitle() != null && !id3v1Tag.getTitle().isBlank() && ('U' >= this.start && 'U' <= this.end)) {
 
 
                                                 id3v1Tag.setArtist("Unknown");
-                                                if(!this.artistMap.containsKey("Unknown")) {
+                                                if (!this.artistMap.containsKey("Unknown")) {
                                                     ArrayList<String> playlist3 = new ArrayList<String>();
                                                     playlist3.add(id3v1Tag.getTitle());
-                                                    this.artistMap.put(id3v1Tag.getArtist(),playlist3);
-                                                }
-                                                else {
+                                                    this.artistMap.put(id3v1Tag.getArtist(), playlist3);
+                                                } else {
                                                     ArrayList<String> temp = this.artistMap.get("Unknown");
                                                     temp.add(id3v1Tag.getTitle());
-                                                    this.artistMap.put("Unknown",temp);
+                                                    this.artistMap.put("Unknown", temp);
                                                 }
                                             }
                                         }
@@ -317,7 +319,7 @@ public class PublisherNode implements Publisher,Serializable{
                                                 ID3v2 id3v2Tag = mp3file.getId3v2Tag();
                                                 System.out.println("Id3v2");
 
-                                                if (val.getMusicfile().getArtistName().equals(id3v2Tag.getArtist()) && (val.getMusicfile().getTrackName().equals(id3v2Tag.getTitle()))) {
+                                                if ((val.getMusicfile().getArtistName().equals(id3v2Tag.getArtist()) && (val.getMusicfile().getTrackName().equals(id3v2Tag.getTitle()))) || ((id3v2Tag.getArtist() == null) && (val.getMusicfile().getTrackName().equals(id3v2Tag.getTitle())))) {
                                                     System.out.println("Found the song");
                                                     found = true;
 
