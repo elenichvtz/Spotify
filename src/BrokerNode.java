@@ -29,7 +29,10 @@ public class BrokerNode extends Thread implements Broker,Serializable {
     Map<Integer, Map<String, ArrayList<String>>> art2 = new HashMap<>();
 
     static boolean p = false;
+<<<<<<< HEAD
     static boolean exist = false;
+=======
+>>>>>>> 1a5485e15b0c1489b9da79a65ef8c6dba14197ed
 
     String ip;
     int port;
@@ -119,6 +122,7 @@ public class BrokerNode extends Thread implements Broker,Serializable {
         }
         System.out.println("Correct publisher port is: "+publisherPort);
 
+<<<<<<< HEAD
         try {
             ppconnection = new Socket("localhost",publisherPort+2);
             System.out.println("Connected as client tot Publisher");
@@ -135,6 +139,24 @@ public class BrokerNode extends Thread implements Broker,Serializable {
         MusicFile f = new MusicFile(song, artist.getArtistName(), null, null, null, 0, 0);
         Value value = new Value(f);
         try {
+=======
+        try {
+            ppconnection = new Socket("localhost",publisherPort+2);
+            System.out.println("Connected as client tot Publisher");
+            out3 = new ObjectOutputStream(ppconnection.getOutputStream());
+            System.out.println("yo");
+            in3 = new ObjectInputStream(ppconnection.getInputStream());
+            System.out.println("yo");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("it exists");
+        MusicFile f = new MusicFile(song, artist.getArtistName(), null, null, null, 0, 0);
+        Value value = new Value(f);
+        try {
+>>>>>>> 1a5485e15b0c1489b9da79a65ef8c6dba14197ed
             this.out3.writeObject(artist);
             this.out3.writeObject(value);
             this.out3.flush();
@@ -271,21 +293,33 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                         e.printStackTrace();
                     }
 
+<<<<<<< HEAD
 
 
                     System.out.println("yep "+registeredPublishers.get(0).hashTopic(artistName).getBrokerPort());
 
 
+=======
+                    System.out.println("yep "+registeredPublishers.get(0).hashTopic(artistName).getBrokerPort());
+
+>>>>>>> 1a5485e15b0c1489b9da79a65ef8c6dba14197ed
                     if(registeredPublishers.get(0).hashTopic(artistName).getBrokerPort() == broker.getBrokerPort()) {
                         System.out.println("Yessss");
 
                         if (broker.getMapReceived().containsKey(broker.getArtistReceived().getArtistName())) {
                             System.out.println("it is exist");
+<<<<<<< HEAD
                         }     //den xreiazetai
 
                         boolean f = false;
 
 
+=======
+                        }
+
+                        boolean f = false;
+
+>>>>>>> 1a5485e15b0c1489b9da79a65ef8c6dba14197ed
                         for (Map.Entry<Integer,  Map<String, ArrayList<String>>> entry : art.entrySet()) {
 
                             Map<String, ArrayList<String>> k = entry.getValue();
@@ -298,7 +332,10 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                                     System.out.println(broker.getArtistReceived().getArtistName());
                                     if (entry2.getKey().equals(broker.getArtistReceived().getArtistName()) && entry2.getKey() != null) {
                                         f = true;
+<<<<<<< HEAD
                                         exist = true;
+=======
+>>>>>>> 1a5485e15b0c1489b9da79a65ef8c6dba14197ed
                                         System.out.println("Yes it is equal");
                                         System.out.println(entry2.getValue().toString());
                                         List<String> songs = entry2.getValue();
@@ -310,12 +347,19 @@ public class BrokerNode extends Thread implements Broker,Serializable {
 
                                         broker.p = false;
 
+<<<<<<< HEAD
                                         broker.out.writeInt(1);
 
                                         broker.out.writeObject(songs); //στελνει την λιστα με τα τραγουδια του καλλιτεχνη που ζητησε
                                         broker.out.flush();
 
                                         String song = broker.in.readUTF();//δεχεται το τραγουδι που θελει ο Consumer
+=======
+                                        broker.out.writeObject(songs);
+                                        broker.out.flush();
+
+                                        String song = broker.in.readUTF();
+>>>>>>> 1a5485e15b0c1489b9da79a65ef8c6dba14197ed
 
                                         System.out.println("Song received : " + song);
                                         System.out.println(art.size());
@@ -329,12 +373,15 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                                 }
                             }
                         }
+<<<<<<< HEAD
                         if(!exist){
                             System.out.println("Inside doesn't exist");
                             broker.out.writeInt(0);
                             broker.out.flush();
 
                         }
+=======
+>>>>>>> 1a5485e15b0c1489b9da79a65ef8c6dba14197ed
                     }
                     else {
                         System.out.println("Noooo "+registeredPublishers.get(0).hashTopic(artistName).getBrokerPort());

@@ -46,9 +46,9 @@ public class MusicFile implements Serializable {
         this.musicFileExtract = musicFileExtract;
     }
 
-    public void setChunkId(int chunkId) { this.chunkId = chunkId;} //new
+    public void setChunkId(int chunkId) { this.chunkId = chunkId;}
 
-    public void setTotalChunks(int totalChunks) { this.totalChunks = totalChunks; } //new
+    public void setTotalChunks(int totalChunks) { this.totalChunks = totalChunks; } 
 
     public String getTrackName() {
         return trackName;
