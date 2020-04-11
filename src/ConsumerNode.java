@@ -74,14 +74,23 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
 
                 System.out.println(this.listofsongs.toString());
 
-                System.out.println("Pick a song: ");
-
                 Scanner userInput = new Scanner(System.in);
-                String song = userInput.nextLine();
 
-                out.writeUTF(song);
+                boolean songflag = false;
 
-                out.flush();
+                while(songflag == false){
+                    System.out.println("Pick a song: ");
+                    String song = userInput.nextLine();
+                    for(int i=0; i<listofsongs.size(); i++){
+                        if(song.equals(listofsongs.get(i))){
+                            songflag =true;
+                            this.out.writeUTF(song);
+                            this.out.flush();
+                            break;
+                        }
+
+                    }
+                }
             }
             else{
                 System.out.println("The artist you searched doesn't exist.");
