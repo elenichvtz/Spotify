@@ -36,7 +36,6 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
             requestSocket = new Socket(this.ip, port+1);
             this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
             this.in = new ObjectInputStream(this.requestSocket.getInputStream());
-            System.out.println("Connected to a new Broker with port "+port);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -46,27 +45,21 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
     public void register(BrokerNode broker, ArtistName artist) {
 
         try {
-            System.out.println("Inside register");
             this.out.writeUTF(this.ip);
             this.out.writeInt(this.port);
-            this.out.writeObject(artist); //successfully sends artistName to BrokerNode
+            this.out.writeObject(artist);
             this.out.flush();
 
             int brokerport = this.in.readInt();
 
             if(brokerport != broker.getBrokerPort()) {
 
-                System.out.println(brokerport + " is the correct broker port.");
-                System.out.println("Disconnecting...");
                 disconnect(broker, artist);
 
-                System.out.println("yo2");
                 connect(brokerport);
 
                 this.out.writeUTF(this.ip);
-                System.out.println("yo");
                 this.out.writeInt(this.port);
-                System.out.println("yo");
 
                 this.out.writeObject(artist); //successfully sends artistName to BrokerNode
                 this.out.flush();
@@ -78,8 +71,8 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
 
                 //list of songs of the requested artist
                 this.listofsongs = (ArrayList<String>) in.readObject();
-                System.out.println("Map received from broker to consumer");
-                System.out.println(listofsongs.toString());
+
+                System.out.println(this.listofsongs.toString());
 
                 System.out.println("Pick a song: ");
 
@@ -91,7 +84,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
                 out.flush();
             }
             else{
-                System.out.println("The Artist you searched doesn't exist.");
+                System.out.println("The artist you searched doesn't exist.");
                 System.out.println("Please try again.");
             }
 
@@ -112,25 +105,23 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
 
     @Override
     public void playData(ArtistName artist, Value val){
+
         int chunks = 0;
-        System.out.println("Inside play data");
+
         ArrayList<Value> pieces = new ArrayList<>();
 
         try {
-            System.out.println("yo");
             chunks = in.readInt();
             FileOutputStream fileOuputStream = new FileOutputStream("songReceived.mp3");
 
             for (int i = 1; i <= chunks;i++) {
-                System.out.println("yo2");
                 Value value = new Value((MusicFile) in.readObject());
-                System.out.println("Chunk id is: "+value.getMusicfile().getChunkId());
                 fileOuputStream.write(value.getMusicfile().getMusicFileExtract());
                 fileOuputStream.flush();
 
                 pieces.add(value); //saves chunks locally
             }
-            System.out.println(pieces.toString());
+
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }

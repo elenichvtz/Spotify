@@ -48,9 +48,7 @@ public class PublisherNode implements Publisher,Serializable{
         this.port = port;
     }
 
-    public Map<String,ArrayList<String>> getArtistMap() {
-        return this.artistMap;
-    }
+    public Map<String,ArrayList<String>> getArtistMap() { return this.artistMap; }
 
     @Override
     public synchronized void init(){
@@ -166,6 +164,7 @@ public class PublisherNode implements Publisher,Serializable{
         } catch (IOException e) {
             e.printStackTrace();
         }
+        System.out.println("Publisher connected.");
     }
 
     public void updateList(){
@@ -179,6 +178,7 @@ public class PublisherNode implements Publisher,Serializable{
 
     @Override
     public BrokerNode hashTopic(ArtistName artist) throws NoSuchAlgorithmException{
+
         MessageDigest sha = MessageDigest.getInstance("SHA-256");
         String name = artist.getArtistName();
 
@@ -360,12 +360,6 @@ public class PublisherNode implements Publisher,Serializable{
 
     public char getEnd() { return this.end; }
 
-    @Override
-    public void notifyFailure(BrokerNode broker){
-        //TODO: write code
-        //not being the right publisher or not having the song/artist?????
-    }
-
     public static void main(String args[]){
 
         PublisherNode p = new PublisherNode('A', 'M', "localhost", 7654);
@@ -402,11 +396,9 @@ public class PublisherNode implements Publisher,Serializable{
                         publisher.requestSocket = publisher.providerSocket.accept();
                         publisher.out2 = new ObjectOutputStream(publisher.requestSocket.getOutputStream());
                         publisher.in2 = new ObjectInputStream(publisher.requestSocket.getInputStream());
-                        ArtistName artist = (ArtistName) publisher.in2.readObject(); // pull
-                        System.out.println("Artist received from broker is: " + artist);
+
+                        ArtistName artist = (ArtistName) publisher.in2.readObject();
                         Value value = (Value) publisher.in2.readObject();
-                        System.out.println("Value received from broker is: " + value.getMusicfile().getTrackName());
-                        System.out.println("Port of broker that will use push is :" + publisher.getPublisherPort());
                         publisher.push(artist, value);
                     } catch (ClassNotFoundException e) {
                         e.printStackTrace();
