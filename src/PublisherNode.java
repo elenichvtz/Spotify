@@ -12,7 +12,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
-
 import static java.lang.Math.ceil;
 
 //Client & Server
@@ -37,6 +36,9 @@ public class PublisherNode implements Publisher,Serializable{
     int BrokerPort1 = 7654;
     int BrokerPort2 = 8765;
     int BrokerPort3 = 9876;
+    String BrokerIP1 = "127.0.0.1";
+    String BrokerIP2 = "127.0.0.2";
+    String BrokerIP3 = "127.0.0.3";
 
     Map<String,ArrayList<String>> artistMap = new HashMap<>();
     ArrayList<BrokerNode> brokerKeys = new ArrayList<>();
@@ -168,11 +170,11 @@ public class PublisherNode implements Publisher,Serializable{
     }
 
     public void updateList(){
-        BrokerNode b = new BrokerNode("localhost",BrokerPort1);
+        BrokerNode b = new BrokerNode(BrokerIP1, BrokerPort1);
         brokerKeys.add(b);
-        BrokerNode b2 = new BrokerNode("localhost",BrokerPort2);
+        BrokerNode b2 = new BrokerNode(BrokerIP2, BrokerPort2);
         brokerKeys.add(b2);
-        BrokerNode b3 = new BrokerNode("localhost",BrokerPort3);
+        BrokerNode b3 = new BrokerNode(BrokerIP3, BrokerPort3);
         brokerKeys.add(b3);
     }
 
@@ -362,8 +364,8 @@ public class PublisherNode implements Publisher,Serializable{
 
     public static void main(String args[]){
 
-        PublisherNode p = new PublisherNode('A', 'M', "localhost", 7654);
-        PublisherNode p2 = new PublisherNode('M','Z',"localhost",8765);
+        PublisherNode p = new PublisherNode('A', 'M', "127.0.0.4", 7654);
+        PublisherNode p2 = new PublisherNode('M','Z',"127.0.0.5",8765);
         p.init();
         p2.init();
         p.updateList();
@@ -392,19 +394,37 @@ public class PublisherNode implements Publisher,Serializable{
                 publisher.out.flush();
 
                 while(true) {
+
                     try {
                         publisher.requestSocket = publisher.providerSocket.accept();
-                        publisher.out2 = new ObjectOutputStream(publisher.requestSocket.getOutputStream());
-                        publisher.in2 = new ObjectInputStream(publisher.requestSocket.getInputStream());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
 
-                        ArtistName artist = (ArtistName) publisher.in2.readObject();
-                        Value value = (Value) publisher.in2.readObject();
-                        publisher.push(artist, value);
-                    } catch (ClassNotFoundException e) {
+                    Thread broker_thread = new Thread(() -> {
+
+                        try {
+
+                            publisher.out2 = new ObjectOutputStream(publisher.requestSocket.getOutputStream());
+                            publisher.in2 = new ObjectInputStream(publisher.requestSocket.getInputStream());
+
+                            ArtistName artist = (ArtistName) publisher.in2.readObject();
+                            Value value = (Value) publisher.in2.readObject();
+                            publisher.push(artist, value);
+                        } catch (ClassNotFoundException | IOException e) {
+                            e.printStackTrace();
+                        }
+                    });
+                    broker_thread.start();
+                    try {
+                        broker_thread.join();
+                    }
+                    catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
-            } catch (IOException e) {
+            }
+            catch (IOException e) {
                 e.printStackTrace();
             }
         });
