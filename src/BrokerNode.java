@@ -309,6 +309,12 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                     }
                 });
                 consumer_thread.start();
+                try {
+                    consumer_thread.join();
+                }
+                catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         });
     }
