@@ -175,9 +175,9 @@ public class BrokerNode extends Thread implements Broker,Serializable {
 
     public static void main(String args[]) {
 
-        BrokerNode b = new BrokerNode("localhost", 7654);
-        BrokerNode b2 = new BrokerNode("localhost", 8765);
-        BrokerNode b3 = new BrokerNode("localhost", 9876);
+        BrokerNode b = new BrokerNode("127.0.0.1", 7654);
+        BrokerNode b2 = new BrokerNode("127.0.0.2", 8765);
+        BrokerNode b3 = new BrokerNode("127.0.0.3", 9876);
         b.init();
         b2.init();
         b3.init();
