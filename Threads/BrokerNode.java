@@ -4,7 +4,10 @@ import java.math.BigInteger;
 import java.net.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 //Client & Server
 public class BrokerNode extends Thread implements Broker,Serializable {
@@ -13,17 +16,17 @@ public class BrokerNode extends Thread implements Broker,Serializable {
     Socket publisher_requestSocket;
     ServerSocket consumer_providerSocket;
     Socket ppconnection;
-    ObjectOutputStream out = null;
-    ObjectInputStream in = null;
+    static ObjectOutputStream out = null;
+    static ObjectInputStream in = null;
 
     ObjectOutputStream out2 = null;
     ObjectInputStream in2 = null;
 
-    ObjectOutputStream out3 = null;
-    ObjectInputStream in3 = null;
+    static ObjectOutputStream out3 = null;
+    static ObjectInputStream in3 = null;
     ArtistName artistReceived= null;
     Map<String, ArrayList<String>> mapreceived = new HashMap<String, ArrayList<String>>();
-    Map<Integer, Map<String, ArrayList<String>>> artists = new HashMap<>();
+    static Map<Integer, Map<String, ArrayList<String>>> artists = new HashMap<>();
 
     static boolean p = false;
     static boolean exist = false;
@@ -98,64 +101,52 @@ public class BrokerNode extends Thread implements Broker,Serializable {
     }
 
     @Override
-    public void pull(Socket ppconnection,ArtistName artist, String song) {
+    public void pull(ArtistName artist, String song) {
 
-            System.out.println("Inside pull..");
-            System.out.println("Name of the artist: " + artist.artistName + " and name of the song: " + song);
-            int publisherPort = 0;
-            for (Map.Entry<Integer, Map<String, ArrayList<String>>> entry : artists.entrySet()) {
-                Map<String, ArrayList<String>> k = entry.getValue();
+        int publisherPort = 0;
+        for (Map.Entry<Integer,  Map<String, ArrayList<String>>> entry : artists.entrySet()) {
+            Map<String, ArrayList<String>> k = entry.getValue();
 
-                if (k.containsKey(artist.artistName)) {
-                    publisherPort = entry.getKey();
-                    break;
-                }
+            if (k.containsKey(artist.artistName)) {
+                publisherPort = entry.getKey();
+                break;
             }
+        }
+
+        try {
+            ppconnection = new Socket("localhost",publisherPort+2);
+            out3 = new ObjectOutputStream(ppconnection.getOutputStream());
+            in3 = new ObjectInputStream(ppconnection.getInputStream());
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        MusicFile f = new MusicFile(song, artist.getArtistName(), null, null, null, 0, 0);
+
+        Value value = new Value(f);
+
+        try {
+            this.out3.writeObject(artist);
+            this.out3.writeObject(value);
+            this.out3.flush();
+            int numOfchunks = in3.readInt();
+            out.writeInt(numOfchunks);
+            out.flush();
 
             try {
+                for (int i = 1; i <= numOfchunks; i++) {
 
-                ppconnection = new Socket("localhost", publisherPort + 2);
-                out3 = new ObjectOutputStream(ppconnection.getOutputStream());
-            } catch (IOException e) {
+                    MusicFile m = (MusicFile) in3.readObject();
+                    out.writeObject(m);
+                    out.flush();
+                }
+            } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
-
-
-                try{
-                    in3 = new ObjectInputStream(ppconnection.getInputStream());
-                }
-                catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-
-
-            MusicFile f = new MusicFile(song, artist.getArtistName(), null, null, null, 0, 0);
-
-            Value value = new Value(f);
-
-            try {
-                this.out3.writeObject(artist);
-                this.out3.writeObject(value);
-                this.out3.flush();
-                int numOfchunks = in3.readInt();
-                out.writeInt(numOfchunks);
-                out.flush();
-
-                try {
-                    for (int i = 1; i <= numOfchunks; i++) {
-
-                        MusicFile m = (MusicFile) in3.readObject();
-                        out.writeObject(m);
-                        out.flush();
-                    }
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void setOut(ObjectOutputStream out){this.out = out;}
@@ -182,149 +173,33 @@ public class BrokerNode extends Thread implements Broker,Serializable {
 
     public int getBrokerPort() { return this.port; }
 
-
     public static class MyThread implements Runnable {
-
-        // to stop the thread
-        private boolean exit;
-        private ArtistName artist;
         private String song;
-        Thread t;
-        protected Socket clientSocket = null;
+        private ArtistName artist;
 
-        MyThread(Socket clientSocket,ArtistName artist,String song)
-        {
-            this.clientSocket = clientSocket;
+
+        BrokerNode b = new BrokerNode("127.0.0.1", 7654);
+        public MyThread(ArtistName artist, String song) {
             this.artist = artist;
             this.song = song;
-            Thread t = new Thread(this, song);
-            System.out.println("New thread: " + t);
-            exit = false;
-            t.start(); // Starting the thread
-
         }
-        public void run( )
-        {
 
-            while (!exit) {
-            System.out.println("Inside run!");
-
-                brokers.get(0).pull(clientSocket,artist, song);
-
-
-            }
-        };
-
-        // for stopping the thread
-        public void stop()
-        {
-            exit = true;
+        public void run() {
+            b.pull(artist,song);
         }
     }
-    Queue<MyThread> threads = new Queue<MyThread>() {
-        @Override
-        public boolean add(MyThread myThread) {
-            return false;
-        }
-
-        @Override
-        public boolean offer(MyThread myThread) {
-            return false;
-        }
-
-        @Override
-        public MyThread remove() {
-            return null;
-        }
-
-        @Override
-        public MyThread poll() {
-            return null;
-        }
-
-        @Override
-        public MyThread element() {
-            return null;
-        }
-
-        @Override
-        public MyThread peek() {
-            return null;
-        }
-
-        @Override
-        public int size() {
-            return 0;
-        }
-
-        @Override
-        public boolean isEmpty() {
-            return false;
-        }
-
-        @Override
-        public boolean contains(Object o) {
-            return false;
-        }
-
-        @Override
-        public Iterator<MyThread> iterator() {
-            return null;
-        }
-
-        @Override
-        public Object[] toArray() {
-            return new Object[0];
-        }
-
-        @Override
-        public <T> T[] toArray(T[] a) {
-            return null;
-        }
-
-        @Override
-        public boolean remove(Object o) {
-            return false;
-        }
-
-        @Override
-        public boolean containsAll(Collection<?> c) {
-            return false;
-        }
-
-        @Override
-        public boolean addAll(Collection<? extends MyThread> c) {
-            return false;
-        }
-
-        @Override
-        public boolean removeAll(Collection<?> c) {
-            return false;
-        }
-
-        @Override
-        public boolean retainAll(Collection<?> c) {
-            return false;
-        }
-
-        @Override
-        public void clear() {
-
-        }
-    };
 
     public static void main(String args[]) {
 
-        BrokerNode b = new BrokerNode("localhost", 7654);
-        BrokerNode b2 = new BrokerNode("localhost", 8765);
-        BrokerNode b3 = new BrokerNode("localhost", 9876);
+        BrokerNode b = new BrokerNode("127.0.0.1", 7654);
+        BrokerNode b2 = new BrokerNode("127.0.0.2", 8765);
+        BrokerNode b3 = new BrokerNode("127.0.0.3", 9876);
         b.init();
         b2.init();
         b3.init();
         brokers.add(b);
         brokers.add(b2);
         brokers.add(b3);
-
 
         Map<Integer, Map<String, ArrayList<String>>> artists = new HashMap<>();
 
@@ -385,81 +260,69 @@ public class BrokerNode extends Thread implements Broker,Serializable {
 
                         registeredUsers.add(cn);
 
-                       // do {
-                            ArtistName artistName = null;
-                            String song = "";
-                            try {
-                                artistName = (ArtistName) broker.in.readObject();
-                                broker.setArtistReceived(artistName);
-                            } catch (ClassNotFoundException e) {
-                                e.printStackTrace();
-                            }
+                        ArtistName artistName = null;
+                        try {
+                            artistName = (ArtistName) broker.in.readObject();
+                            broker.setArtistReceived(artistName);
+                        } catch (ClassNotFoundException e) {
+                            e.printStackTrace();
+                        }
 
-                            if (registeredPublishers.get(0).hashTopic(artistName).getBrokerPort() == broker.getBrokerPort()) {
+                        if (registeredPublishers.get(0).hashTopic(artistName).getBrokerPort() == broker.getBrokerPort()) {
 
-                                boolean f = false;
+                            boolean f = false;
 
-                                for (Map.Entry<Integer, Map<String, ArrayList<String>>> entry : artists.entrySet()) {
+                            for (Map.Entry<Integer, Map<String, ArrayList<String>>> entry : artists.entrySet()) {
 
-                                    Map<String, ArrayList<String>> k = entry.getValue();
+                                Map<String, ArrayList<String>> k = entry.getValue();
 
-                                    for (Map.Entry<String, ArrayList<String>> entry2 : k.entrySet()) {
+                                for (Map.Entry<String, ArrayList<String>> entry2 : k.entrySet()) {
 
-                                        if (entry2.getKey() != null) {
+                                    if (entry2.getKey() != null) {
 
-                                            if (entry2.getKey().equals(broker.getArtistReceived().getArtistName()) && entry2.getKey() != null) {
+                                        if (entry2.getKey().equals(broker.getArtistReceived().getArtistName()) && entry2.getKey() != null) {
 
-                                                f = true;
-                                                List<String> songs = entry2.getValue();
+                                            f = true;
+                                            List<String> songs = entry2.getValue();
 
-                                                if (!broker.p) {
-                                                    broker.out.writeInt(broker.port);
-                                                }
-
-                                                broker.p = false;
-
-                                                broker.out.writeInt(1);
-
-                                                broker.out.writeObject(songs);
-                                                broker.out.flush();
-                                                Socket socket =null;
-                                                song = broker.in.readUTF();
-                                                artistName = broker.getArtistReceived();
-                                                MyThread t2 = new MyThread(socket,broker.getArtistReceived(), song);//3000//3000-2500
-                                                broker.threads.add(t2);
-
-
-                                                break;
+                                            if (!broker.p) {
+                                                broker.out.writeInt(broker.port);
                                             }
+
+                                            broker.p = false;
+
+                                            broker.out.writeInt(1);
+
+                                            broker.out.writeObject(songs);
+                                            broker.out.flush();
+
+                                            String song = broker.in.readUTF();
+
+                                            //broker.pull(broker.getArtistReceived(), song);
+                                            MyThread t1 = new MyThread(broker.getArtistReceived(),song);
+                                            t1.run();
+                                            break;
                                         }
-                                        if (f) {break; }
                                     }
-
-                                   // t2.run();
-
-                                    //Thread.sleep(500);
-                                    //t2.stop();
-                                    //Thread.sleep(500);
-                                    if (f) {break; }
-                                }
-
-                                if (!exist) {
-                                    broker.out.writeInt(0);
-                                    broker.out.flush();
+                                    if (f) { break; }
                                 }
                             }
-                            else {
-                                int port = registeredPublishers.get(0).hashTopic(artistName).getBrokerPort();
-
-                                broker.out.writeInt(port);
+                            if (!exist) {
+                                broker.out.writeInt(0);
                                 broker.out.flush();
-                                broker.out.close();
-                                broker.in.close();
-                                broker.p = true;
                             }
-                       // }while(!broker.threads.isEmpty());
+                        }
+                        else {
+                            int port = registeredPublishers.get(0).hashTopic(artistName).getBrokerPort();
+
+                            broker.out.writeInt(port);
+                            broker.out.flush();
+                            broker.out.close();
+                            broker.in.close();
+                            broker.p = true;
+                        }
                     }
-                    catch (IOException | NoSuchAlgorithmException  e) {
+                    catch (IOException | NoSuchAlgorithmException e) {
                         e.printStackTrace();
                     }
                 });

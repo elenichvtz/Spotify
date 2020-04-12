@@ -12,7 +12,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
-
 import static java.lang.Math.ceil;
 
 //Client & Server
@@ -23,11 +22,11 @@ public class PublisherNode implements Publisher,Serializable{
 
     ObjectOutputStream out = null;
     ObjectInputStream in = null;
-    ObjectOutputStream out2 = null;
+    static ObjectOutputStream out2 = null;
     ObjectInputStream in2 = null;
     static boolean already = false;
 
-    String path = "C:\\Users\\user\\Documents\\mathimata\\6o Εξάμηνο\\Κατανεμημένα Συστήματα\\Project\\dataset1";
+    static String path = "C:\\Users\\user\\Documents\\mathimata\\6o Εξάμηνο\\Κατανεμημένα Συστήματα\\Project\\dataset1";
 
     char start;
     char end;
@@ -37,6 +36,9 @@ public class PublisherNode implements Publisher,Serializable{
     int BrokerPort1 = 7654;
     int BrokerPort2 = 8765;
     int BrokerPort3 = 9876;
+    String BrokerIP1 = "127.0.0.1";
+    String BrokerIP2 = "127.0.0.2";
+    String BrokerIP3 = "127.0.0.3";
 
     Map<String,ArrayList<String>> artistMap = new HashMap<>();
     ArrayList<BrokerNode> brokerKeys = new ArrayList<>();
@@ -168,11 +170,11 @@ public class PublisherNode implements Publisher,Serializable{
     }
 
     public void updateList(){
-        BrokerNode b = new BrokerNode("localhost",BrokerPort1);
+        BrokerNode b = new BrokerNode(BrokerIP1, BrokerPort1);
         brokerKeys.add(b);
-        BrokerNode b2 = new BrokerNode("localhost",BrokerPort2);
+        BrokerNode b2 = new BrokerNode(BrokerIP2, BrokerPort2);
         brokerKeys.add(b2);
-        BrokerNode b3 = new BrokerNode("localhost",BrokerPort3);
+        BrokerNode b3 = new BrokerNode(BrokerIP3, BrokerPort3);
         brokerKeys.add(b3);
     }
 
@@ -224,10 +226,8 @@ public class PublisherNode implements Publisher,Serializable{
         return brokerNodes.get(0);
     }
 
-    public void push(Socket socket,ArtistName artist,Value val) {
+    public void push(ArtistName artist,Value val) {
 
-        System.out.println("Inside push..");
-        System.out.println("Name of the artist: " + artist.artistName + " and name of the song: " + val.getMusicfile().getTrackName());
         int chunk_size = 512 * 1024;
         int counter = 1;
 
@@ -307,8 +307,8 @@ public class PublisherNode implements Publisher,Serializable{
 
                                                 byte[] chunk = new byte[chunk_size];
                                                 int numberOfChunks = (int) ceil((float)file2.length() / chunk_size);
-                                                System.out.println("Num of chunks: " + numberOfChunks);
-                                                this.out2.writeInt(numberOfChunks);
+
+                                                out2.writeInt(numberOfChunks);
                                                 out2.flush();
 
                                                 try {
@@ -362,140 +362,25 @@ public class PublisherNode implements Publisher,Serializable{
 
     public char getEnd() { return this.end; }
 
-
-
-
     public static class MyThread implements Runnable {
-
-        // to stop the thread
-        private boolean exit;
+        private Value val;
         private ArtistName artist;
-        private Value song;
-        Thread t;
-        Socket socket = null;
-        PublisherNode pub = new PublisherNode('A', 'M', "localhost", 7654);
 
-        MyThread(Socket socket,ArtistName artist,Value song)
-        {
-            this.socket = socket;
+        PublisherNode p = new PublisherNode('A', 'M', "127.0.0.4", 7654);
+        public MyThread(ArtistName artist, Value val) {
             this.artist = artist;
-            this.song = song;
-            Thread t = new Thread(this, artist.artistName);
-            System.out.println("New thread: " + t);
-            exit = false;
-            t.start(); // Starting the thread
-
+            this.val = val;
         }
-        public void run( )
-        {
 
-            //while (!exit) {
-            System.out.println("Inside run!");
-                pub.push(socket,artist, song);
-            //}
-        };
-
-        // for stopping the thread
-        public void stop()
-        {
-            exit = true;
+        public void run() {
+            p.push(artist,val);
         }
     }
-    Queue<PublisherNode.MyThread> threads = new Queue<PublisherNode.MyThread>() {
-        @Override
-        public boolean add(PublisherNode.MyThread myThread) {
-            return false;
-        }
 
-        @Override
-        public boolean offer(PublisherNode.MyThread myThread) {
-            return false;
-        }
-
-        @Override
-        public PublisherNode.MyThread remove() {
-            return null;
-        }
-
-        @Override
-        public PublisherNode.MyThread poll() {
-            return null;
-        }
-
-        @Override
-        public PublisherNode.MyThread element() {
-            return null;
-        }
-
-        @Override
-        public PublisherNode.MyThread peek() {
-            return null;
-        }
-
-        @Override
-        public int size() {
-            return 0;
-        }
-
-        @Override
-        public boolean isEmpty() {
-            return false;
-        }
-
-        @Override
-        public boolean contains(Object o) {
-            return false;
-        }
-
-        @Override
-        public Iterator<PublisherNode.MyThread> iterator() {
-            return null;
-        }
-
-        @Override
-        public Object[] toArray() {
-            return new Object[0];
-        }
-
-        @Override
-        public <T> T[] toArray(T[] a) {
-            return null;
-        }
-
-        @Override
-        public boolean remove(Object o) {
-            return false;
-        }
-
-        @Override
-        public boolean containsAll(Collection<?> c) {
-            return false;
-        }
-
-        @Override
-        public boolean addAll(Collection<? extends PublisherNode.MyThread> c) {
-            return false;
-        }
-
-        @Override
-        public boolean removeAll(Collection<?> c) {
-            return false;
-        }
-
-        @Override
-        public boolean retainAll(Collection<?> c) {
-            return false;
-        }
-
-        @Override
-        public void clear() {
-
-        }
-    };
     public static void main(String args[]){
 
-        PublisherNode p = new PublisherNode('A', 'M', "localhost", 7654);
-        PublisherNode p2 = new PublisherNode('M','Z',"localhost",8765);
+        PublisherNode p = new PublisherNode('A', 'M', "127.0.0.4", 7654);
+        PublisherNode p2 = new PublisherNode('M','Z',"127.0.0.5",8765);
         p.init();
         p2.init();
         p.updateList();
@@ -524,33 +409,39 @@ public class PublisherNode implements Publisher,Serializable{
                 publisher.out.flush();
 
                 while(true) {
+
                     try {
-                        do {
-                            publisher.requestSocket = publisher.providerSocket.accept();
-                            System.out.println("Here 1");
+                        publisher.requestSocket = publisher.providerSocket.accept();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    Thread broker_thread = new Thread(() -> {
+
+                        try {
+
                             publisher.out2 = new ObjectOutputStream(publisher.requestSocket.getOutputStream());
-                            System.out.println("Here 2");
                             publisher.in2 = new ObjectInputStream(publisher.requestSocket.getInputStream());
-                            System.out.println("Here 3");
+
                             ArtistName artist = (ArtistName) publisher.in2.readObject();
                             Value value = (Value) publisher.in2.readObject();
-                            MyThread t2 = new MyThread(publisher.requestSocket,artist, value);
-                            publisher.threads.add(t2);
-                            System.out.println("Here 5");
-                            //t2.run();
-
-                            //Thread.sleep(500);
-                            //t2.stop();
-                            //Thread.sleep(500);
                             //publisher.push(artist, value);
-
-
-                        } while (!publisher.threads.isEmpty());
-                    } catch (ClassNotFoundException  e) {
+                            MyThread t1 = new MyThread(artist, value);
+                            t1.run();
+                        } catch (ClassNotFoundException | IOException e) {
+                            e.printStackTrace();
+                        }
+                    });
+                    broker_thread.start();
+                    try {
+                        broker_thread.join();
+                    }
+                    catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
-            } catch (IOException e) {
+            }
+            catch (IOException e) {
                 e.printStackTrace();
             }
         });
