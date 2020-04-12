@@ -1,5 +1,3 @@
-package src;
-import java.io.Serializable;
 import java.io.IOException;
 import java.io.*;
 import java.math.BigInteger;
@@ -7,7 +5,6 @@ import java.net.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
-
 
 //Client & Server
 public class BrokerNode extends Thread implements Broker,Serializable {
@@ -101,52 +98,64 @@ public class BrokerNode extends Thread implements Broker,Serializable {
     }
 
     @Override
-    public void pull(ArtistName artist, String song) {
+    public void pull(Socket ppconnection,ArtistName artist, String song) {
 
-        int publisherPort = 0;
-        for (Map.Entry<Integer,  Map<String, ArrayList<String>>> entry : artists.entrySet()) {
-            Map<String, ArrayList<String>> k = entry.getValue();
+            System.out.println("Inside pull..");
+            System.out.println("Name of the artist: " + artist.artistName + " and name of the song: " + song);
+            int publisherPort = 0;
+            for (Map.Entry<Integer, Map<String, ArrayList<String>>> entry : artists.entrySet()) {
+                Map<String, ArrayList<String>> k = entry.getValue();
 
-            if (k.containsKey(artist.artistName)) {
-                publisherPort = entry.getKey();
-                break;
+                if (k.containsKey(artist.artistName)) {
+                    publisherPort = entry.getKey();
+                    break;
+                }
             }
-        }
-
-        try {
-            ppconnection = new Socket("localhost",publisherPort+2);
-            out3 = new ObjectOutputStream(ppconnection.getOutputStream());
-            in3 = new ObjectInputStream(ppconnection.getInputStream());
-        }
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        MusicFile f = new MusicFile(song, artist.getArtistName(), null, null, null, 0, 0);
-
-        Value value = new Value(f);
-
-        try {
-            this.out3.writeObject(artist);
-            this.out3.writeObject(value);
-            this.out3.flush();
-            int numOfchunks = in3.readInt();
-            out.writeInt(numOfchunks);
-            out.flush();
 
             try {
-                for (int i = 1; i <= numOfchunks; i++) {
 
-                    MusicFile m = (MusicFile) in3.readObject();
-                    out.writeObject(m);
-                    out.flush();
-                }
-            } catch (ClassNotFoundException e) {
+                ppconnection = new Socket("localhost", publisherPort + 2);
+                out3 = new ObjectOutputStream(ppconnection.getOutputStream());
+            } catch (IOException e) {
                 e.printStackTrace();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+
+                try{
+                    in3 = new ObjectInputStream(ppconnection.getInputStream());
+                }
+                catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+
+
+            MusicFile f = new MusicFile(song, artist.getArtistName(), null, null, null, 0, 0);
+
+            Value value = new Value(f);
+
+            try {
+                this.out3.writeObject(artist);
+                this.out3.writeObject(value);
+                this.out3.flush();
+                int numOfchunks = in3.readInt();
+                out.writeInt(numOfchunks);
+                out.flush();
+
+                try {
+                    for (int i = 1; i <= numOfchunks; i++) {
+
+                        MusicFile m = (MusicFile) in3.readObject();
+                        out.writeObject(m);
+                        out.flush();
+                    }
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
     }
 
     public void setOut(ObjectOutputStream out){this.out = out;}
@@ -173,6 +182,7 @@ public class BrokerNode extends Thread implements Broker,Serializable {
 
     public int getBrokerPort() { return this.port; }
 
+
     public static class MyThread implements Runnable {
 
         // to stop the thread
@@ -180,9 +190,11 @@ public class BrokerNode extends Thread implements Broker,Serializable {
         private ArtistName artist;
         private String song;
         Thread t;
+        protected Socket clientSocket = null;
 
-        MyThread(ArtistName artist,String song)
+        MyThread(Socket clientSocket,ArtistName artist,String song)
         {
+            this.clientSocket = clientSocket;
             this.artist = artist;
             this.song = song;
             Thread t = new Thread(this, song);
@@ -195,8 +207,11 @@ public class BrokerNode extends Thread implements Broker,Serializable {
         {
 
             while (!exit) {
+            System.out.println("Inside run!");
 
-                brokers.get(0).pull(brokers.get(0).getArtistReceived(), this.song);
+                brokers.get(0).pull(clientSocket,artist, song);
+
+
             }
         };
 
@@ -310,6 +325,7 @@ public class BrokerNode extends Thread implements Broker,Serializable {
         brokers.add(b2);
         brokers.add(b3);
 
+
         Map<Integer, Map<String, ArrayList<String>>> artists = new HashMap<>();
 
         brokers.parallelStream().forEach((broker) -> {
@@ -368,79 +384,92 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                         ConsumerNode cn = new ConsumerNode(consumerip, consumerport);
 
                         registeredUsers.add(cn);
-                        do {
-                        ArtistName artistName = null;
-                        try {
-                            artistName = (ArtistName) broker.in.readObject();
-                            broker.setArtistReceived(artistName);
-                        } catch (ClassNotFoundException e) {
-                            e.printStackTrace();
-                        }
 
-                        if (registeredPublishers.get(0).hashTopic(artistName).getBrokerPort() == broker.getBrokerPort()) {
+                       // do {
+                            ArtistName artistName = null;
+                            String song = "";
+                            try {
+                                artistName = (ArtistName) broker.in.readObject();
+                                broker.setArtistReceived(artistName);
+                            } catch (ClassNotFoundException e) {
+                                e.printStackTrace();
+                            }
 
-                            boolean f = false;
+                            if (registeredPublishers.get(0).hashTopic(artistName).getBrokerPort() == broker.getBrokerPort()) {
 
-                            for (Map.Entry<Integer, Map<String, ArrayList<String>>> entry : artists.entrySet()) {
+                                boolean f = false;
 
-                                Map<String, ArrayList<String>> k = entry.getValue();
+                                for (Map.Entry<Integer, Map<String, ArrayList<String>>> entry : artists.entrySet()) {
 
-                                for (Map.Entry<String, ArrayList<String>> entry2 : k.entrySet()) {
+                                    Map<String, ArrayList<String>> k = entry.getValue();
 
-                                    if (entry2.getKey() != null) {
+                                    for (Map.Entry<String, ArrayList<String>> entry2 : k.entrySet()) {
 
-                                        if (entry2.getKey().equals(broker.getArtistReceived().getArtistName()) && entry2.getKey() != null) {
+                                        if (entry2.getKey() != null) {
 
-                                            f = true;
-                                            List<String> songs = entry2.getValue();
+                                            if (entry2.getKey().equals(broker.getArtistReceived().getArtistName()) && entry2.getKey() != null) {
 
-                                            if (!broker.p) {
-                                                broker.out.writeInt(broker.port);
+                                                f = true;
+                                                List<String> songs = entry2.getValue();
+
+                                                if (!broker.p) {
+                                                    broker.out.writeInt(broker.port);
+                                                }
+
+                                                broker.p = false;
+
+                                                broker.out.writeInt(1);
+
+                                                broker.out.writeObject(songs);
+                                                broker.out.flush();
+                                                Socket socket =null;
+                                                song = broker.in.readUTF();
+                                                artistName = broker.getArtistReceived();
+                                                MyThread t2 = new MyThread(socket,broker.getArtistReceived(), song);//3000//3000-2500
+                                                broker.threads.add(t2);
+
+
+                                                break;
                                             }
-
-                                            broker.p = false;
-
-                                            broker.out.writeInt(1);
-
-                                            broker.out.writeObject(songs);
-                                            broker.out.flush();
-
-                                            String song = broker.in.readUTF();
-                                            MyThread t2 = new MyThread(broker.getArtistReceived(), song);
-                                            broker.threads.add(t2);
-
-                                            Thread.sleep(500);
-                                            t2.stop();
-                                            Thread.sleep(500);
-
-
-                                            break;
                                         }
+                                        if (f) {break; }
                                     }
-                                    if (f) { break; }
+
+                                   // t2.run();
+
+                                    //Thread.sleep(500);
+                                    //t2.stop();
+                                    //Thread.sleep(500);
+                                    if (f) {break; }
+                                }
+
+                                if (!exist) {
+                                    broker.out.writeInt(0);
+                                    broker.out.flush();
                                 }
                             }
-                            if (!exist) {
-                                broker.out.writeInt(0);
-                                broker.out.flush();
-                            }
-                        }
-                        else {
-                            int port = registeredPublishers.get(0).hashTopic(artistName).getBrokerPort();
+                            else {
+                                int port = registeredPublishers.get(0).hashTopic(artistName).getBrokerPort();
 
-                            broker.out.writeInt(port);
-                            broker.out.flush();
-                            broker.out.close();
-                            broker.in.close();
-                            broker.p = true;
-                        }
-                        }while(!broker.threads.isEmpty());
+                                broker.out.writeInt(port);
+                                broker.out.flush();
+                                broker.out.close();
+                                broker.in.close();
+                                broker.p = true;
+                            }
+                       // }while(!broker.threads.isEmpty());
                     }
-                    catch (IOException | NoSuchAlgorithmException | InterruptedException e) {
+                    catch (IOException | NoSuchAlgorithmException  e) {
                         e.printStackTrace();
                     }
                 });
                 consumer_thread.start();
+                try {
+                    consumer_thread.join();
+                }
+                catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         });
     }

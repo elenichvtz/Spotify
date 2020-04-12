@@ -1,5 +1,3 @@
-package src;
-import java.io.Serializable;
 import com.mpatric.mp3agic.*;
 
 import java.io.*;
@@ -226,8 +224,10 @@ public class PublisherNode implements Publisher,Serializable{
         return brokerNodes.get(0);
     }
 
-    public void push(ArtistName artist,Value val) {
+    public void push(Socket socket,ArtistName artist,Value val) {
 
+        System.out.println("Inside push..");
+        System.out.println("Name of the artist: " + artist.artistName + " and name of the song: " + val.getMusicfile().getTrackName());
         int chunk_size = 512 * 1024;
         int counter = 1;
 
@@ -307,8 +307,8 @@ public class PublisherNode implements Publisher,Serializable{
 
                                                 byte[] chunk = new byte[chunk_size];
                                                 int numberOfChunks = (int) ceil((float)file2.length() / chunk_size);
-
-                                                out2.writeInt(numberOfChunks);
+                                                System.out.println("Num of chunks: " + numberOfChunks);
+                                                this.out2.writeInt(numberOfChunks);
                                                 out2.flush();
 
                                                 try {
@@ -362,6 +362,9 @@ public class PublisherNode implements Publisher,Serializable{
 
     public char getEnd() { return this.end; }
 
+
+
+
     public static class MyThread implements Runnable {
 
         // to stop the thread
@@ -369,10 +372,12 @@ public class PublisherNode implements Publisher,Serializable{
         private ArtistName artist;
         private Value song;
         Thread t;
+        Socket socket = null;
         PublisherNode pub = new PublisherNode('A', 'M', "localhost", 7654);
 
-        MyThread(ArtistName artist,Value song)
+        MyThread(Socket socket,ArtistName artist,Value song)
         {
+            this.socket = socket;
             this.artist = artist;
             this.song = song;
             Thread t = new Thread(this, artist.artistName);
@@ -384,10 +389,10 @@ public class PublisherNode implements Publisher,Serializable{
         public void run( )
         {
 
-            while (!exit) {
-
-                pub.push(brokers.get(0).getArtistReceived(), this.song);
-            }
+            //while (!exit) {
+            System.out.println("Inside run!");
+                pub.push(socket,artist, song);
+            //}
         };
 
         // for stopping the thread
@@ -487,7 +492,6 @@ public class PublisherNode implements Publisher,Serializable{
 
         }
     };
-
     public static void main(String args[]){
 
         PublisherNode p = new PublisherNode('A', 'M', "localhost", 7654);
@@ -519,31 +523,34 @@ public class PublisherNode implements Publisher,Serializable{
                 publisher.out.writeObject(publisher.getArtistMap());
                 publisher.out.flush();
 
-                while (true) {
+                while(true) {
                     try {
                         do {
                             publisher.requestSocket = publisher.providerSocket.accept();
+                            System.out.println("Here 1");
                             publisher.out2 = new ObjectOutputStream(publisher.requestSocket.getOutputStream());
+                            System.out.println("Here 2");
                             publisher.in2 = new ObjectInputStream(publisher.requestSocket.getInputStream());
-
+                            System.out.println("Here 3");
                             ArtistName artist = (ArtistName) publisher.in2.readObject();
                             Value value = (Value) publisher.in2.readObject();
-                            MyThread t2 = new MyThread(artist, value);
+                            MyThread t2 = new MyThread(publisher.requestSocket,artist, value);
                             publisher.threads.add(t2);
+                            System.out.println("Here 5");
+                            //t2.run();
 
-                            Thread.sleep(500);
-                            t2.stop();
-                            Thread.sleep(500);
-                            publisher.push(artist, value);
+                            //Thread.sleep(500);
+                            //t2.stop();
+                            //Thread.sleep(500);
+                            //publisher.push(artist, value);
 
 
-                        } while (publisher.threads.isEmpty());
-                    } catch (ClassNotFoundException | InterruptedException e) {
+                        } while (!publisher.threads.isEmpty());
+                    } catch (ClassNotFoundException  e) {
                         e.printStackTrace();
                     }
                 }
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         });
