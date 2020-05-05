@@ -124,9 +124,10 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
         try {
             chunks = in.readInt();
             FileOutputStream fileOuputStream = new FileOutputStream("songReceived.mp3");
-            System.out.println("Inside playdata: " + chunks);
+
             for (int i = 1; i <= chunks; i++) {
                 Value value = new Value((MusicFile) in.readObject());
+                System.out.println("Inside playdata: " + value.getMusicfile().getTrackName() + " " + value.getMusicfile().getArtistName());
                 fileOuputStream.write(value.getMusicfile().getMusicFileExtract());
                 fileOuputStream.flush();
 
@@ -183,6 +184,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
                 MusicFile ms = new MusicFile(null, null, null, null, null, 0, 0);
                 Value value = new Value(ms);
                 //System.out.println("Before playdata");
+                System.out.println(artistName + " " + value.getMusicfile().getTrackName());
                 cn.playData(artistName, value);
                 //System.out.println("After playdata");
                 cn.disconnect(b, artistName);

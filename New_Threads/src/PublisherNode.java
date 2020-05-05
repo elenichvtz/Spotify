@@ -350,6 +350,7 @@ public class PublisherNode implements Publisher,Serializable{
         } catch (IOException e) {
             e.printStackTrace();
         }
+        System.out.println(artist.artistName + " value artist: " + val.getMusicfile().getArtistName()+ " "  + val.getMusicfile().getTrackName());
     }
 
     public Socket getSocket() { return this.requestSocket; }

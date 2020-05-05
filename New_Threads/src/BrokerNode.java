@@ -135,7 +135,8 @@ public class BrokerNode extends Thread implements Broker,Serializable {
             int numOfchunks = in3.readInt();
             out.writeInt(numOfchunks);
             out.flush();
-
+            System.out.println(artist);
+            System.out.println(song);
             try {
                 for (int i = 1; i <= numOfchunks; i++) {
 
@@ -320,22 +321,24 @@ public class BrokerNode extends Thread implements Broker,Serializable {
             while (true) {
 
                 //socket object to receive incoming consumer requests
-                Socket consumer = null;
-                int i = 0;
-                try {
-                    consumer = broker.getConsumerServerSocket().accept();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
 
-                Socket finalConsumer = consumer;
-                try {
-                    b.setOut(new ObjectOutputStream(finalConsumer.getOutputStream()));
-                    b.setIn(new ObjectInputStream(finalConsumer.getInputStream()));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
                 for(int k=0; k<2; k++) {
+                    Socket consumer = null;
+                    int i = 0;
+                    try {
+                        consumer = broker.getConsumerServerSocket().accept();
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    Socket finalConsumer = consumer;
+                    try {
+                        b.setOut(new ObjectOutputStream(finalConsumer.getOutputStream()));
+                        b.setIn(new ObjectInputStream(finalConsumer.getInputStream()));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     MyThread t = new MyThread(finalConsumer, broker);
                     t.start();
 
