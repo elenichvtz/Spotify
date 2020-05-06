@@ -14,7 +14,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
     int port;
     ArrayList<String> listofsongs = new ArrayList<String>();
     int exist;
-    static String countSong = "";
+    
 
     ConsumerNode(String ip, int port) {
         this.ip = ip;
@@ -120,11 +120,14 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
 
         int chunks = 0;
         String str ;
+        
         ArrayList<Value> pieces = new ArrayList<>();
 
         try {
+            str = in.readUTF();
             chunks = in.readInt();
-            FileOutputStream fileOuputStream = new FileOutputStream(this.countSong.concat("songReceived.mp3"));
+
+            FileOutputStream fileOuputStream = new FileOutputStream(str.concat(".mp3"));
 
             for (int i = 1; i <= chunks; i++) {
                 Value value = new Value((MusicFile) in.readObject());
@@ -185,7 +188,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
 
                 cn.disconnect(b, artistName);
                 str = "127.0.0.2";
-                cn.countSong = "2";
+
                 i = i + 10;
             }
 

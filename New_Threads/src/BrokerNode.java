@@ -132,7 +132,9 @@ public class BrokerNode extends Thread implements Broker,Serializable {
             this.out3.writeObject(artist);
             this.out3.writeObject(value);
             this.out3.flush();
+            String songName = in3.readUTF();
             int numOfchunks = in3.readInt();
+            out.writeUTF(songName);
             out.writeInt(numOfchunks);
             out.flush();
             System.out.println(artist);

@@ -265,7 +265,7 @@ public class PublisherNode implements Publisher,Serializable{
 
                                                 byte[] chunk = new byte[chunk_size];
                                                 int numberOfChunks = (int) ceil((float)file2.length() / chunk_size);
-
+                                                this.out2.writeUTF(val.getMusicfile().getTrackName());
                                                 this.out2.writeInt(numberOfChunks);
 
                                                 try {
@@ -307,7 +307,7 @@ public class PublisherNode implements Publisher,Serializable{
 
                                                 byte[] chunk = new byte[chunk_size];
                                                 int numberOfChunks = (int) ceil((float)file2.length() / chunk_size);
-
+                                                out2.writeUTF(val.getMusicfile().getTrackName());
                                                 out2.writeInt(numberOfChunks);
                                                 out2.flush();
 
