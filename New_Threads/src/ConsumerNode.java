@@ -183,7 +183,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
                 System.out.println(artistName + " " + value.getMusicfile().getTrackName());
                 cn.playData(artistName, value);
 
-                //cn.disconnect(b, artistName);
+                cn.disconnect(b, artistName);
                 str = "127.0.0.2";
                 cn.countSong = "2";
                 i = i + 10;

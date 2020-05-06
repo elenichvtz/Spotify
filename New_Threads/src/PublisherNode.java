@@ -226,7 +226,7 @@ public class PublisherNode implements Publisher,Serializable{
         return brokerNodes.get(0);
     }
 
-    public void push(ArtistName artist,Value val) {
+    public synchronized void push(ArtistName artist,Value val) {
 
         int chunk_size = 512 * 1024;
         int counter = 1;
