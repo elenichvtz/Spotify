@@ -14,6 +14,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
     int port;
     ArrayList<String> listofsongs = new ArrayList<String>();
     int exist;
+    static String countSong = "";
 
     ConsumerNode(String ip, int port) {
         this.ip = ip;
@@ -43,7 +44,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
 
     @Override
     public void register(BrokerNode broker, ArtistName artist, String ip, int port) {
-        System.out.println("Register");
+
         try {
             this.out.writeUTF(ip);
             this.out.writeInt(port);
@@ -67,7 +68,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
             }
 
             exist = in.readInt();
-            System.out.println("exist: " + exist);
+
 
             if (exist == 1) {
 
@@ -101,7 +102,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
-        System.out.println("out of register");
+
     }
 
     @Override
@@ -118,12 +119,12 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
     public void playData(ArtistName artist, Value val) {
 
         int chunks = 0;
-
+        String str ;
         ArrayList<Value> pieces = new ArrayList<>();
 
         try {
             chunks = in.readInt();
-            FileOutputStream fileOuputStream = new FileOutputStream("songReceived.mp3");
+            FileOutputStream fileOuputStream = new FileOutputStream(this.countSong.concat("songReceived.mp3"));
 
             for (int i = 1; i <= chunks; i++) {
                 Value value = new Value((MusicFile) in.readObject());
@@ -164,7 +165,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
 
 
                 while (cn.exist == 0) {
-                    System.out.println(111111111);
+
                     System.out.println("Pick an artist: ");
                     userInput = new Scanner(System.in);
                     artist = userInput.nextLine();
@@ -184,6 +185,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
 
                 //cn.disconnect(b, artistName);
                 str = "127.0.0.2";
+                cn.countSong = "2";
                 i = i + 10;
             }
 

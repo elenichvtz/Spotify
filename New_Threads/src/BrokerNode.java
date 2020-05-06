@@ -104,7 +104,7 @@ public class BrokerNode extends Thread implements Broker,Serializable {
 
     @Override
     public synchronized void  pull(ArtistName artist, String song ) {
-        System.out.println("Inside pull");
+
         int publisherPort = 0;
         for (Map.Entry<Integer,  Map<String, ArrayList<String>>> entry : artists.entrySet()) {
             Map<String, ArrayList<String>> k = entry.getValue();
@@ -150,7 +150,7 @@ public class BrokerNode extends Thread implements Broker,Serializable {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println("Out of pull");
+
     }
 
     public void setOut(ObjectOutputStream out){this.out = out;}
@@ -192,10 +192,10 @@ public class BrokerNode extends Thread implements Broker,Serializable {
         public void run(){
             try {
 
-            System.out.println("Before reading consumer");
+
             String consumerip = b.in.readUTF();
             int consumerport = b.in.readInt();
-            System.out.println("After reading consumer");
+
             ConsumerNode cn = new ConsumerNode(consumerip, consumerport);
 
             registeredUsers.add(cn);
