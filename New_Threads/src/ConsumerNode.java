@@ -127,7 +127,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
 
             for (int i = 1; i <= chunks; i++) {
                 Value value = new Value((MusicFile) in.readObject());
-                System.out.println("Inside playdata: " + value.getMusicfile().getTrackName() + " " + value.getMusicfile().getArtistName());
+
                 fileOuputStream.write(value.getMusicfile().getMusicFileExtract());
                 fileOuputStream.flush();
 
@@ -145,16 +145,12 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
         BrokerNode b = new BrokerNode(str, 7654);
         while (i <= 10) {
             ConsumerNode cn = new ConsumerNode(str, 7654 );
-            // ConsumerNode cn = new ConsumerNode("localhost", 7654 );
-            System.out.println(1111111);
+
+
             System.out.println("ip and port: " + cn.ip + " " + cn.port);
 
-            //if (i == 0) {
-                cn.init();
-          //  }
 
-            System.out.println(2222222);
-
+            cn.init();
 
             System.out.println("Pick an artist: ");
 
@@ -175,43 +171,22 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
                     artistName = new ArtistName(artist);
                     cn.disconnect(b, artistName);
                     cn.connect(b.port);
-                    // cn1.connect(b.port);
+
                     cn.register(b, artistName, cn.ip, cn.port);
-                    //cn1.register(b,artistName);
 
                 }
-                //}
+
                 MusicFile ms = new MusicFile(null, null, null, null, null, 0, 0);
                 Value value = new Value(ms);
-                //System.out.println("Before playdata");
+
                 System.out.println(artistName + " " + value.getMusicfile().getTrackName());
                 cn.playData(artistName, value);
-                //System.out.println("After playdata");
-                cn.disconnect(b, artistName);
+
+                //cn.disconnect(b, artistName);
                 str = "127.0.0.2";
                 i = i + 10;
             }
-       /* cn1.init();
-        System.out.println("Pick an artist: ");
 
-        //Scanner userInput = new Scanner(System.in);
-        String artist1 = userInput.nextLine();
-        ArtistName artistName1 = new ArtistName(artist1);
-        cn1.register(b,artistName1);
-        while(cn1.exist == 0){
-            System.out.println("Pick an artist: ");
-            userInput = new Scanner(System.in);
-            artist1 = userInput.nextLine();
-            artistName1 = new ArtistName(artist1);
-            cn1.disconnect(b,artistName1);
-
-            cn1.connect(b.port);
-
-            cn1.register(b,artistName1);
-        }
-        MusicFile ms1= new MusicFile(null,null,null,null,null,0,0);
-        Value value1 = new Value(ms);
-        cn1.playData(artistName1,value1);*/
 
     }
 }

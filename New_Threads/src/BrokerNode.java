@@ -182,8 +182,7 @@ public class BrokerNode extends Thread implements Broker,Serializable {
         Socket s = null;
         Boolean flag = false;
         BrokerNode b ;
-        Map<ArtistName, String> requests = new HashMap<>();
-        Map<MyThread, Map<ArtistName, String> > threadRequest = new HashMap<>();
+
         public MyThread(Socket s, BrokerNode b) {
 
             this.s = s;
@@ -239,9 +238,8 @@ public class BrokerNode extends Thread implements Broker,Serializable {
 
                                 String song = in.readUTF();
 
-                                requests.put(b.getArtistReceived(), song);
                                 b.pull(b.getArtistReceived(), song);
-                                flag =true;
+
                                 break;
                             }
                         }
@@ -321,71 +319,33 @@ public class BrokerNode extends Thread implements Broker,Serializable {
             while (true) {
 
                 //socket object to receive incoming consumer requests
+                Socket consumer = null;
 
-                for(int k=0; k<2; k++) {
-                    Socket consumer = null;
-                    int i = 0;
-                    try {
-                        consumer = broker.getConsumerServerSocket().accept();
+                try {
+                    consumer = broker.getConsumerServerSocket().accept();
 
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                    Socket finalConsumer = consumer;
-                    try {
-                        b.setOut(new ObjectOutputStream(finalConsumer.getOutputStream()));
-                        b.setIn(new ObjectInputStream(finalConsumer.getInputStream()));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    MyThread t = new MyThread(finalConsumer, broker);
-                    t.start();
-
-                    threads.add(t);
-                    t.threadRequest.put(t, t.requests);
-                    /*for (Map.Entry<MyThread, Map<ArtistName,String>> entry :  threads.get(0).threadRequest.entrySet()) {
-                        for (Map.Entry<ArtistName, String> entry1 : entry.getKey().requests.entrySet()) {
-                           broker.pull(entry1.getKey(), entry1.getValue());
-                        }
-                    }*/
-                    try {
-                        t.join();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
 
-                /*for (Map.Entry<MyThread, Map<ArtistName,String>> entry :  threads.get(0).threadRequest.entrySet()) {
-                    for(Map.Entry<ArtistName,String> entry1 :  entry.getKey().requests.entrySet())
-                        broker.pull(entry1.getKey(), entry1.getValue());
+                Socket finalConsumer = consumer;
+                try {
+                    b.setOut(new ObjectOutputStream(finalConsumer.getOutputStream()));
+                    b.setIn(new ObjectInputStream(finalConsumer.getInputStream()));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                MyThread t = new MyThread(finalConsumer, broker);
+                t.start();
+
+                try {
+                    t.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
 
 
-                }*/
-                /*threads.add(t);
-
-                do {
-                    threads.get(i).start();
-                    MyThread t1 = new MyThread(finalConsumer, broker);
-                    threads.add(t1);
-
-                    try {
-                        threads.get(i).join();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-
-                    i++;
-
-                } while (i < threads.size());
-
-
-                System.out.println("i is: " + i);*/
-
-            }
-
-
+             }
 
         });
     }

@@ -350,7 +350,7 @@ public class PublisherNode implements Publisher,Serializable{
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println(artist.artistName + " value artist: " + val.getMusicfile().getArtistName()+ " "  + val.getMusicfile().getTrackName());
+
     }
 
     public Socket getSocket() { return this.requestSocket; }
@@ -363,20 +363,35 @@ public class PublisherNode implements Publisher,Serializable{
 
     public char getEnd() { return this.end; }
 
-    public static class MyThread implements Runnable {
-        private Value val;
-        private ArtistName artist;
+    public static class PubThread extends Thread {
 
-        PublisherNode p = new PublisherNode('A', 'M', "127.0.0.4", 7654);
-        public MyThread(ArtistName artist, Value val) {
-            this.artist = artist;
-            this.val = val;
+        Socket requestSocket = null;
+        PublisherNode publisher ;
+
+        public PubThread(Socket s, PublisherNode publisher) {
+
+            this.requestSocket = s;
+            this.publisher = publisher;
         }
 
-        public void run() {
-            p.push(artist,val);
+        public void run(){
+
+            try {
+
+                publisher.out2 = new ObjectOutputStream(publisher.requestSocket.getOutputStream());
+                publisher.in2 = new ObjectInputStream(publisher.requestSocket.getInputStream());
+
+                ArtistName artist = (ArtistName) publisher.in2.readObject();
+                Value value = (Value) publisher.in2.readObject();
+                publisher.push(artist, value);
+
+            } catch (ClassNotFoundException | IOException e) {
+                e.printStackTrace();
+            }
         }
     }
+
+
 
     public static void main(String args[]){
 
@@ -390,7 +405,7 @@ public class PublisherNode implements Publisher,Serializable{
         ArrayList<PublisherNode> publishers = new ArrayList<>();
         publishers.add(p);
         publishers.add(p2);
-        ArrayList<MyThread> threads = new ArrayList<>();
+
 
         publishers.parallelStream().forEach((publisher) -> {
 
@@ -409,44 +424,22 @@ public class PublisherNode implements Publisher,Serializable{
                 //send map to broker
                 publisher.out.writeObject(publisher.getArtistMap());
                 publisher.out.flush();
+                while (true) {
 
-                while(true) {
 
                     try {
                         publisher.requestSocket = publisher.providerSocket.accept();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-
-                    Thread broker_thread = new Thread(() -> {
-
-                        try {
-
-                            publisher.out2 = new ObjectOutputStream(publisher.requestSocket.getOutputStream());
-                            publisher.in2 = new ObjectInputStream(publisher.requestSocket.getInputStream());
-
-                            ArtistName artist = (ArtistName) publisher.in2.readObject();
-                            Value value = (Value) publisher.in2.readObject();
-                            //publisher.push(artist, value);
-                            MyThread t1 = new MyThread(artist, value);
-                            threads.add(t1);
-                            for(int i = 0; i<threads.size(); i++){
-                                threads.get(i).run();
-                            }
-
-
-                        } catch (ClassNotFoundException | IOException e) {
-                            e.printStackTrace();
-                        }
-
-                    });
-                    broker_thread.start();
+                    PubThread t = new PubThread(publisher.requestSocket, publisher);
+                    t.start();
                     try {
-                        broker_thread.join();
-                    }
-                    catch (InterruptedException e) {
+                        t.join();
+                    } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
+
                 }
             }
             catch (IOException e) {
