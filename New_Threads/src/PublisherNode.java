@@ -74,7 +74,7 @@ public class PublisherNode implements Publisher,Serializable{
                                             already = true;
 
                                             ID3v2 id3v2Tag = mp3file.getId3v2Tag();
-
+                                            
                                             if (id3v2Tag.getArtist() != null && !id3v2Tag.getArtist().isBlank() && id3v2Tag.getTitle() != null && !id3v2Tag.getTitle().isBlank()) {
 
                                                 if (id3v2Tag.getArtist().charAt(0) >= this.start && id3v2Tag.getArtist().charAt(0) <= this.end) {

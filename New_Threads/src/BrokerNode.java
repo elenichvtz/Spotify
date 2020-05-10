@@ -184,89 +184,98 @@ public class BrokerNode extends Thread implements Broker,Serializable {
         Socket s = null;
         Boolean flag = false;
         BrokerNode b ;
+        int exit = 0;
 
         public MyThread(Socket s, BrokerNode b) {
 
             this.s = s;
             this.b = b;
         }
+        public void stopThread() {
+            this.exit = 1;
+        }
 
-        public void run(){
-            try {
+        public void run() {
+
+            //while (exit == 0) {
+                try {
 
 
-            String consumerip = b.in.readUTF();
-            int consumerport = b.in.readInt();
+                    String consumerip = b.in.readUTF();
+                    int consumerport = b.in.readInt();
 
-            ConsumerNode cn = new ConsumerNode(consumerip, consumerport);
+                    ConsumerNode cn = new ConsumerNode(consumerip, consumerport);
 
-            registeredUsers.add(cn);
+                    registeredUsers.add(cn);
 
-            ArtistName artistName = null;
-            try {
-                artistName = (ArtistName) b.in.readObject();
-                b.setArtistReceived(artistName);
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }
+                    ArtistName artistName = null;
+                    try {
+                        artistName = (ArtistName) b.in.readObject();
+                        b.setArtistReceived(artistName);
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }
 
-            if (registeredPublishers.get(0).hashTopic(artistName).getBrokerPort() == b.getBrokerPort()) {
+                    if (registeredPublishers.get(0).hashTopic(artistName).getBrokerPort() == b.getBrokerPort()) {
 
-                boolean f = false;
+                        boolean f = false;
 
-                for (Map.Entry<Integer, Map<String, ArrayList<String>>> entry : artists.entrySet()) {
+                        for (Map.Entry<Integer, Map<String, ArrayList<String>>> entry : artists.entrySet()) {
 
-                    Map<String, ArrayList<String>> k = entry.getValue();
+                            Map<String, ArrayList<String>> k = entry.getValue();
 
-                    for (Map.Entry<String, ArrayList<String>> entry2 : k.entrySet()) {
+                            for (Map.Entry<String, ArrayList<String>> entry2 : k.entrySet()) {
 
-                        if (entry2.getKey() != null) {
+                                if (entry2.getKey() != null) {
 
-                            if (entry2.getKey().equals(b.getArtistReceived().getArtistName()) && entry2.getKey() != null) {
+                                    if (entry2.getKey().equals(b.getArtistReceived().getArtistName()) && entry2.getKey() != null) {
 
-                                f = true;
-                                List<String> songs = entry2.getValue();
+                                        f = true;
+                                        List<String> songs = entry2.getValue();
 
-                                if (!p) {
-                                    out.writeInt(b.port);
+                                        if (!p) {
+                                            out.writeInt(b.port);
+                                        }
+
+                                        p = false;
+
+                                        out.writeInt(1);
+
+                                        out.writeObject(songs);
+                                        out.flush();
+
+                                        String song = in.readUTF();
+
+                                        b.pull(b.getArtistReceived(), song);
+                                        System.out.println("Goodbye");
+                                       // stopThread();
+
+                                        break;
+                                    }
                                 }
-
-                                p = false;
-
-                                out.writeInt(1);
-
-                                out.writeObject(songs);
-                                out.flush();
-
-                                String song = in.readUTF();
-
-                                b.pull(b.getArtistReceived(), song);
-
-                                break;
+                                if (f) {
+                                    break;
+                                }
                             }
                         }
-                        if (f) { break; }
+                        if (!exist) {
+                            out.writeInt(0);
+                            out.flush();
+                        }
+                    } else {
+                        int port = registeredPublishers.get(0).hashTopic(artistName).getBrokerPort();
+
+                        b.out.writeInt(port);
+                        b.out.flush();
+                        b.out.close();
+                        b.in.close();
+                        b.p = true;
                     }
+                } catch (IOException | NoSuchAlgorithmException e) {
+                    e.printStackTrace();
                 }
-                if (!exist) {
-                    out.writeInt(0);
-                    out.flush();
-                }
-            }
-            else {
-                int port = registeredPublishers.get(0).hashTopic(artistName).getBrokerPort();
 
-                b.out.writeInt(port);
-                b.out.flush();
-                b.out.close();
-                b.in.close();
-                b.p = true;
-            }
-        }
-                    catch (IOException | NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-
+            //}
         }
     }
 
@@ -337,17 +346,35 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                System.out.println("New customer!");
                 MyThread t = new MyThread(finalConsumer, broker);
-                t.start();
+                threads.add(t);
 
-                try {
-                    t.join();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                for (int i = 0; i < threads.size(); i++) {
+                    threads.get(i).start();
+                    if (!threads.get(i).isAlive()) {
+                           
+                        try {
+                            threads.get(i).join();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        threads.remove(i);
+                    }
+                    else {
+
+                        try {
+                            threads.get(i).join(5);
+                            threads.remove(i);
+
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+
                 }
-
-
-             }
+            }
 
         });
     }

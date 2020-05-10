@@ -14,7 +14,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
     int port;
     ArrayList<String> listofsongs = new ArrayList<String>();
     int exist;
-    
+
 
     ConsumerNode(String ip, int port) {
         this.ip = ip;
@@ -120,12 +120,13 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
 
         int chunks = 0;
         String str ;
-        
+        //System.out.println("Song's name: " +str);
         ArrayList<Value> pieces = new ArrayList<>();
 
         try {
             str = in.readUTF();
             chunks = in.readInt();
+            if(str==null) str="songReceived";
 
             FileOutputStream fileOuputStream = new FileOutputStream(str.concat(".mp3"));
 
@@ -147,7 +148,7 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
         int i = 0;
         String str = "127.0.0.1";
         BrokerNode b = new BrokerNode(str, 7654);
-        while (i <= 10) {
+        while (i <= 1) {
             ConsumerNode cn = new ConsumerNode(str, 7654 );
 
 
@@ -184,12 +185,18 @@ public class ConsumerNode extends Thread implements Consumer,Serializable {
                 Value value = new Value(ms);
 
                 System.out.println(artistName + " " + value.getMusicfile().getTrackName());
+               // System.out.println("Type 0 if you want to listen online or 1 if you want to listen offline: ");
+               /* int choice = userInput.nextInt();
+                while(choice!=0 || choice!=1){
+                    System.out.println("Please type 0 or 1");
+                    choice = userInput.nextInt();
+                }*/
                 cn.playData(artistName, value);
 
                 cn.disconnect(b, artistName);
                 str = "127.0.0.2";
 
-                i = i + 10;
+                i = i + 1;
             }
 
 
