@@ -2,6 +2,7 @@ package com.example.spotify;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -32,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
     private Button button;
     private EditText txt_input;
     private TextView lb1_output;
+    private Spinner dropdown;
     Socket requestSocket = null;
     private TextWatcher text =null;
     private TextKeyListener textKeyListener = null;
@@ -48,26 +50,19 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         txt_input = (EditText) findViewById(R.id.txt_input);
+
+        dropdown = findViewById(R.id.spinner1);
        //this.ip = "127.0.0.1";
         //this.port = 7654;
         //flag_artist = true;
         // init();
 
-
-
-
     }
 
     public void onStart() {
         super.onStart();
-
-
         System.out.println("FLAG : " + flag_artist);
-
         ArtistName artist = new ArtistName(txt_input.toString());
-
-
-
         txt_input.setOnKeyListener(new OnKeyListener() {
             public boolean onKey(View view, int keyCode, KeyEvent keyevent) {
                 //If the keyevent is a key-down event on the "enter" button
@@ -75,14 +70,13 @@ public class MainActivity extends AppCompatActivity {
                     //...
                     // Perform your action on key press here
                     // ...
-                   // ArtistName artistName = new ArtistName(txt_input.toString());
-
-                    AsyncTaskRunner runner = new AsyncTaskRunner(requestSocket,out, in, artist,"127.0.0.4", 7654, 7654 );
-
+                    txt_input = (EditText) findViewById(R.id.txt_input);
+                    System.out.println("11111111111  "+ " " + txt_input.getText().toString());
+                    AsyncTaskRunner runner = new AsyncTaskRunner();
                     runner.execute();
                     System.out.println("FLAG : " + flag_artist);
                     if(flag_artist==true){
-                        Spinner dropdown = findViewById(R.id.spinner1);
+
                         //create a list of items for the spinner.
                         try {
                             listofsongs = (ArrayList<String>) in.readObject();
@@ -97,8 +91,6 @@ public class MainActivity extends AppCompatActivity {
                         //set the spinners adapter to the previously created one.
                         dropdown.setAdapter(adapter);
                         //list of songs of the requested artist
-
-
                         System.out.println(listofsongs.toString());
                         dropdown.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                             @Override
@@ -129,57 +121,68 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    private class AsyncTaskRunner extends AsyncTask<Void, Void, Void> {
-        private Socket requestSocket = null;
-        ObjectOutputStream out = null;
-        ObjectInputStream in = null;
-        ArtistName artist;
-        int broker;
-        String ip;
-        int port ;
+    private class AsyncTaskRunner extends AsyncTask<String,String,String> {
 
-        AsyncTaskRunner(Socket socket,ObjectOutputStream out, ObjectInputStream in, ArtistName artist, String ip, int port ,int broker ){
-            this.requestSocket = socket;
-            this.out = out;
-            this.in = in;
-            this.artist = artist;
-            this.ip = ip;
-            this.port = port;
-            this.broker = broker;
-        }
+        private String resp;
+        ProgressDialog progressDialog;
+        //System.out.println("artist:");
+        ArtistName artist = new ArtistName(txt_input.getText().toString());
+        String[] params = new String[2];
 
 
-        protected Void doInBackground(Void...voids) {
+        protected String doInBackground(String... params) {
+            System.out.println("artist:" + artist.getArtistName());
+
+
+            publishProgress("Sleeping...");
             try {
+              // int time = Integer.parseInt(params[0])*1000;
+                //Thread.sleep(time);
+
+                Socket requestSocket = null;
+                ObjectOutputStream out = null;
+                ObjectInputStream in = null;
+
                 System.out.println("Inside doInBackground");
-                this.requestSocket = new Socket(this.ip, this.port + 1);
+                requestSocket = new Socket("192.168.1.3", 7655);
+                out = new ObjectOutputStream(requestSocket.getOutputStream());
+                in = new ObjectInputStream(requestSocket.getInputStream());
+                //Thread.sleep(10);
+
+
+                out.writeUTF("192.168.1.3");
+                out.writeInt(7655);
+                out.writeUTF(artist.getArtistName());
+                out.flush();
+
+
+                int brokerport = in.readInt();
+               // String ip = in.readUTF();
+                System.out.println("Port of broker: " + brokerport);
                 System.out.println("..... doInBackground");
-                this.out = new ObjectOutputStream(this.requestSocket.getOutputStream());
-                this.in = new ObjectInputStream(this.requestSocket.getInputStream());
-                this.out.writeUTF(ip);
-                this.out.writeInt(port);
-                this.out.writeObject(artist);
-                this.out.flush();
-
-
-
-                int brokerport = this.in.readInt();
-
-                if (brokerport != broker) {
+                if (brokerport != 7655) {
 
                     requestSocket.close();
 
-                    this.requestSocket = new Socket(ip, this.port + 1);
+                    requestSocket = new Socket("192.168.1.3", brokerport);
 
-                    this.out.writeUTF(ip);
-                    this.out.writeInt(port);
+                    out.writeUTF("192.168.1.3");
+                    out.writeInt(brokerport);
 
-                    this.out.writeObject(artist); //successfully sends artistName to BrokerNode
-                    this.out.flush();
+                    out.writeUTF(artist.getArtistName()); //successfully sends artistName to BrokerNode
+                    out.flush();
+                    System.out.println("Connect with other broker");
                 }
 
                 exist = in.readInt();
                 if (exist == 1) {
+                    try {
+                        listofsongs = (ArrayList<String>) in.readObject();
+                    } catch (ClassNotFoundException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     flag_artist = true;
 
 
@@ -196,6 +199,26 @@ public class MainActivity extends AppCompatActivity {
             }
             return null;
         }
+      //  @Override
+        protected void onPostExecute(ArrayAdapter adapter) {
+            // execution of result of Long time consuming operation
+            progressDialog.dismiss();
+           // dropdown = listofsongs;
+            dropdown.setVisibility(Spinner.VISIBLE);
+            dropdown.setAdapter(adapter);
+        }
+
+        @Override
+        protected void onPreExecute() {
+            progressDialog = ProgressDialog.show(MainActivity.this,
+                    "Searching for artist",
+                    "Still searching...");
+        }
+
+       /* @Override
+        protected void onProgressUpdate(String... text) {
+            finalResult.setText(text[0]);
+        }*/
 
 
 
