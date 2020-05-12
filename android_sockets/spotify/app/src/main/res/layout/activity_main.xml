@@ -25,19 +25,18 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/lb1_output"
+        android:id="@+id/textView"
         android:text=""
         android:textAlignment="center"
 
         android:textSize="30dp"
         android:layout_marginTop="20dp"
         android:gravity="center_horizontal" />
+
     <Spinner
-        android:id="@+id/spinner1"
+        android:id="@+id/spinner"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@android:drawable/btn_dropdown"
-        android:spinnerMode="dropdown"/>
+        android:layout_height="wrap_content" />
 
 
 </LinearLayout>
