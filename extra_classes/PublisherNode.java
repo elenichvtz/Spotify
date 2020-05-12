@@ -38,8 +38,8 @@ public class PublisherNode implements Publisher,Serializable{
     int BrokerPort2 = 8765;
     int BrokerPort3 = 9876;
     String BrokerIP1 = "192.168.1.3";
-    String BrokerIP2 = "127.0.0.4";
-    String BrokerIP3 = "127.0.0.2";
+    String BrokerIP2 = "192.168.1.3";
+    String BrokerIP3 = "192.168.1.3";
 
     Map<String,ArrayList<String>> artistMap = new HashMap<>();
     ArrayList<BrokerNode> brokerKeys = new ArrayList<>();
@@ -397,7 +397,7 @@ public class PublisherNode implements Publisher,Serializable{
     public static void main(String args[]){
 
         PublisherNode p = new PublisherNode('A', 'M', "192.168.1.3", 7654);
-        PublisherNode p2 = new PublisherNode('M','Z',"127.0.0.4",8765);
+        PublisherNode p2 = new PublisherNode('M','Z',"192.168.1.3",8765);
         p.init();
         p2.init();
         p.updateList();

@@ -211,15 +211,26 @@ public class BrokerNode extends Thread implements Broker,Serializable {
 
                     ArtistName artistName = null;
                     try {
-                       String artist = b.in.readUTF();
-                       artistName = new ArtistName(artist);
-                       System.out.println("artist: " + artistName.getArtistName());
-                       //artistName = (ArtistName) b.in.readObject();
+                        String artist = b.in.readUTF();
+                        artistName = new ArtistName(artist);
+                     //  System.out.println("artist: " + artistName.getArtistName());
+                       // artistName = (ArtistName) b.in.readObject();
                         b.setArtistReceived(artistName);
+                        System.out.println("Ip and port of broker: " + b.ip + " " + b.port);
                     } catch (IOException e) {
                         e.printStackTrace();
-                    }
+                    }/* catch (ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }*/
                     System.out.println("111111111: " + artistName.getArtistName());
+                    /*ArrayList<String> some = new ArrayList<>();
+                    some.add("Hello");
+                    some.add("GEIA");
+                    for(int i=0;i<some.size();i++) {
+                        out.writeUTF(some.get(i));
+                    }*/
+                    System.out.println("555555555: " + artistName.getArtistName());
+
                     if (registeredPublishers.get(0).hashTopic(artistName).getBrokerPort() == b.getBrokerPort()) {
                         System.out.println("00000000: " + artistName.getArtistName());
                         boolean f = false;
@@ -248,11 +259,18 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                                         System.out.println("333333333: " + artistName.getArtistName());
                                         out.writeInt(1);
                                         System.out.println("4444444: " + artistName.getArtistName());
-                                        out.writeObject(songs);
+                                        out.writeInt(songs.size());
+                                        System.out.println("55555555: " + artistName.getArtistName());
+                                        //out.writeObject(songs);
                                         out.flush();
+                                        for(int j=0; j<songs.size();j++) {
+                                            System.out.println("666666666: " + artistName.getArtistName());
+                                            out.writeUTF(songs.get(j));
+                                            out.flush();
+                                        }
 
                                         String song = in.readUTF();
-
+                                        System.out.println("song selected: " + song);
                                         b.pull(b.getArtistReceived(), song);
                                         System.out.println("Goodbye");
                                        // stopThread();
@@ -270,6 +288,7 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                             out.flush();
                         }
                     } else {
+                        System.out.println("Changing Broker");
                         int port = registeredPublishers.get(0).hashTopic(artistName).getBrokerPort();
 
                         b.out.writeInt(port);
@@ -291,8 +310,8 @@ public class BrokerNode extends Thread implements Broker,Serializable {
     public static void main(String args[]) {
 
         BrokerNode b = new BrokerNode("192.168.1.3", 7654);
-        BrokerNode b2 = new BrokerNode("192.168.1.4", 8765);
-        BrokerNode b3 = new BrokerNode("192.168.1.5", 9876);
+        BrokerNode b2 = new BrokerNode("192.168.1.3", 8765);
+        BrokerNode b3 = new BrokerNode("192.168.1.3", 9876);
         b.init();
         b2.init();
         b3.init();
