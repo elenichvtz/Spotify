@@ -51,7 +51,7 @@ public class BrokerNode extends Thread implements Broker,Serializable {
         }
 
         try {
-           // this.consumer_providerSocket = new ServerSocket(this.port + 1, 10);
+            // this.consumer_providerSocket = new ServerSocket(this.port + 1, 10);
             this.consumer_providerSocket = new ServerSocket(this.port+1 , 10);
 
         } catch (IOException e) {
@@ -144,9 +144,12 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                 for (int i = 1; i <= numOfchunks; i++) {
 
                     MusicFile m = (MusicFile) in3.readObject();
-                    out.writeObject(m);
+                    out.write(m.getMusicFileExtract());
+                   // out.writeObject((MusicFile)m);
                     out.flush();
+                    System.out.println("Sending song: " + m.getTrackName());
                 }
+
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
@@ -180,7 +183,7 @@ public class BrokerNode extends Thread implements Broker,Serializable {
 
     public int getBrokerPort() { return this.port; }
 
-    public static class MyThread extends Thread {
+    public static class MyThread extends Thread implements Serializable{
 
         Socket s = null;
         Boolean flag = false;
@@ -199,107 +202,105 @@ public class BrokerNode extends Thread implements Broker,Serializable {
         public void run() {
 
             //while (exit == 0) {
+            try {
+
+
+                String consumerip = b.in.readUTF();
+                int consumerport = b.in.readInt();
+                System.out.println("Consumer connected");
+                //ConsumerNode cn = new ConsumerNode(consumerip, consumerport);
+
+                //registeredUsers.add(cn);
+
+                ArtistName artistName = null;
                 try {
-
-
-                    String consumerip = b.in.readUTF();
-                    int consumerport = b.in.readInt();
-                    System.out.println("Consumer connected");
-                    //ConsumerNode cn = new ConsumerNode(consumerip, consumerport);
-
-                    //registeredUsers.add(cn);
-
-                    ArtistName artistName = null;
-                    try {
-                        String artist = b.in.readUTF();
-                        artistName = new ArtistName(artist);
-                     //  System.out.println("artist: " + artistName.getArtistName());
-                       // artistName = (ArtistName) b.in.readObject();
-                        b.setArtistReceived(artistName);
-                        System.out.println("Ip and port of broker: " + b.ip + " " + b.port);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }/* catch (ClassNotFoundException e) {
-                        e.printStackTrace();
-                    }*/
-                    System.out.println("111111111: " + artistName.getArtistName());
+                    String artist = b.in.readUTF();
+                    artistName = new ArtistName(artist);
+                    //  System.out.println("artist: " + artistName.getArtistName());
+                    // artistName = (ArtistName) b.in.readObject();
+                    b.setArtistReceived(artistName);
+                    System.out.println("Ip and port of broker: " + b.ip + " " + b.port);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                System.out.println("111111111: " + artistName.getArtistName());
                     /*ArrayList<String> some = new ArrayList<>();
                     some.add("Hello");
                     some.add("GEIA");
                     for(int i=0;i<some.size();i++) {
                         out.writeUTF(some.get(i));
                     }*/
-                    System.out.println("555555555: " + artistName.getArtistName());
+                System.out.println("555555555: " + artistName.getArtistName());
 
-                    if (registeredPublishers.get(0).hashTopic(artistName).getBrokerPort() == b.getBrokerPort()) {
-                        System.out.println("00000000: " + artistName.getArtistName());
-                        boolean f = false;
+                if (registeredPublishers.get(0).hashTopic(artistName).getBrokerPort() == b.getBrokerPort()) {
+                    System.out.println("00000000: " + artistName.getArtistName());
+                    boolean f = false;
 
-                        for (Map.Entry<Integer, Map<String, ArrayList<String>>> entry : artists.entrySet()) {
+                    for (Map.Entry<Integer, Map<String, ArrayList<String>>> entry : artists.entrySet()) {
 
-                            Map<String, ArrayList<String>> k = entry.getValue();
+                        Map<String, ArrayList<String>> k = entry.getValue();
 
-                            for (Map.Entry<String, ArrayList<String>> entry2 : k.entrySet()) {
+                        for (Map.Entry<String, ArrayList<String>> entry2 : k.entrySet()) {
 
-                                if (entry2.getKey() != null) {
+                            if (entry2.getKey() != null) {
 
-                                    if (entry2.getKey().equals(b.getArtistReceived().getArtistName()) && entry2.getKey() != null) {
+                                if (entry2.getKey().equals(b.getArtistReceived().getArtistName()) && entry2.getKey() != null) {
 
-                                        f = true;
-                                        List<String> songs = entry2.getValue();
+                                    f = true;
+                                    List<String> songs = entry2.getValue();
 
-                                        if (!p) {
-                                            System.out.println("2222222: " + artistName.getArtistName());
-                                            out.writeInt(b.port);
+                                    if (!p) {
+                                        System.out.println("2222222: " + artistName.getArtistName());
+                                        out.writeInt(b.port);
 
-                                           // out.writeUTF(b.ip);
-                                        }
-
-                                        p = false;
-                                        System.out.println("333333333: " + artistName.getArtistName());
-                                        out.writeInt(1);
-                                        System.out.println("4444444: " + artistName.getArtistName());
-                                        out.writeInt(songs.size());
-                                        System.out.println("55555555: " + artistName.getArtistName());
-                                        //out.writeObject(songs);
-                                        out.flush();
-                                        for(int j=0; j<songs.size();j++) {
-                                            System.out.println("666666666: " + artistName.getArtistName());
-                                            out.writeUTF(songs.get(j));
-                                            out.flush();
-                                        }
-
-                                        String song = in.readUTF();
-                                        System.out.println("song selected: " + song);
-                                        b.pull(b.getArtistReceived(), song);
-                                        System.out.println("Goodbye");
-                                       // stopThread();
-
-                                        break;
+                                        // out.writeUTF(b.ip);
                                     }
-                                }
-                                if (f) {
+
+                                    p = false;
+                                    System.out.println("333333333: " + artistName.getArtistName());
+                                    out.writeInt(1);
+                                    System.out.println("4444444: " + artistName.getArtistName());
+                                    out.writeInt(songs.size());
+                                    System.out.println("55555555: " + artistName.getArtistName());
+                                    //out.writeObject(songs);
+                                    out.flush();
+                                    for(int j=0; j<songs.size();j++) {
+                                        System.out.println("666666666: " + artistName.getArtistName());
+                                        out.writeUTF(songs.get(j));
+                                        out.flush();
+                                    }
+                                    System.out.println("Before...");
+                                    String song = in.readUTF();
+                                    System.out.println("song selected: " + song);
+                                    b.pull(b.getArtistReceived(), song);
+                                    System.out.println("Goodbye");
+                                    // stopThread();
+
                                     break;
                                 }
                             }
+                            if (f) {
+                                break;
+                            }
                         }
-                        if (!exist) {
-                            out.writeInt(0);
-                            out.flush();
-                        }
-                    } else {
-                        System.out.println("Changing Broker");
-                        int port = registeredPublishers.get(0).hashTopic(artistName).getBrokerPort();
-
-                        b.out.writeInt(port);
-                        b.out.flush();
-                        b.out.close();
-                        b.in.close();
-                        b.p = true;
                     }
-                } catch (IOException | NoSuchAlgorithmException e) {
-                    e.printStackTrace();
+                    if (!exist) {
+                        out.writeInt(0);
+                        out.flush();
+                    }
+                } else {
+                    System.out.println("Changing Broker");
+                    int port = registeredPublishers.get(0).hashTopic(artistName).getBrokerPort();
+
+                    b.out.writeInt(port);
+                    b.out.flush();
+                    b.out.close();
+                    b.in.close();
+                    b.p = true;
                 }
+            } catch (IOException | NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            }
 
             //}
         }

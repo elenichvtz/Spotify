@@ -228,7 +228,7 @@ public class PublisherNode implements Publisher,Serializable{
     }
 
     public synchronized void push(ArtistName artist,Value val) {
-
+        System.out.println("Inside push");
         int chunk_size = 512 * 1024;
         int counter = 1;
 
@@ -273,20 +273,9 @@ public class PublisherNode implements Publisher,Serializable{
                                                     for (int readNum; (readNum = fis.read(chunk)) != -1; ) {
                                                         byteout.write(chunk, 0, readNum);
 
-                                                        MusicFile musicfile = new MusicFile(id3v1Tag.getTitle(), id3v1Tag.getArtist(), id3v1Tag.getAlbum(),
-                                                                id3v1Tag.getGenreDescription(), chunk, counter, numberOfChunks);
-
                                                         counter++;
                                                         chunk = new byte[chunk_size];
-                                                        val.setMusicfile(musicfile);
 
-                                                        try {
-                                                            this.out2.writeObject(musicfile);
-                                                            this.out2.flush();
-                                                        }
-                                                        catch (IOException e) {
-                                                            e.printStackTrace();
-                                                        }
                                                     }
                                                 } catch (IOException e) {
                                                     e.printStackTrace();
