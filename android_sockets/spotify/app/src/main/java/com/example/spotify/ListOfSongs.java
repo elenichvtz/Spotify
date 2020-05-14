@@ -22,15 +22,21 @@ import android.widget.Toast;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.net.Socket;
 import java.util.ArrayList;
 
-public class ListOfSongs extends AppCompatActivity {
+
+
+public class ListOfSongs extends AppCompatActivity implements Serializable {
     ListView songlist;
     TextView txt;
     static String itemValue;
     //Button button;
     Intent intent;
+    public static final String EXTRA_MESSAGE = "com.example.spotify.MESSAGE";
+    public static final int RESULT_OK = 1;
+    public static  int RESULT_CANCELLED = 0;
 
 
 
@@ -39,7 +45,7 @@ public class ListOfSongs extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list_of_songs);
-        intent = new Intent(ListOfSongs.this, PlaySong.class);
+        intent = new Intent(ListOfSongs.this, MainActivity.class);
 
         /*button =  findViewById(R.id.button2);
         button.setOnClickListener(new View.OnClickListener() {
@@ -71,38 +77,22 @@ public class ListOfSongs extends AppCompatActivity {
         songlist.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+               // AsyncTaskRunner1 runner = new AsyncTaskRunner1();
                 itemValue = (String) songlist.getItemAtPosition(position);
-                AsyncTaskRunner1 runner = new AsyncTaskRunner1();
-                runner.execute();
-                startActivity(intent);
+              //  Log.e("Send song with name: ", itemValue);
+              //  runner.execute();
+                //Intent intent1 = new Intent();
+                intent.putExtra(EXTRA_MESSAGE, itemValue);
+
+                setResult(ListOfSongs.RESULT_OK, intent);
+                //MainActivity m = new MainActivity();
+                //m.flag_song = true;
+                finish();
+                //startActivity(intent1);
             }
+
         });
     }
-    public class AsyncTaskRunner1 extends AsyncTask<String,String,String> {
-        MainActivity m = new MainActivity();
-        Socket requestSocket = m.requestSocket;
-        ObjectOutputStream out = m.out;
-        ObjectInputStream in = m.in;
-        private String resp;
-        ProgressDialog progressDialog;
-        String[] params = new String[2];
 
-        @SuppressLint("WrongThread")
-        protected String doInBackground(String... params) {
-
-            //publishProgress("Sleeping...");
-            try {
-                out.writeUTF(itemValue);
-                out.flush();
-                /*System.out.println("Song has been send");
-                intent = new Intent(ListOfSongs.this, PlaySong.class);
-                startActivity(intent);*/
-
-            } catch (IOException e) {
-                Log.e("MessageSender", "" + e);
-
-            }
-            return null;
-        }
-    }
 }
