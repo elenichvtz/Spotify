@@ -211,8 +211,12 @@ public class MainActivity extends AppCompatActivity implements Serializable {
                                 //...
                                 // Perform your action on key press here
                                 // ...
+                                if(txt_input.getText().toString().trim().equalsIgnoreCase("")){
+                                    txt_input.setError("Type an artist");
+                                }
                                 txt_input = (EditText) findViewById(R.id.txt_input);
                                 System.out.println("Third");
+
                                 AsyncTaskRunner runner = new AsyncTaskRunner();
                                 runner.execute();
 
