@@ -1,5 +1,4 @@
 package com.example.spotify;
-
 import java.io.Serializable;
 
 public class MusicFile implements Serializable {
@@ -17,6 +16,7 @@ public class MusicFile implements Serializable {
     int totalChunks;
     int chunkId;
     byte[] musicFileExtract;
+    static final long serialVersionUID = 42L;
 
     MusicFile(String trackName,String artistName,String albumInfo,String genre,byte[] musicFileExtract, int chunkId, int totalChunks){
         this.trackName = trackName;
@@ -50,7 +50,7 @@ public class MusicFile implements Serializable {
 
     public void setChunkId(int chunkId) { this.chunkId = chunkId;}
 
-    public void setTotalChunks(int totalChunks) { this.totalChunks = totalChunks; } 
+    public void setTotalChunks(int totalChunks) { this.totalChunks = totalChunks; }
 
     public String getTrackName() {
         return trackName;

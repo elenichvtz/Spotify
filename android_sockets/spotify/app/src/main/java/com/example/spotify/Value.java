@@ -1,10 +1,10 @@
 package com.example.spotify;
-
 import java.io.Serializable;
 
 public class Value implements Serializable {
 
     MusicFile musicfile;
+    static final long serialVersionUID = 42L;
 
     Value(MusicFile musicFile){
         this.musicfile = musicFile;
@@ -23,3 +23,4 @@ public class Value implements Serializable {
         return super.toString();
     }
 }
+

@@ -1,18 +1,23 @@
 package com.example.spotify;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.res.AssetFileDescriptor;
+import android.content.res.AssetManager;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.net.rtp.AudioStream;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.text.TextWatcher;
 import android.text.method.TextKeyListener;
@@ -33,8 +38,11 @@ import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileDescriptor;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -74,12 +82,16 @@ public class MainActivity extends AppCompatActivity implements Serializable {
     static ObjectOutputStream out = null;
     static ObjectInputStream in = null;
     static DataInputStream in3 = null;
-    static FileOutputStream file;
+    static DataOutputStream out3 = null;
+     FileOutputStream file;
 
     static ArrayList<Value> pieces1;
     static String name;
     MediaPlayer player;
-
+    static final long serialVersionUID = 42L;
+    File fis;
+    static File fis2;
+    FileOutputStream file1 ;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -162,8 +174,8 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         }
     }
 
-    public class AsyncTaskRunner extends AsyncTask<String,String,String> implements java.io.Serializable {
-
+    public class AsyncTaskRunner extends AsyncTask<String,String,String> implements Serializable {
+        static final long serialVersionUID = 42L;
         private String resp;
         ProgressDialog progressDialog;
         int exist;
@@ -179,6 +191,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
                 out = new ObjectOutputStream(requestSocket.getOutputStream());
                 in = new ObjectInputStream(requestSocket.getInputStream());
                 in3 = new DataInputStream(requestSocket.getInputStream());
+                out3 = new DataOutputStream(requestSocket.getOutputStream());
                 portOfBroker = 7655;
                 out.writeUTF("192.168.1.3");
                 out.writeInt(7655);
@@ -193,6 +206,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
                     out = new ObjectOutputStream(request.getOutputStream());
                     in = new ObjectInputStream(request.getInputStream());
                     in3 = new DataInputStream(request.getInputStream());
+                    out3 = new DataOutputStream(request.getOutputStream());
                     out.writeUTF("192.168.1.3");
                     out.writeInt(brokerport);
                     out.writeUTF(artist.getArtistName()); //successfully sends artistName to BrokerNode
@@ -216,10 +230,8 @@ public class MainActivity extends AppCompatActivity implements Serializable {
                                 }
                                 txt_input = (EditText) findViewById(R.id.txt_input);
                                 System.out.println("Third");
-
                                 AsyncTaskRunner runner = new AsyncTaskRunner();
                                 runner.execute();
-
                                 return true;
                             }
                             return false;
@@ -230,7 +242,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
                 if (exist == 1) {
                     try {
                         //lb1_output.d
-                        lb1_output.setText("");
+                        //lb1_output.setVisibility(View.GONE);
                         System.out.println("size: "+ 111111111);
                         int size = in.readInt();
                         System.out.println("size: "+ size);
@@ -266,8 +278,8 @@ public class MainActivity extends AppCompatActivity implements Serializable {
 
 
 
-    public class AsyncTaskRunner1 extends AsyncTask<String,String,String> implements java.io.Serializable {
-
+    public class AsyncTaskRunner1 extends AsyncTask<String,String,String> implements Serializable {
+        static final long serialVersionUID = 42L;
         private String resp;
         ProgressDialog progressDialog;
         //String[] params = new String[2];
@@ -276,6 +288,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
 
         ArtistName artist = new ArtistName(txt_input.getText().toString());
 
+        @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
         @SuppressLint("WrongThread")
         protected String doInBackground(String... params) {
             System.out.println("artist:" + artist.getArtistName());
@@ -303,74 +316,56 @@ public class MainActivity extends AppCompatActivity implements Serializable {
                         String str ;
                         //System.out.println("Song's name: " +str);
                         ArrayList<Value> pieces = new ArrayList<>();
-
-
-                        str = in.readUTF();
-                        System.out.println("Name of the song broker sent me: " + str);
-                        chunks = in.readInt();
-                        if(str==null) str="songReceived";
-                        name = str.concat(".mp3");
-                        File fis = new File(getExternalFilesDir(null), name);
-                        FileOutputStream file1 ;
-                       // MusicFile f = new MusicFile(song, artist.getArtistName(), null, null, null, 0, 0);
-                       // DataInputStream in3 = new DataInputStream(k.requestSocket.getInputStream());
-                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-                       // byte result[] = new byte[512*1024*chunks];
-
-                        byte buffer[] = new byte[512*1024];
-
-
-                       //file1 =
-                        for (int i = 1; i <= chunks; i++) {
+                        MediaPlayer player = new MediaPlayer();
+                        try {
+                            str = in.readUTF();
+                            chunks = in.readInt();
+                            if(str==null) str="songReceived";
+                            File fis = new File(getExternalFilesDir(null) , str.concat(".mp3"));
+                            FileOutputStream fileOutputStream = null;
                             fis.createNewFile();
-                            MusicFile f = new MusicFile(str, artist.getArtistName(), null, null, null, 0, 0);
-                            baos.write(buffer, 0 , in3.read(buffer));
-                            byte[] result = baos.toByteArray();
-                            f.setMusicFileExtract(result);
-                            System.out.println("Path of the song: " +fis.getPath());
-                            String res = Arrays.toString(result);
-                            Value value =  new Value(f);
-
-                            System.out.println("Value of the song broker sent me: " + value.getMusicfile().getTrackName());
-                            file1= new FileOutputStream(fis, true);
-
-                            file1.write(value.getMusicfile().getMusicFileExtract());
-                            file1.flush();
-                            file = file1;
-                            pieces.add(value); //saves chunks locally
+                            fileOutputStream = new FileOutputStream(fis, true);
+                            fileOutputStream.write(str.concat(".mp3").getBytes());
+                            fileOutputStream.flush();
 
 
+                            for (int i = 1; i <= chunks; i++) {
+
+                                Value value = new Value((MusicFile) in.readObject());
+                                System.out.println("Song broker send me:  " + value.getMusicfile().getTrackName());
+
+                                fileOutputStream.write(value.getMusicfile().getMusicFileExtract());
+                                fileOutputStream.flush();
+                                pieces.add(value); //saves chunks locally
+                            }
+                            //fileOutputStream.close();
+                            fileOutputStream.close();
+                            player.setDataSource(fis.getPath());
+
+                            player.prepare();
+
+                            player.start();
+                           // player.reset();
+
+                            /*Button button = (Button)findViewById(R.id.button2);
+                            button.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    System.out.println("Play song!!!!");
+                                    //player.seekTo(1000);
+
+                                    player.start();
+                                }
+                            });*/
+
+
+                        } catch (IOException | ClassNotFoundException e) {
+                            e.printStackTrace();
                         }
-                        //initializeMediaPlayer(file);
-                        /*MediaPlayer player = new MediaPlayer();
-                        Button b2 = (Button) findViewById(R.id.button2);
-                        b2.setOnClickListener(new View.OnClickListener() {
 
-                                                  @Override
-                                                  public void onClick(View v) {
-                                                      try {
-                                                          player.setDataSource("/storage/emulated/0/Android/data/com.example.spotify/files/".concat(name));
-                                                      } catch (IOException e) {
-                                                          e.printStackTrace();
-                                                      }
-                                                      player.prepareAsync();
-                                                      player.start();
-                                                  }
-                                              });*/
-                        //String bip = "bip.mp3";
 
-                       // MediaStore.Audio.Media hit = new Mediabip);
-                       /* MediaPlayer mp = new MediaPlayer();
-                       // mp = MediaPlayer.create(getApplicationContext(),
-                        mp.setDataSource(fd);
-                        mp.start();*/
 
-                        //mediaPlayer1.prepareAsync();
 
-                        /*for(int i=0; i<pieces.size(); i++) {
-                            pieces1.add(pieces.get(i));
-                        }*/
 
 
 
@@ -378,14 +373,13 @@ public class MainActivity extends AppCompatActivity implements Serializable {
                     } catch (IOException  e) {
                         e.printStackTrace();
                     }
-               // }
 
 
 
             return null;
         }
 
-        protected void onPostExecute(String text) {
+       /* protected void onPostExecute(String text) {
             //if(exist==1) {
                txt_input.setText("");
                 progressDialog = ProgressDialog.show(MainActivity.this,
@@ -393,7 +387,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
                         "Fetching the song");
                 Intent intentplay = new Intent(MainActivity.this, PlaySong.class);
                 startActivity(intentplay);
-            }
+            }*/
 
         }
 
