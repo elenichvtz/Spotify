@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 public class ArtistName implements Serializable{
     String artistName;
-    static final long serialVersionUID = 42L;
+    static final long serialVersionUID = -373782829391231342L;
 
     ArtistName(String artistName){
         this.artistName = artistName;

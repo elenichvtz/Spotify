@@ -14,15 +14,15 @@ import java.util.concurrent.atomic.AtomicReference;
 
 //Client & Server
 public class BrokerNode extends Thread implements Broker,Serializable {
-    static final long serialVersionUID = 42L;
+    static final long serialVersionUID = -373782829391231342L;
     ServerSocket publisher_providerSocket;
     Socket publisher_requestSocket;
     ServerSocket consumer_providerSocket;
     Socket ppconnection;
     Socket consumerconnection;
-    static ObjectOutputStream out = null;
-    static ObjectInputStream in = null;
-    static ObjectOutputStream out4 = null;
+     ObjectOutputStream out = null;
+     ObjectInputStream in = null;
+
     ObjectOutputStream out2 = null;
     ObjectInputStream in2 = null;
 
@@ -135,11 +135,14 @@ public class BrokerNode extends Thread implements Broker,Serializable {
             this.out3.writeObject(artist);
             this.out3.writeObject(value);
             this.out3.flush();
+            System.out.println("Song");
             String songName = in3.readUTF();
+            System.out.println(songName);
             int numOfchunks = in3.readInt();
-            out.writeUTF(songName);
-            out.writeInt(numOfchunks);
-            out.flush();
+            this.out.writeUTF(songName);
+            this.out.writeInt(numOfchunks);
+            System.out.println("Number of chunks: " + numOfchunks);
+            this.out.flush();
             System.out.println(artist);
             System.out.println(song);
             try {
@@ -147,8 +150,11 @@ public class BrokerNode extends Thread implements Broker,Serializable {
 
                     MusicFile m = (MusicFile) in3.readObject();
                    // out.write(m.getMusicFileExtract());
-                    out.writeObject((MusicFile)m);
-                    out.flush();
+                    this.out.writeObject((MusicFile)m);
+
+                    this.out.flush();
+                    String ok = this.in.readUTF();
+                    System.out.println(ok);
                     
                     System.out.println("Sending song: " + m.getTrackName());
                 }
@@ -192,7 +198,7 @@ public class BrokerNode extends Thread implements Broker,Serializable {
         Boolean flag = false;
         BrokerNode b ;
         int exit = 0;
-        static final long serialVersionUID = 42L;
+        static final long serialVersionUID =-373782829391231342L;
         public MyThread(Socket s, BrokerNode b) {
 
             this.s = s;
@@ -254,26 +260,26 @@ public class BrokerNode extends Thread implements Broker,Serializable {
 
                                     if (!p) {
                                         System.out.println("2222222: " + artistName.getArtistName());
-                                        out.writeInt(b.port);
+                                        b.out.writeInt(b.port);
 
                                         // out.writeUTF(b.ip);
                                     }
 
                                     p = false;
                                     System.out.println("333333333: " + artistName.getArtistName());
-                                    out.writeInt(1);
+                                    b.out.writeInt(1);
                                     System.out.println("4444444: " + artistName.getArtistName());
-                                    out.writeInt(songs.size());
+                                    b.out.writeInt(songs.size());
                                     System.out.println("55555555: " + artistName.getArtistName());
                                     //out.writeObject(songs);
-                                    out.flush();
+                                    b.out.flush();
                                     for(int j=0; j<songs.size();j++) {
                                         System.out.println("666666666: " + artistName.getArtistName());
-                                        out.writeUTF(songs.get(j));
-                                        out.flush();
+                                        b.out.writeUTF(songs.get(j));
+                                        b.out.flush();
                                     }
                                     System.out.println("Before...");
-                                    String song = in.readUTF();
+                                    String song = b.in.readUTF();
                                     System.out.println("song selected: " + song);
                                     b.pull(b.getArtistReceived(), song);
                                     System.out.println("Goodbye");
@@ -288,8 +294,8 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                         }
                     }
                     if (!exist) {
-                        out.writeInt(0);
-                        out.flush();
+                        b.out.writeInt(0);
+                        b.out.flush();
                     }
                 } else {
                     System.out.println("Changing Broker");
@@ -372,13 +378,13 @@ public class BrokerNode extends Thread implements Broker,Serializable {
 
                 Socket finalConsumer = consumer;
                 try {
-                    b.setOut(new ObjectOutputStream(finalConsumer.getOutputStream()));
-                    b.setIn(new ObjectInputStream(finalConsumer.getInputStream()));
+                    broker.setOut(new ObjectOutputStream(finalConsumer.getOutputStream()));
+                    broker.setIn(new ObjectInputStream(finalConsumer.getInputStream()));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
                 System.out.println("New customer!");
-                MyThread t = new MyThread(finalConsumer, broker);
+                MyThread t = new MyThread(finalConsumer, broker );
                 threads.add(t);
 
                 for (int i = 0; i < threads.size(); i++) {

@@ -18,13 +18,13 @@ import static java.lang.Math.ceil;
 
 //Client & Server
 public class PublisherNode implements Publisher,Serializable{
-    static final long serialVersionUID = 42L;
+    static final long serialVersionUID = -373782829391231342L;
     Socket requestSocket = null;
     ServerSocket providerSocket = null;
 
     ObjectOutputStream out = null;
     ObjectInputStream in = null;
-    static ObjectOutputStream out2 = null;
+    ObjectOutputStream out2 = null;
     ObjectInputStream in2 = null;
     static boolean already = false;
 

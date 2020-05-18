@@ -9,7 +9,7 @@ public class MusicFile implements Serializable {
     //arraylist me filename
     //oxi localhost
     //brokers diaforetika port alliws tha evgaze bind error
-    static final long serialVersionUID = 42L;
+    static final long serialVersionUID = -373782829391231342L;
     String trackName;
     String artistName;
     String albumInfo;
