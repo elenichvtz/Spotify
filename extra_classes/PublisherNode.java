@@ -1,3 +1,5 @@
+package com.example.spotify;
+
 import com.mpatric.mp3agic.*;
 
 import java.io.*;
@@ -16,7 +18,7 @@ import static java.lang.Math.ceil;
 
 //Client & Server
 public class PublisherNode implements Publisher,Serializable{
-
+    static final long serialVersionUID = 42L;
     Socket requestSocket = null;
     ServerSocket providerSocket = null;
 
@@ -353,10 +355,11 @@ public class PublisherNode implements Publisher,Serializable{
 
     public char getEnd() { return this.end; }
 
-    public static class PubThread extends Thread {
-
+    public static class PubThread extends Thread implements Serializable{
+        public static final long serialVersionUID = -3643274596837043061L;
         Socket requestSocket = null;
         PublisherNode publisher ;
+
 
         public PubThread(Socket s, PublisherNode publisher) {
 

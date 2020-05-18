@@ -1,3 +1,5 @@
+package com.example.spotify;
+
 import java.io.IOException;
 import java.io.*;
 import java.math.BigInteger;
@@ -12,7 +14,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 //Client & Server
 public class BrokerNode extends Thread implements Broker,Serializable {
-
+    static final long serialVersionUID = 42L;
     ServerSocket publisher_providerSocket;
     Socket publisher_requestSocket;
     ServerSocket consumer_providerSocket;
@@ -144,9 +146,10 @@ public class BrokerNode extends Thread implements Broker,Serializable {
                 for (int i = 1; i <= numOfchunks; i++) {
 
                     MusicFile m = (MusicFile) in3.readObject();
-                    out.write(m.getMusicFileExtract());
-                   // out.writeObject((MusicFile)m);
+                   // out.write(m.getMusicFileExtract());
+                    out.writeObject((MusicFile)m);
                     out.flush();
+                    
                     System.out.println("Sending song: " + m.getTrackName());
                 }
 
@@ -189,7 +192,7 @@ public class BrokerNode extends Thread implements Broker,Serializable {
         Boolean flag = false;
         BrokerNode b ;
         int exit = 0;
-
+        static final long serialVersionUID = 42L;
         public MyThread(Socket s, BrokerNode b) {
 
             this.s = s;

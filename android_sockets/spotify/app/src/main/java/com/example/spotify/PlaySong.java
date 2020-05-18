@@ -3,6 +3,8 @@ package com.example.spotify;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.PixelFormat;
 import android.media.AudioAttributes;
@@ -10,6 +12,7 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -31,7 +34,11 @@ import java.io.FileOutputStream;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.net.Socket;
+import java.util.ArrayList;
 
 import android.media.MediaPlayer.OnCompletionListener;
 import android.widget.VideoView;
@@ -48,40 +55,26 @@ public class PlaySong extends AppCompatActivity implements Serializable {
 
         setContentView(R.layout.activity_play_song);
 
-        File clip = new File(m.fis2.getPath());
 
-        if (clip.exists()) {
+
            // video=(VideoView)findViewById(R.id.videoView);
-            System.out.println("Path of fis2:     " + m.fis2.getAbsolutePath());
+
             MediaPlayer player = new MediaPlayer();
-            player.setAudioAttributes( new AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_MEDIA)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .build());
 
             try {
-                player.setDataSource(m.file1.getFD());
-                player.prepareAsync();
-                player.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                    public void onPrepared(MediaPlayer mp) {
-                        mp.start();
-                    }
-                });
-            } catch (IllegalArgumentException e) {
-                e.printStackTrace();
-            } catch (IllegalStateException e) {
-                e.printStackTrace();
+                System.out.println("fis length: " + m.fis2.length());
+                player.setDataSource(m.fis2.getPath());
+                player.prepare();
+                player.start();
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
-            /*ctlr=new MediaController(PlaySong.this);
-            ctlr.setMediaPlayer(video);
-            video.setMediaController(ctlr);
-            video.requestFocus();
-            video.start();*/
-        }
+
     }
+
+
 
 }
 
