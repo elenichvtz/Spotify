@@ -22,7 +22,7 @@
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.005" />
+        app:layout_constraintVertical_bias="0.243" />
 
     <TextView
         android:id="@+id/textView"
@@ -43,20 +43,24 @@
         app:layout_constraintHorizontal_bias="0.49"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/txt_input"
-        app:layout_constraintVertical_bias="0.089" />
+        app:layout_constraintVertical_bias="0.121" />
 
-
-    <Button
-        android:id="@+id/button2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Button"
+    <Switch
+        android:id="@+id/simpleSwitch"
+        android:layout_width="163dp"
+        android:layout_height="56dp"
+        android:checked="true"
+        android:text="Online "
+        android:textOff="Off"
+        android:textOn="On"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintHorizontal_bias="0.104"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.893" />
+        app:layout_constraintVertical_bias="0.111" /><!-- text to be displayed whenever current state is checked-->
+
+    <!-- text to be displayed whenever current state is checked-->
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

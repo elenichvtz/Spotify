@@ -27,8 +27,10 @@ import android.view.KeyEvent;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import android.view.View.OnKeyListener;
@@ -71,27 +73,22 @@ public class MainActivity extends AppCompatActivity implements Serializable {
     static boolean flag_artist = false;
     static ArrayList<String> listofsongs = new ArrayList<String>();
     static String songSelected;
-
     static  boolean flag_song = false;
-
     Intent intent;
     public static final int LAUNCH_ACTIVITY = 1;
-
     static String message;
     static Socket requestSocket = null;
     static ObjectOutputStream out = null;
     static ObjectInputStream in = null;
-    static DataInputStream in3 = null;
-    static DataOutputStream out3 = null;
-
-
     static ArrayList<Value> pieces1;
     static String name;
     MediaPlayer player;
     static final long serialVersionUID = -373782829391231342L;
     File fis;
-    static File fis2;
-    FileOutputStream file1 ;
+    Switch simpleSwitch;
+    static boolean choice;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,6 +96,8 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         setContentView(R.layout.activity_main);
         txt_input = (EditText) findViewById(R.id.txt_input);
         lb1_output = (TextView) findViewById(R.id.textView);
+        simpleSwitch = (Switch) findViewById(R.id.simpleSwitch);// initiate Switch
+        simpleSwitch.setTextSize(25);
         //button = (Button) findViewById(R.id.button4);
         System.out.println("Fifth");
 
@@ -115,8 +114,10 @@ public class MainActivity extends AppCompatActivity implements Serializable {
                 message = "" + intent.getStringExtra(ListOfSongs.EXTRA_MESSAGE);
                 System.out.println("Song'name that has been selected is "+ message);
                 System.out.println("sdfkshfuwefuh    " + flag_song);
-                AsyncTaskRunner1 run1 = new AsyncTaskRunner1();
-                run1.execute();
+                Intent intent2 = new Intent(MainActivity.this, PlaySong.class);
+                startActivity(intent2);
+                //AsyncTaskRunner1 run1 = new AsyncTaskRunner1();
+               // run1.execute();
 
             }
             if (resultCode == ListOfSongs.RESULT_CANCELED) {
@@ -129,6 +130,18 @@ public class MainActivity extends AppCompatActivity implements Serializable {
     public void onStart() {
         super.onStart();
         System.out.println("FLAG : " + flag_artist);
+
+        simpleSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    choice = true;
+                    System.out.println("Online");
+                } else {
+                    choice = false;
+                    System.out.println("Offline");
+                }
+            }
+        });
        // ArtistName artist = new ArtistName(txt_input.toString());
         txt_input.setOnKeyListener(new OnKeyListener() {
             public boolean onKey(View view, int keyCode, KeyEvent keyevent) {
@@ -139,6 +152,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
                     // ...
                     txt_input = (EditText) findViewById(R.id.txt_input);
                     System.out.println("Third");
+
                     AsyncTaskRunner runner = new AsyncTaskRunner();
                     runner.execute();
 
@@ -190,8 +204,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
                 requestSocket = new Socket("192.168.1.3", 7655);
                 out = new ObjectOutputStream(requestSocket.getOutputStream());
                 in = new ObjectInputStream(requestSocket.getInputStream());
-                in3 = new DataInputStream(requestSocket.getInputStream());
-                out3 = new DataOutputStream(requestSocket.getOutputStream());
+
                 portOfBroker = 7655;
                 out.writeUTF("192.168.1.3");
                 out.writeInt(7655);
@@ -205,8 +218,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
                     Socket request = new Socket("192.168.1.3", brokerport+1);
                     out = new ObjectOutputStream(request.getOutputStream());
                     in = new ObjectInputStream(request.getInputStream());
-                    in3 = new DataInputStream(request.getInputStream());
-                    out3 = new DataOutputStream(request.getOutputStream());
+
                     out.writeUTF("192.168.1.3");
                     out.writeInt(brokerport);
                     out.writeUTF(artist.getArtistName()); //successfully sends artistName to BrokerNode
@@ -278,7 +290,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
 
 
 
-    public class AsyncTaskRunner1 extends AsyncTask<String,String,String> implements Serializable {
+   /* public class AsyncTaskRunner1 extends AsyncTask<String,String,String> implements Serializable {
         static final long serialVersionUID = -373782829391231342L;
         private String resp;
         ProgressDialog progressDialog;
@@ -381,9 +393,9 @@ public class MainActivity extends AppCompatActivity implements Serializable {
                         "Fetching the song");
                 Intent intentplay = new Intent(MainActivity.this, PlaySong.class);
                 startActivity(intentplay);
-            }*/
+            }
 
-        }
+        }*/
 
 
 
