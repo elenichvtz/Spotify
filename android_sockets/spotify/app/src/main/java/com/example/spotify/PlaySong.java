@@ -31,6 +31,7 @@ import android.widget.TextView;
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 
 import java.io.IOException;
@@ -50,6 +51,10 @@ public class PlaySong extends AppCompatActivity implements Serializable {
     ObjectInputStream in;
     ObjectOutputStream out;
     File fis;
+    static File temp;
+    ArrayList<File> pieces;
+    int chunks = 0;
+    static String str ;
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -75,6 +80,9 @@ public class PlaySong extends AppCompatActivity implements Serializable {
         int exist;
         MainActivity k = new MainActivity();
 
+        FileOutputStream fileOutputStream = null;
+        MediaPlayer player1 = new MediaPlayer();
+        boolean on_off = k.choice;
         //ArtistName artist = new ArtistName(txt_input.getText().toString());
 
         @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -82,18 +90,12 @@ public class PlaySong extends AppCompatActivity implements Serializable {
         protected String doInBackground(String... params) {
 
 
-
             publishProgress("Sleeping...");
 
 
-            //requestSocket = new Socket("192.168.1.3", 7655);
-            // out = new ObjectOutputStream(requestSocket.getOutputStream());
-            // in = new ObjectInputStream(requestSocket.getInputStream());
-            //if(flag_song==true){
             try {
 
 
-                //requestSocket = k.requestSocket;
                 out = k.out;
                 in = k.in;
 
@@ -103,12 +105,11 @@ public class PlaySong extends AppCompatActivity implements Serializable {
                 out.flush();
                 System.out.println("Message in asynctask is:  " + k.message);
 
-                int chunks = 0;
-                String str ;
-                //System.out.println("Song's name: " +str);
-                ArrayList<Value> pieces = new ArrayList<>();
-                boolean on_off = k.choice;
+
+                pieces = new ArrayList<>();
+
                 if(on_off==false) {
+                    System.out.println("Offline");
                     try {
                         str = in.readUTF();
                         chunks = in.readInt();
@@ -116,11 +117,8 @@ public class PlaySong extends AppCompatActivity implements Serializable {
                         if (str == null) str = "songReceived";
                         fis = new File(getFilesDir() + "/" + str.concat(".mp3"));
                         FileOutputStream fileOutputStream = null;
-                        //fis.createNewFile();
-                        fileOutputStream = new FileOutputStream(fis);
-                        //fileOutputStream.write(str.concat(".mp3").getBytes());
-                        //fileOutputStream.flush();
 
+                        fileOutputStream = new FileOutputStream(fis);
 
                         for (int i = 1; i <= chunks; i++) {
 
@@ -131,7 +129,7 @@ public class PlaySong extends AppCompatActivity implements Serializable {
                             fileOutputStream.write(value.getMusicfile().getMusicFileExtract());
                             fileOutputStream.flush();
 
-                            pieces.add(value); //saves chunks locally
+
                             out.writeUTF("ok");
                             out.flush();
 
@@ -144,7 +142,6 @@ public class PlaySong extends AppCompatActivity implements Serializable {
                             player.setDataSource(fis.getPath());
                             player.prepare();
                             player.start();
-
 
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -160,50 +157,75 @@ public class PlaySong extends AppCompatActivity implements Serializable {
                         chunks = in.readInt();
                         System.out.println("number of chunks:   " + chunks);
                         if (str == null) str = "songReceived";
-                        fis = new File(getFilesDir() + "/" + str.concat(".mp3"));
+
                         FileOutputStream fileOutputStream = null;
-                        //fis.createNewFile();
-                        fileOutputStream = new FileOutputStream(fis);
-                        //fileOutputStream.write(str.concat(".mp3").getBytes());
-                        //fileOutputStream.flush();
+                        Value value = new Value((MusicFile) in.readObject());
 
+                        System.out.println("Song broker send me:  " + value.getMusicfile().getTrackName());
+                        temp = new File(getFilesDir() + "/" + str.concat(".mp3"));
 
-                        for (int i = 1; i <= chunks; i++) {
-
-                            Value value = new Value((MusicFile) in.readObject());
-                            System.err.println(i);
-                            System.out.println("Song broker send me:  " + value.getMusicfile().getTrackName());
-
-                            fileOutputStream.write(value.getMusicfile().getMusicFileExtract());
-                            fileOutputStream.flush();
-
-                            pieces.add(value); //saves chunks locally
-                            out.writeUTF("ok");
-                            out.flush();
-
-                        }
-                        fileOutputStream.close();
+                        fileOutputStream = new FileOutputStream(temp);
+                        fileOutputStream.write(value.getMusicfile().getMusicFileExtract());
+                        fileOutputStream.flush();
                         MediaPlayer player = new MediaPlayer();
 
-                        try {
-                            System.out.println("fis length: " + fis.length());
-                            player.setDataSource(fis.getPath());
-                            player.prepare();
-                            player.start();
-                            fis.delete();
-                            System.out.println("fis size: " + fis.length());
+                        player.setDataSource(temp.getPath());
+                        player.prepare();
+                        player.start();
+                        int pos=0;
 
 
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                        int j= 2;
+                        out.writeUTF("ok");
+                        out.flush();
+                        while(player.isPlaying()) {
+                            if(j<=chunks){
+                            for (int i = 2; i <= chunks; i++) {
+                                try {
+
+                                    Value value1 = new Value((MusicFile) in.readObject());
+                                    System.err.println(i);
+                                    System.out.println("Song broker send me:  " + value.getMusicfile().getTrackName());
+
+                                    fileOutputStream.write(value1.getMusicfile().getMusicFileExtract());
+                                    fileOutputStream.flush();
+                                    j++;
+                                    out.writeUTF("ok");
+                                    out.flush();
+                                } catch (IOException ex) {
+                                    ex.printStackTrace();
+                                }
+                            }
+
+
+                            }
+                            pos = player.getCurrentPosition();
                         }
-                        //fis2 = fis;
+                        player.reset();
+                        player.setDataSource(temp.getPath());
+                        player.prepare();
+                        player.seekTo(pos);
+
+                        player.start();
+                        System.err.println(123);
+
+                        while (player.isPlaying()) {
+                            player.setOnCompletionListener(new OnCompletionListener() {
+                                @Override
+                                public void onCompletion(MediaPlayer mp) {
+                                    System.err.println("Releasing the player");
+                                    mp.release();
+                                    temp.delete();
+
+                                }
+                            });
+                        }
+
                     } catch (IOException | ClassNotFoundException e) {
                         e.printStackTrace();
                     }
+
                 }
-
-
 
             } catch (IOException  e) {
                 e.printStackTrace();
@@ -213,6 +235,7 @@ public class PlaySong extends AppCompatActivity implements Serializable {
 
             return null;
         }
+
 
       /* protected void onPostExecute(String text) {
             //if(exist==1) {

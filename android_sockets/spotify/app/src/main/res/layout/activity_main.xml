@@ -43,13 +43,13 @@
         app:layout_constraintHorizontal_bias="0.49"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/txt_input"
-        app:layout_constraintVertical_bias="0.121" />
+        app:layout_constraintVertical_bias="0.194" />
 
     <Switch
         android:id="@+id/simpleSwitch"
         android:layout_width="163dp"
         android:layout_height="56dp"
-        android:checked="true"
+        android:checked="false"
         android:text="Online "
         android:textOff="Off"
         android:textOn="On"
