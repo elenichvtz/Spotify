@@ -68,7 +68,7 @@ public class PlaySong extends AppCompatActivity implements Serializable {
     static int offline=0;
 
     MainActivity m = new MainActivity();
-   // @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -403,7 +403,7 @@ public class PlaySong extends AppCompatActivity implements Serializable {
                         player.setDataSource(temp.getPath());
                         player.prepare();
                         player.setVolume(0.5f, 0.5f);
-                        //player.setLooping(false);
+                        player.setLooping(false);
                         seekBar.setMax(player.getDuration());
                         player.seekTo(stop_pos);
 
