@@ -2,6 +2,7 @@ package com.example.spotify;
 
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
@@ -45,9 +46,10 @@ import java.util.ArrayList;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.widget.VideoView;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
 public class PlaySong extends AppCompatActivity implements Serializable {
-    private VideoView video;
-    private MediaController ctlr;
+
     ObjectInputStream in;
     ObjectOutputStream out;
     File fis;
@@ -55,22 +57,128 @@ public class PlaySong extends AppCompatActivity implements Serializable {
     ArrayList<File> pieces;
     int chunks = 0;
     static String str ;
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    SeekBar seekBar;
+    boolean wasPlaying = false;
+    FloatingActionButton fab;
+    Button back;
+    Button again;
+    MediaPlayer player = new MediaPlayer();
+    static int num_clicks =0;
+    static int stop_pos = 0;
+    static int offline=0;
+
+    MainActivity m = new MainActivity();
+   // @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //getWindow().setFormat(PixelFormat.TRANSLUCENT);
-
         setContentView(R.layout.activity_play_song);
+        back = (Button)findViewById(R.id.button2);
+        fab = (FloatingActionButton)findViewById(R.id.button);
+        again = (Button)findViewById(R.id.button3);
+
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                AsyncTaskRunner1 runner = new AsyncTaskRunner1();
+                runner.execute();
+                num_clicks++;
+
+                stop_pos = player.getCurrentPosition();
+                player.pause();
+                fab.setImageDrawable(ContextCompat.getDrawable(PlaySong.this, android.R.drawable.ic_media_play));
+                if(num_clicks%2!=0){
+                    player.seekTo(stop_pos);
+                    player.start();
+                    fab.setImageDrawable(ContextCompat.getDrawable(PlaySong.this, android.R.drawable.ic_media_pause));
+                }
+
+            }
+        });
+        again.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                AsyncTaskRunner1 run1 = new AsyncTaskRunner1();
+                run1.execute();
+
+            }
+        });
+        back.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                player.release();
+
+                try {
+                    m.requestSocket.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                Intent intent = new Intent(PlaySong.this, MainActivity.class);
+                startActivity(intent);
+
+            }
+        });
+
+
+
+        final TextView seekBarHint = findViewById(R.id.textView);
+        seekBar = (SeekBar)findViewById(R.id.seekbar);
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+                seekBarHint.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromTouch) {
+                seekBarHint.setVisibility(View.VISIBLE);
+                int x = (int) Math.ceil(progress / 1000f);
+
+                if (x ==0 && player != null && !player.isPlaying()) {
+                    clearMediaPlayer();
+                    fab.setImageDrawable(ContextCompat.getDrawable(PlaySong.this, android.R.drawable.ic_media_play));
+                    PlaySong.this.seekBar.setProgress(0);
+                }
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+
+                if (player != null && player.isPlaying()) {
+                    player.seekTo(seekBar.getProgress());
+                }
+            }
+        });
+
+
         // video=(VideoView)findViewById(R.id.videoView);
 
     }
     public void onStart() {
         super.onStart();
-        AsyncTaskRunner1 runner = new AsyncTaskRunner1();
-        runner.execute();
+
+
+
+
+
 
     }
+    protected void onDestroy() {
+        super.onDestroy();
+        clearMediaPlayer();
+    }
+
+    private void clearMediaPlayer() {
+        player.stop();
+        player.reset();
+        player = null;
+    }
+
+
 
     public class AsyncTaskRunner1 extends AsyncTask<String,String,String> implements Serializable {
         static final long serialVersionUID = -373782829391231342L;
@@ -81,17 +189,16 @@ public class PlaySong extends AppCompatActivity implements Serializable {
         MainActivity k = new MainActivity();
 
         FileOutputStream fileOutputStream = null;
-        MediaPlayer player1 = new MediaPlayer();
-        boolean on_off = k.choice;
+
+        boolean on_off =  k.choice;
+
         //ArtistName artist = new ArtistName(txt_input.getText().toString());
 
         @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
         @SuppressLint("WrongThread")
         protected String doInBackground(String... params) {
 
-
             publishProgress("Sleeping...");
-
 
             try {
 
@@ -135,13 +242,81 @@ public class PlaySong extends AppCompatActivity implements Serializable {
 
                         }
                         fileOutputStream.close();
-                        MediaPlayer player = new MediaPlayer();
+
 
                         try {
+                            if (player != null && player.isPlaying()) {
+                                clearMediaPlayer();
+                                seekBar.setProgress(0);
+                                wasPlaying = true;
+                               // fab.setImageDrawable(ContextCompat.getDrawable(PlaySong.this, android.R.drawable.ic_media_play));
+                            }
                             System.out.println("fis length: " + fis.length());
-                            player.setDataSource(fis.getPath());
-                            player.prepare();
-                            player.start();
+                            if (!wasPlaying) {
+
+                                if (player == null) {
+                                    player = new MediaPlayer();
+                                }
+
+                                fab.setImageDrawable(ContextCompat.getDrawable(PlaySong.this, android.R.drawable.ic_media_pause));
+
+                                player.setDataSource(fis.getPath());
+                                player.prepare();
+                                player.setVolume(0.5f, 0.5f);
+                                player.setLooping(false);
+                                seekBar.setMax(player.getDuration());
+
+                                player.start();
+                                int currentPosition = player.getCurrentPosition();
+                                int total = player.getDuration();
+
+
+                                while (player != null && player.isPlaying() && currentPosition < total) {
+                                    try {
+
+                                        currentPosition = player.getCurrentPosition();
+                                    }  catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+
+                                    seekBar.setProgress(currentPosition);
+
+
+                                }
+
+                            }
+                            player.setOnCompletionListener(new OnCompletionListener() {
+                                @Override
+                                public void onCompletion(MediaPlayer mp) {
+                                    System.err.println("Releasing the player");
+                                    mp.stop();
+                                    mp.reset();
+                                    if(offline>0){
+                                        fis.delete();
+                                    }
+                                    offline++;
+                                    back.setOnClickListener(new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View view) {
+                                            mp.release();
+
+                                            try {
+                                                k.requestSocket.close();
+                                            } catch (IOException e) {
+                                                e.printStackTrace();
+                                            }
+                                            Intent intent = new Intent(PlaySong.this, MainActivity.class);
+                                            startActivity(intent);
+
+                                        }
+                                    });
+
+
+                                }
+                            });
+
+
+
 
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -167,59 +342,103 @@ public class PlaySong extends AppCompatActivity implements Serializable {
                         fileOutputStream = new FileOutputStream(temp);
                         fileOutputStream.write(value.getMusicfile().getMusicFileExtract());
                         fileOutputStream.flush();
-                        MediaPlayer player = new MediaPlayer();
+
+                        if (player != null && player.isPlaying()) {
+                            clearMediaPlayer();
+                            seekBar.setProgress(0);
+                            wasPlaying = true;
+                            fab.setImageDrawable(ContextCompat.getDrawable(PlaySong.this, android.R.drawable.ic_media_play));
+                        }
+
+                        if (!wasPlaying) {
+
+                            if (player == null) {
+                                player = new MediaPlayer();
+                            }
+                        fab.setImageDrawable(ContextCompat.getDrawable(PlaySong.this, android.R.drawable.ic_media_pause));
 
                         player.setDataSource(temp.getPath());
                         player.prepare();
+                        player.setVolume(0.5f, 0.5f);
+                        player.setLooping(false);
+                        seekBar.setMax(player.getDuration());
                         player.start();
-                        int pos=0;
+
 
 
                         int j= 2;
                         out.writeUTF("ok");
                         out.flush();
-                        while(player.isPlaying()) {
-                            if(j<=chunks){
-                            for (int i = 2; i <= chunks; i++) {
-                                try {
+                        int pos= 0;
+                        int current =0;
 
-                                    Value value1 = new Value((MusicFile) in.readObject());
-                                    System.err.println(i);
-                                    System.out.println("Song broker send me:  " + value.getMusicfile().getTrackName());
 
-                                    fileOutputStream.write(value1.getMusicfile().getMusicFileExtract());
-                                    fileOutputStream.flush();
-                                    j++;
-                                    out.writeUTF("ok");
-                                    out.flush();
-                                } catch (IOException ex) {
-                                    ex.printStackTrace();
+                        while (player.isPlaying() ) {
+                            if (j <= chunks) {
+                                for (int i = 2; i <= chunks; i++) {
+                                    try {
+                                        Value value1 = new Value((MusicFile) in.readObject());
+                                        System.err.println(i);
+                                        System.out.println("Song broker send me:  " + value.getMusicfile().getTrackName());
+
+                                        fileOutputStream.write(value1.getMusicfile().getMusicFileExtract());
+                                        fileOutputStream.flush();
+                                        j++;
+                                        out.writeUTF("ok");
+                                        out.flush();
+                                        current = player.getCurrentPosition();
+                                        seekBar.setProgress(current);
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+
                                 }
-                            }
-
 
                             }
-                            pos = player.getCurrentPosition();
+                            stop_pos = player.getCurrentPosition();
+                            seekBar.setProgress(stop_pos);
                         }
+
                         player.reset();
                         player.setDataSource(temp.getPath());
                         player.prepare();
-                        player.seekTo(pos);
+                        player.setVolume(0.5f, 0.5f);
+                        //player.setLooping(false);
+                        seekBar.setMax(player.getDuration());
+                        player.seekTo(stop_pos);
 
                         player.start();
                         System.err.println(123);
 
-                        while (player.isPlaying()) {
-                            player.setOnCompletionListener(new OnCompletionListener() {
-                                @Override
-                                public void onCompletion(MediaPlayer mp) {
-                                    System.err.println("Releasing the player");
-                                    mp.release();
-                                    temp.delete();
 
+                            int currentPosition = player.getCurrentPosition();
+                            int total = player.getDuration();
+
+
+                            while (player != null && player.isPlaying() && currentPosition < total) {
+                                try {
+
+                                    currentPosition = player.getCurrentPosition();
+                                }  catch (Exception e) {
+                                    e.printStackTrace();
                                 }
-                            });
+
+                                seekBar.setProgress(currentPosition);
+
+
+                            }
+
                         }
+                        player.setOnCompletionListener(new OnCompletionListener() {
+                            @Override
+                            public void onCompletion(MediaPlayer mp) {
+                                System.err.println("Releasing the player");
+                                mp.stop();
+                                mp.reset();
+                                temp.delete();
+
+                            }
+                        });
 
                     } catch (IOException | ClassNotFoundException e) {
                         e.printStackTrace();
@@ -237,15 +456,9 @@ public class PlaySong extends AppCompatActivity implements Serializable {
         }
 
 
-      /* protected void onPostExecute(String text) {
-            //if(exist==1) {
-               txt_input.setText("");
-                progressDialog = ProgressDialog.show(MainActivity.this,
-                        "Wait a few seconds",
-                        "Fetching the song");
-                Intent intentplay = new Intent(MainActivity.this, PlaySong.class);
-                startActivity(intentplay);
-            }*/
+      /*protected void onPostExecute(String text) {
+
+      }*/
 
     }
 
