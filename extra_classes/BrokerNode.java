@@ -20,14 +20,14 @@ public class BrokerNode extends Thread implements Broker,Serializable {
     ServerSocket consumer_providerSocket;
     Socket ppconnection;
     Socket consumerconnection;
-     ObjectOutputStream out = null;
-     ObjectInputStream in = null;
+    ObjectOutputStream out = null;
+    ObjectInputStream in = null;
 
     ObjectOutputStream out2 = null;
     ObjectInputStream in2 = null;
 
-    static ObjectOutputStream out3 = null;
-    static ObjectInputStream in3 = null;
+    ObjectOutputStream out3 = null;
+    ObjectInputStream in3 = null;
     ArtistName artistReceived= null;
     Map<String, ArrayList<String>> mapreceived = new HashMap<String, ArrayList<String>>();
     static Map<Integer, Map<String, ArrayList<String>>> artists = new HashMap<>();
@@ -119,9 +119,13 @@ public class BrokerNode extends Thread implements Broker,Serializable {
         }
 
         try {
+            System.out.println(111111);
             ppconnection = new Socket("192.168.1.3",publisherPort+2);
+            System.err.println("SOOOOcket");
             out3 = new ObjectOutputStream(ppconnection.getOutputStream());
+            System.err.println("OUUUUTTT333");
             in3 = new ObjectInputStream(ppconnection.getInputStream());
+            System.err.println(222222);
         }
         catch (IOException e) {
             e.printStackTrace();
@@ -132,31 +136,33 @@ public class BrokerNode extends Thread implements Broker,Serializable {
         Value value = new Value(f);
 
         try {
+            System.err.println(33333333);
             this.out3.writeObject(artist);
             this.out3.writeObject(value);
             this.out3.flush();
-            System.out.println("Song");
+            System.err.println("Song");
             String songName = in3.readUTF();
-            System.out.println(songName);
+            System.err.println(songName);
             int numOfchunks = in3.readInt();
             this.out.writeUTF(songName);
             this.out.writeInt(numOfchunks);
-            System.out.println("Number of chunks: " + numOfchunks);
+            System.err.println("Number of chunks: " + numOfchunks);
             this.out.flush();
-            System.out.println(artist);
-            System.out.println(song);
+            System.err.println(artist);
+            System.err.println(song);
             try {
                 for (int i = 1; i <= numOfchunks; i++) {
 
                     MusicFile m = (MusicFile) in3.readObject();
+                    System.err.println("Sending song: " + m.getTrackName());
                    // out.write(m.getMusicFileExtract());
                     this.out.writeObject((MusicFile)m);
 
                     this.out.flush();
                     String ok = this.in.readUTF();
-                    System.out.println(ok);
+                    System.err.println(ok);
                     
-                    System.out.println("Sending song: " + m.getTrackName());
+
                 }
 
             } catch (ClassNotFoundException e) {

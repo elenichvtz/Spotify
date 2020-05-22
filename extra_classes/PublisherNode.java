@@ -270,6 +270,7 @@ public class PublisherNode implements Publisher,Serializable{
                                                 int numberOfChunks = (int) ceil((float)file2.length() / chunk_size);
                                                 this.out2.writeUTF(val.getMusicfile().getTrackName());
                                                 this.out2.writeInt(numberOfChunks);
+                                                this.out2.flush();
 
                                                 try {
                                                     for (int readNum; (readNum = fis.read(chunk)) != -1; ) {
@@ -299,9 +300,9 @@ public class PublisherNode implements Publisher,Serializable{
 
                                                 byte[] chunk = new byte[chunk_size];
                                                 int numberOfChunks = (int) ceil((float)file2.length() / chunk_size);
-                                                out2.writeUTF(val.getMusicfile().getTrackName());
-                                                out2.writeInt(numberOfChunks);
-                                                out2.flush();
+                                                this.out2.writeUTF(val.getMusicfile().getTrackName());
+                                                this.out2.writeInt(numberOfChunks);
+                                                this.out2.flush();
 
                                                 try {
                                                     for (int readNum; (readNum = fis.read(chunk)) != -1;  ) {
@@ -398,6 +399,7 @@ public class PublisherNode implements Publisher,Serializable{
         ArrayList<PublisherNode> publishers = new ArrayList<>();
         publishers.add(p);
         publishers.add(p2);
+        ArrayList<PubThread> thread_pub = new ArrayList<>();
 
 
         publishers.parallelStream().forEach((publisher) -> {
@@ -426,11 +428,30 @@ public class PublisherNode implements Publisher,Serializable{
                         e.printStackTrace();
                     }
                     PubThread t = new PubThread(publisher.requestSocket, publisher);
-                    t.start();
-                    try {
-                        t.join();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+                    thread_pub.add(t);
+                    for (int i = 0; i < thread_pub.size(); i++) {
+                        thread_pub.get(i).start();
+                        if (!thread_pub.get(i).isAlive()) {
+
+                            try {
+                                thread_pub.get(i).join();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            thread_pub.remove(i);
+                        }
+                        else {
+
+                            try {
+                                thread_pub.get(i).join(5);
+                                thread_pub.remove(i);
+
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+
                     }
 
                 }
