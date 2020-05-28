@@ -78,11 +78,17 @@ public class ListOfSongs extends AppCompatActivity implements Serializable {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-               // AsyncTaskRunner1 runner = new AsyncTaskRunner1();
+
                 itemValue = (String) songlist.getItemAtPosition(position);
-              //  Log.e("Send song with name: ", itemValue);
-              //  runner.execute();
-                //Intent intent1 = new Intent();
+                int a = c.listofsongs.size()-1;
+                while(c.listofsongs!=null && a>=0){
+
+                    System.out.println("size of songs list:   " + c.listofsongs.size());
+                    System.out.println("Thesi:  " + a);
+                    c.listofsongs.remove(a);
+                    a--;
+
+                }
                 intent.putExtra(EXTRA_MESSAGE, itemValue);
 
                 setResult(ListOfSongs.RESULT_OK, intent);

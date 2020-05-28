@@ -66,6 +66,7 @@ public class PlaySong extends AppCompatActivity implements Serializable {
     static int num_clicks =0;
     static int stop_pos = 0;
     static int offline=0;
+    static boolean sw = false;
 
     MainActivity m = new MainActivity();
 
@@ -76,6 +77,7 @@ public class PlaySong extends AppCompatActivity implements Serializable {
         back = (Button)findViewById(R.id.button2);
         fab = (FloatingActionButton)findViewById(R.id.button);
         again = (Button)findViewById(R.id.button3);
+        again.setVisibility(View.GONE);
 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -95,20 +97,18 @@ public class PlaySong extends AppCompatActivity implements Serializable {
 
             }
         });
-        again.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
 
-                AsyncTaskRunner1 run1 = new AsyncTaskRunner1();
-                run1.execute();
-
-            }
-        });
         back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                for(int i=0; i<m.listofsongs.size();i++){
+                    m.listofsongs.remove(i);
+                }
+                if(player.isPlaying()) player.stop();
                 player.release();
-
+                if(temp!=null){
+                    temp.delete();
+                }
                 try {
                     m.requestSocket.close();
                 } catch (IOException e) {
@@ -119,6 +119,21 @@ public class PlaySong extends AppCompatActivity implements Serializable {
 
             }
         });
+
+        while(sw==true){
+            if(m.choice==false){
+                if(fis!=null){
+                   playagain(fis);
+                }
+
+            }
+            else{
+                if(temp!= null){
+                    playagain(temp);
+                }
+
+            }
+        }
 
 
 
@@ -176,6 +191,74 @@ public class PlaySong extends AppCompatActivity implements Serializable {
         player.stop();
         player.reset();
         player = null;
+    }
+    void playagain(File file){
+        try {
+            if (player != null && player.isPlaying()) {
+                clearMediaPlayer();
+                seekBar.setProgress(0);
+                wasPlaying = true;
+                // fab.setImageDrawable(ContextCompat.getDrawable(PlaySong.this, android.R.drawable.ic_media_play));
+            }
+
+            if (!wasPlaying) {
+
+                if (player == null) {
+                    player = new MediaPlayer();
+                }
+
+                fab.setImageDrawable(ContextCompat.getDrawable(PlaySong.this, android.R.drawable.ic_media_pause));
+
+                player.setDataSource(file.getPath());
+                player.prepare();
+                player.setVolume(0.5f, 0.5f);
+                player.setLooping(false);
+                seekBar.setMax(player.getDuration());
+
+                player.start();
+                int currentPosition = player.getCurrentPosition();
+                int total = player.getDuration();
+
+
+                while (player != null && player.isPlaying() && currentPosition < total) {
+                    try {
+
+                        currentPosition = player.getCurrentPosition();
+                    }  catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    seekBar.setProgress(currentPosition);
+                }
+
+            }
+            player.setOnCompletionListener(new OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mp) {
+                    System.err.println("Releasing the player");
+
+                    mp.reset();
+
+                    offline++;
+                    again.setVisibility(View.VISIBLE);
+                    again.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            sw = true;
+                        }
+                    });
+                    sw=false;
+
+                }
+            });
+
+
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
 
@@ -270,7 +353,7 @@ public class PlaySong extends AppCompatActivity implements Serializable {
                                 int currentPosition = player.getCurrentPosition();
                                 int total = player.getDuration();
 
-
+                                System.err.println("Fis path:   " + fis.getPath());
                                 while (player != null && player.isPlaying() && currentPosition < total) {
                                     try {
 
@@ -289,28 +372,17 @@ public class PlaySong extends AppCompatActivity implements Serializable {
                                 @Override
                                 public void onCompletion(MediaPlayer mp) {
                                     System.err.println("Releasing the player");
-                                    mp.stop();
+
                                     mp.reset();
-                                    if(offline>0){
-                                        fis.delete();
-                                    }
+
                                     offline++;
-                                    back.setOnClickListener(new View.OnClickListener() {
+                                    again.setVisibility(View.VISIBLE);
+                                    again.setOnClickListener(new View.OnClickListener() {
                                         @Override
                                         public void onClick(View view) {
-                                            mp.release();
-
-                                            try {
-                                                k.requestSocket.close();
-                                            } catch (IOException e) {
-                                                e.printStackTrace();
-                                            }
-                                            Intent intent = new Intent(PlaySong.this, MainActivity.class);
-                                            startActivity(intent);
-
+                                           sw = true;
                                         }
                                     });
-
 
                                 }
                             });
@@ -363,7 +435,6 @@ public class PlaySong extends AppCompatActivity implements Serializable {
                         player.setLooping(false);
                         seekBar.setMax(player.getDuration());
                         player.start();
-
 
 
                         int j= 2;
@@ -433,9 +504,18 @@ public class PlaySong extends AppCompatActivity implements Serializable {
                             @Override
                             public void onCompletion(MediaPlayer mp) {
                                 System.err.println("Releasing the player");
-                                mp.stop();
+
                                 mp.reset();
-                                temp.delete();
+                                again.setVisibility(View.VISIBLE);
+                                again.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View view) {
+                                       sw = true;
+
+                                    }
+                                });
+
+
 
                             }
                         });

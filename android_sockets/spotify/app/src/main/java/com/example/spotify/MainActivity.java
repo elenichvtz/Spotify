@@ -59,10 +59,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
     private Button button;
     private EditText txt_input;
     private TextView lb1_output;
-    private Spinner dropdown;
-   // static ObjectOutputStream out = null;
-   // static ObjectInputStream in = null;
-    //static Socket requestSocket = null;
+
     private TextWatcher text =null;
     private TextKeyListener textKeyListener = null;
     static int portOfBroker;
