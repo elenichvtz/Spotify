@@ -7,44 +7,36 @@ import androidx.core.content.ContextCompat;
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.graphics.PixelFormat;
-import android.media.AudioAttributes;
-import android.media.AudioManager;
+
 import android.media.MediaPlayer;
 
-import android.net.Uri;
+
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.util.Log;
-import android.view.KeyEvent;
+
 import android.view.View;
 
 import android.widget.Button;
 
-import android.widget.EditText;
-import android.widget.MediaController;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
 
 import java.io.File;
-import java.io.FileDescriptor;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+
 import java.io.FileOutputStream;
 
 import java.io.IOException;
-import java.io.InputStream;
+
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.net.Socket;
+
 import java.util.ArrayList;
 
 import android.media.MediaPlayer.OnCompletionListener;
-import android.widget.VideoView;
+
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -54,7 +46,7 @@ public class PlaySong extends AppCompatActivity implements Serializable {
     ObjectOutputStream out;
     File fis;
     static File temp;
-    ArrayList<File> pieces;
+    static ArrayList<Value> pieces;
     int chunks = 0;
     static String str ;
     SeekBar seekBar;
@@ -67,6 +59,8 @@ public class PlaySong extends AppCompatActivity implements Serializable {
     static int stop_pos = 0;
     static int offline=0;
     static boolean sw = false;
+    static ArrayList<String> downloads = new ArrayList<>();
+    static  ArrayList<File> downloadedSongs = new ArrayList<>();
 
     MainActivity m = new MainActivity();
 
@@ -92,6 +86,9 @@ public class PlaySong extends AppCompatActivity implements Serializable {
                 if(num_clicks%2!=0){
                     player.seekTo(stop_pos);
                     player.start();
+
+                    seekBar.setMax(player.getDuration());
+                    seekBar.setProgress(stop_pos);
                     fab.setImageDrawable(ContextCompat.getDrawable(PlaySong.this, android.R.drawable.ic_media_pause));
                 }
 
@@ -104,8 +101,15 @@ public class PlaySong extends AppCompatActivity implements Serializable {
                 for(int i=0; i<m.listofsongs.size();i++){
                     m.listofsongs.remove(i);
                 }
-                if(player.isPlaying()) player.stop();
-                player.release();
+
+                System.out.println("Back pressed releasing the player");
+                if(player!=null) {
+                    player.stop();
+                    player.reset();
+                    player.release();
+                    player = null;
+                }
+
                 if(temp!=null){
                     temp.delete();
                 }
@@ -120,24 +124,9 @@ public class PlaySong extends AppCompatActivity implements Serializable {
             }
         });
 
-        while(sw==true){
-            if(m.choice==false){
-                if(fis!=null){
-                   playagain(fis);
-                }
-
-            }
-            else{
-                if(temp!= null){
-                    playagain(temp);
-                }
-
-            }
-        }
 
 
-
-        final TextView seekBarHint = findViewById(R.id.textView);
+        final TextView seekBarHint = findViewById(R.id.textView1);
         seekBar = (SeekBar)findViewById(R.id.seekbar);
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -170,96 +159,20 @@ public class PlaySong extends AppCompatActivity implements Serializable {
         });
 
 
-        // video=(VideoView)findViewById(R.id.videoView);
-
     }
-    public void onStart() {
-        super.onStart();
 
-
-
-
-
-
-    }
     protected void onDestroy() {
         super.onDestroy();
         clearMediaPlayer();
     }
 
     private void clearMediaPlayer() {
+        System.out.println("Inside Playsong/clearMediaPlayer");
         player.stop();
         player.reset();
         player = null;
     }
-    void playagain(File file){
-        try {
-            if (player != null && player.isPlaying()) {
-                clearMediaPlayer();
-                seekBar.setProgress(0);
-                wasPlaying = true;
-                // fab.setImageDrawable(ContextCompat.getDrawable(PlaySong.this, android.R.drawable.ic_media_play));
-            }
 
-            if (!wasPlaying) {
-
-                if (player == null) {
-                    player = new MediaPlayer();
-                }
-
-                fab.setImageDrawable(ContextCompat.getDrawable(PlaySong.this, android.R.drawable.ic_media_pause));
-
-                player.setDataSource(file.getPath());
-                player.prepare();
-                player.setVolume(0.5f, 0.5f);
-                player.setLooping(false);
-                seekBar.setMax(player.getDuration());
-
-                player.start();
-                int currentPosition = player.getCurrentPosition();
-                int total = player.getDuration();
-
-
-                while (player != null && player.isPlaying() && currentPosition < total) {
-                    try {
-
-                        currentPosition = player.getCurrentPosition();
-                    }  catch (Exception e) {
-                        e.printStackTrace();
-                    }
-
-                    seekBar.setProgress(currentPosition);
-                }
-
-            }
-            player.setOnCompletionListener(new OnCompletionListener() {
-                @Override
-                public void onCompletion(MediaPlayer mp) {
-                    System.err.println("Releasing the player");
-
-                    mp.reset();
-
-                    offline++;
-                    again.setVisibility(View.VISIBLE);
-                    again.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            sw = true;
-                        }
-                    });
-                    sw=false;
-
-                }
-            });
-
-
-
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
 
 
 
@@ -275,7 +188,6 @@ public class PlaySong extends AppCompatActivity implements Serializable {
 
         boolean on_off =  k.choice;
 
-        //ArtistName artist = new ArtistName(txt_input.getText().toString());
 
         @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
         @SuppressLint("WrongThread")
@@ -319,7 +231,7 @@ public class PlaySong extends AppCompatActivity implements Serializable {
                             fileOutputStream.write(value.getMusicfile().getMusicFileExtract());
                             fileOutputStream.flush();
 
-
+                            pieces.add(value);
                             out.writeUTF("ok");
                             out.flush();
 
@@ -332,7 +244,7 @@ public class PlaySong extends AppCompatActivity implements Serializable {
                                 clearMediaPlayer();
                                 seekBar.setProgress(0);
                                 wasPlaying = true;
-                               // fab.setImageDrawable(ContextCompat.getDrawable(PlaySong.this, android.R.drawable.ic_media_play));
+                                // fab.setImageDrawable(ContextCompat.getDrawable(PlaySong.this, android.R.drawable.ic_media_play));
                             }
                             System.out.println("fis length: " + fis.length());
                             if (!wasPlaying) {
@@ -342,19 +254,21 @@ public class PlaySong extends AppCompatActivity implements Serializable {
                                 }
 
                                 fab.setImageDrawable(ContextCompat.getDrawable(PlaySong.this, android.R.drawable.ic_media_pause));
-
+                                downloads.add(str);
+                                downloadedSongs.add(fis);
                                 player.setDataSource(fis.getPath());
                                 player.prepare();
                                 player.setVolume(0.5f, 0.5f);
                                 player.setLooping(false);
-                                seekBar.setMax(player.getDuration());
 
+                                seekBar.setMax(player.getDuration());
                                 player.start();
+                                //seekBar.setMax(player.getDuration());
                                 int currentPosition = player.getCurrentPosition();
                                 int total = player.getDuration();
 
                                 System.err.println("Fis path:   " + fis.getPath());
-                                while (player != null && player.isPlaying() && currentPosition < total) {
+                                while (player != null && player.isPlaying() && currentPosition < total && !back.isPressed()) {
                                     try {
 
                                         currentPosition = player.getCurrentPosition();
@@ -376,13 +290,7 @@ public class PlaySong extends AppCompatActivity implements Serializable {
                                     mp.reset();
 
                                     offline++;
-                                    again.setVisibility(View.VISIBLE);
-                                    again.setOnClickListener(new View.OnClickListener() {
-                                        @Override
-                                        public void onClick(View view) {
-                                           sw = true;
-                                        }
-                                    });
+
 
                                 }
                             });
@@ -427,59 +335,59 @@ public class PlaySong extends AppCompatActivity implements Serializable {
                             if (player == null) {
                                 player = new MediaPlayer();
                             }
-                        fab.setImageDrawable(ContextCompat.getDrawable(PlaySong.this, android.R.drawable.ic_media_pause));
+                            fab.setImageDrawable(ContextCompat.getDrawable(PlaySong.this, android.R.drawable.ic_media_pause));
 
-                        player.setDataSource(temp.getPath());
-                        player.prepare();
-                        player.setVolume(0.5f, 0.5f);
-                        player.setLooping(false);
-                        seekBar.setMax(player.getDuration());
-                        player.start();
-
-
-                        int j= 2;
-                        out.writeUTF("ok");
-                        out.flush();
-                        int pos= 0;
-                        int current =0;
+                            player.setDataSource(temp.getPath());
+                            player.prepare();
+                            player.setVolume(0.5f, 0.5f);
+                            player.setLooping(false);
+                            seekBar.setMax(player.getDuration());
+                            player.start();
 
 
-                        while (player.isPlaying() ) {
-                            if (j <= chunks) {
-                                for (int i = 2; i <= chunks; i++) {
-                                    try {
-                                        Value value1 = new Value((MusicFile) in.readObject());
-                                        System.err.println(i);
-                                        System.out.println("Song broker send me:  " + value.getMusicfile().getTrackName());
+                            int j= 2;
+                            out.writeUTF("ok");
+                            out.flush();
+                            int pos= 0;
+                            int current =0;
 
-                                        fileOutputStream.write(value1.getMusicfile().getMusicFileExtract());
-                                        fileOutputStream.flush();
-                                        j++;
-                                        out.writeUTF("ok");
-                                        out.flush();
-                                        current = player.getCurrentPosition();
-                                        seekBar.setProgress(current);
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
+
+                            while (player.isPlaying() ) {
+                                if (j <= chunks) {
+                                    for (int i = 2; i <= chunks; i++) {
+                                        try {
+                                            Value value1 = new Value((MusicFile) in.readObject());
+                                            System.err.println(i);
+                                            System.out.println("Song broker send me:  " + value.getMusicfile().getTrackName());
+
+                                            fileOutputStream.write(value1.getMusicfile().getMusicFileExtract());
+                                            fileOutputStream.flush();
+                                            j++;
+                                            out.writeUTF("ok");
+                                            out.flush();
+                                            current = player.getCurrentPosition();
+                                            seekBar.setProgress(current);
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                        }
+
                                     }
 
                                 }
-
+                                stop_pos = player.getCurrentPosition();
+                                seekBar.setProgress(stop_pos);
                             }
-                            stop_pos = player.getCurrentPosition();
-                            seekBar.setProgress(stop_pos);
-                        }
 
-                        player.reset();
-                        player.setDataSource(temp.getPath());
-                        player.prepare();
-                        player.setVolume(0.5f, 0.5f);
-                        player.setLooping(false);
-                        seekBar.setMax(player.getDuration());
-                        player.seekTo(stop_pos);
+                            player.reset();
+                            player.setDataSource(temp.getPath());
+                            player.prepare();
+                            player.setVolume(0.5f, 0.5f);
+                            player.setLooping(false);
+                            seekBar.setMax(player.getDuration());
+                            player.seekTo(stop_pos);
 
-                        player.start();
-                        System.err.println(123);
+                            player.start();
+                            System.err.println(123);
 
 
                             int currentPosition = player.getCurrentPosition();
@@ -506,14 +414,7 @@ public class PlaySong extends AppCompatActivity implements Serializable {
                                 System.err.println("Releasing the player");
 
                                 mp.reset();
-                                again.setVisibility(View.VISIBLE);
-                                again.setOnClickListener(new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View view) {
-                                       sw = true;
-
-                                    }
-                                });
+                                temp.delete();
 
 
 

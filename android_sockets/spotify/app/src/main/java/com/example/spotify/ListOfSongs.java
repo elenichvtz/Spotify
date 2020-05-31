@@ -47,13 +47,6 @@ public class ListOfSongs extends AppCompatActivity implements Serializable {
         setContentView(R.layout.activity_list_of_songs);
         intent = new Intent(ListOfSongs.this, MainActivity.class);
 
-        /*button =  findViewById(R.id.button2);
-        button.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Intent intent = new Intent(ListOfSongs.this, PlaySong.class);
-                startActivity(intent);
-            }
-        });*/
 
 
     }

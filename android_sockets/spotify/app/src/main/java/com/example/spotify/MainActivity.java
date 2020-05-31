@@ -1,51 +1,30 @@
 package com.example.spotify;
 
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.content.res.AssetFileDescriptor;
-import android.content.res.AssetManager;
-import android.media.AudioAttributes;
-import android.media.AudioManager;
+
 import android.media.MediaPlayer;
-import android.net.Uri;
-import android.net.rtp.AudioStream;
+
 import android.os.AsyncTask;
-import android.os.Build;
+
 import android.os.Bundle;
 
-import android.os.Environment;
-import android.provider.MediaStore;
 import android.text.TextWatcher;
 import android.text.method.TextKeyListener;
 import android.util.Log;
 import android.view.KeyEvent;
 
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
-
 import android.view.View.OnKeyListener;
 import android.view.View;
-import android.widget.Toast;
-
-
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileDescriptor;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -53,7 +32,7 @@ import java.io.Serializable;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.lang.*;
-import java.util.Arrays;
+
 
 public class MainActivity extends AppCompatActivity implements Serializable {
     private Button button;
@@ -92,8 +71,9 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         txt_input = (EditText) findViewById(R.id.txt_input);
-        lb1_output = (TextView) findViewById(R.id.textView);
+        lb1_output = (TextView) findViewById(R.id.textView1);
         simpleSwitch = (Switch) findViewById(R.id.simpleSwitch);// initiate Switch
+        button = (Button)findViewById(R.id.button4);
         simpleSwitch.setTextSize(25);
         //button = (Button) findViewById(R.id.button4);
         System.out.println("Fifth");
@@ -159,6 +139,14 @@ public class MainActivity extends AppCompatActivity implements Serializable {
             }
         });
 
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent2 = new Intent(MainActivity.this, Downloads.class);
+                startActivity(intent2);
+            }
+        });
+
     }
 
 
@@ -175,12 +163,12 @@ public class MainActivity extends AppCompatActivity implements Serializable {
             try {
                 System.out.println("Second");
                 System.out.println("Inside doInBackground");
-                requestSocket = new Socket("192.168.1.3", 7655);
+                requestSocket = new Socket("192.168.1.15", 7655);
                 out = new ObjectOutputStream(requestSocket.getOutputStream());
                 in = new ObjectInputStream(requestSocket.getInputStream());
 
                 portOfBroker = 7655;
-                out.writeUTF("192.168.1.3");
+                out.writeUTF("192.168.1.15");
                 out.writeInt(7655);
                 out.writeUTF(artist.getArtistName());
                 out.flush();
@@ -189,11 +177,11 @@ public class MainActivity extends AppCompatActivity implements Serializable {
                 if (brokerport != 7655) {
                     portOfBroker = brokerport;
                     requestSocket.close();
-                    Socket request = new Socket("192.168.1.3", brokerport+1);
+                    Socket request = new Socket("192.168.1.15", brokerport+1);
                     out = new ObjectOutputStream(request.getOutputStream());
                     in = new ObjectInputStream(request.getInputStream());
 
-                    out.writeUTF("192.168.1.3");
+                    out.writeUTF("192.168.1.15");
                     out.writeInt(brokerport);
                     out.writeUTF(artist.getArtistName()); //successfully sends artistName to BrokerNode
                     out.flush();
@@ -202,6 +190,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
 
                 exist = in.readInt();
                 if(exist!=1){
+                    lb1_output.setVisibility(View.VISIBLE);
                     lb1_output.setText("Please insert another artist");
                     artist.setArtistName(txt_input.toString());
                     txt_input.setOnKeyListener(new OnKeyListener() {
@@ -228,7 +217,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
                 if (exist == 1) {
                     try {
                         //lb1_output.d
-                        //lb1_output.setVisibility(View.GONE);
+                        lb1_output.setText("");
                         System.out.println("size: "+ 111111111);
                         int size = in.readInt();
                         System.out.println("size: "+ size);
