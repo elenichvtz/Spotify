@@ -51,15 +51,6 @@
         android:background="#9C27B0"
         android:text="Go back" />
 
-    <Button
-        android:layout_marginTop="-48dp"
-        android:layout_marginLeft="100dp"
-        android:id="@+id/button3"
-        android:layout_width="109dp"
-        android:layout_height="wrap_content"
-        android:background="#9C27B0"
-        android:text="Play again" />
-
 
 </LinearLayout>
 

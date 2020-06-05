@@ -174,6 +174,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
                 out.flush();
                 int brokerport = in.readInt();
                 System.out.println("..... doInBackground");
+                System.out.println("Brokerport: " + brokerport);
                 if (brokerport != 7655) {
                     portOfBroker = brokerport;
                     requestSocket.close();
@@ -187,8 +188,9 @@ public class MainActivity extends AppCompatActivity implements Serializable {
                     out.flush();
                     System.out.println("Connect with other broker");
                 }
-
+                int port = in.readInt();
                 exist = in.readInt();
+                System.out.println("exist: " + exist);
                 if(exist!=1){
                     lb1_output.setVisibility(View.VISIBLE);
                     lb1_output.setText("Please insert another artist");
@@ -218,7 +220,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
                     try {
                         //lb1_output.d
                         lb1_output.setText("");
-                        System.out.println("size: "+ 111111111);
+
                         int size = in.readInt();
                         System.out.println("size: "+ size);
                         for(int i=0; i<size;i++) {
@@ -230,7 +232,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
                         e.printStackTrace();
                     }
 
-                    System.out.println("BEFORE FLAG SONG is: " + flag_song);
+
                     Intent intent= new Intent(MainActivity.this, ListOfSongs.class);
                     startActivityForResult(intent, LAUNCH_ACTIVITY);
 
