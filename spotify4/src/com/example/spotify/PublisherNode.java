@@ -19,14 +19,14 @@ import static java.lang.Math.ceil;
 //Client & Server
 public class PublisherNode implements Publisher,Serializable{
     static final long serialVersionUID = -373782829391231342L;
-    Socket requestSocket = null;
+
     ServerSocket providerSocket = null;
 
     ObjectOutputStream out = null;
     ObjectInputStream in = null;
     ObjectOutputStream out2 = null;
     ObjectInputStream in2 = null;
-    static boolean already = false;
+    boolean already = false;
 
     static String path = "C:\\Users\\user\\Documents\\mathimata\\6o Εξάμηνο\\Κατανεμημένα Συστήματα\\Project\\dataset1";
 
@@ -39,12 +39,13 @@ public class PublisherNode implements Publisher,Serializable{
     int BrokerPort1 = 7654;
     int BrokerPort2 = 8765;
     int BrokerPort3 = 9876;
-    String BrokerIP1 = "192.168.1.3";
-    String BrokerIP2 = "192.168.1.3";
-    String BrokerIP3 = "192.168.1.3";
+    String BrokerIP1 = "192.168.1.15";
+    String BrokerIp = "192.168.1.15";
+    String BrokerIP3 = "192.168.1.15";
 
     Map<String,ArrayList<String>> artistMap = new HashMap<>();
     ArrayList<BrokerNode> brokerKeys = new ArrayList<>();
+    ArrayList<PubThread> thread_pub = new ArrayList<>();
 
     PublisherNode(char start,char end, String ip, int port){
         this.start = start;
@@ -158,11 +159,7 @@ public class PublisherNode implements Publisher,Serializable{
         }
 
         //initialize sockets
-        try {
-            this.requestSocket = new Socket(this.ip, this.port);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
 
         try {
             this.providerSocket = new ServerSocket(this.port+2, 10);
@@ -175,7 +172,7 @@ public class PublisherNode implements Publisher,Serializable{
     public void updateList(){
         BrokerNode b = new BrokerNode(BrokerIP1, BrokerPort1);
         brokerKeys.add(b);
-        BrokerNode b2 = new BrokerNode(BrokerIP2, BrokerPort2);
+        BrokerNode b2 = new BrokerNode(BrokerIp, BrokerPort2);
         brokerKeys.add(b2);
         BrokerNode b3 = new BrokerNode(BrokerIP3, BrokerPort3);
         brokerKeys.add(b3);
@@ -346,7 +343,7 @@ public class PublisherNode implements Publisher,Serializable{
 
     }
 
-    public Socket getSocket() { return this.requestSocket; }
+
 
     public String getPublisherIP() { return this.ip; }
 
@@ -356,7 +353,7 @@ public class PublisherNode implements Publisher,Serializable{
 
     public char getEnd() { return this.end; }
 
-    public static class PubThread extends Thread implements Serializable{
+    public  class PubThread extends Thread implements Serializable{
         public static final long serialVersionUID = -3643274596837043061L;
         Socket requestSocket = null;
         PublisherNode publisher ;
@@ -372,16 +369,74 @@ public class PublisherNode implements Publisher,Serializable{
 
             try {
 
-                publisher.out2 = new ObjectOutputStream(publisher.requestSocket.getOutputStream());
-                publisher.in2 = new ObjectInputStream(publisher.requestSocket.getInputStream());
+                out2 = new ObjectOutputStream(requestSocket.getOutputStream());
+                in2 = new ObjectInputStream(requestSocket.getInputStream());
 
-                ArtistName artist = (ArtistName) publisher.in2.readObject();
-                Value value = (Value) publisher.in2.readObject();
-                publisher.push(artist, value);
+                ArtistName artist = (ArtistName) in2.readObject();
+                Value value = (Value) in2.readObject();
+                push(artist, value);
 
             } catch (ClassNotFoundException | IOException e) {
                 e.printStackTrace();
             }
+        }
+    }
+    public void sendArtists(){
+        for(BrokerNode b: brokerKeys) {
+            try {
+                Socket broker = new Socket(b.getBrokerIp(), b.getBrokerPort());
+
+                out = new ObjectOutputStream(broker.getOutputStream());
+                in = new ObjectInputStream(broker.getInputStream());
+
+                //send ip, port, start and end to broker
+                out.writeUTF(getPublisherIP());
+                out.writeInt(getPublisherPort());
+                out.writeChar(getStart());
+                out.writeChar(getEnd());
+
+                //send map to broker
+                out.writeObject(getArtistMap());
+                out.flush();
+
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    public void takeRequests(){
+        while (true) {
+            Socket requestSocket= null;
+
+            try {
+                requestSocket = providerSocket.accept();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            PubThread t = new PubThread(requestSocket, this);
+            t.start();
+            thread_pub.add(t);
+            for (int k = thread_pub.size()-1; k >-1; k--) {
+
+                if (!thread_pub.get(k).isAlive()) {
+
+                    try {
+                        thread_pub.get(k).join(1000);
+
+                        thread_pub.remove(k);
+
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+
+            }
+
+
         }
     }
 
@@ -389,77 +444,14 @@ public class PublisherNode implements Publisher,Serializable{
 
     public static void main(String args[]){
 
-        PublisherNode p = new PublisherNode('A', 'M', "192.168.1.3", 7654);
-        PublisherNode p2 = new PublisherNode('M','Z',"192.168.1.3",8765);
+       PublisherNode p = new PublisherNode('A', 'M', "192.168.1.15", 7654);
+       //PublisherNode p = new PublisherNode('M','Z',"192.168.1.15",8765);
+
         p.init();
-        p2.init();
         p.updateList();
-        p2.updateList();
-
-        ArrayList<PublisherNode> publishers = new ArrayList<>();
-        publishers.add(p);
-        publishers.add(p2);
-        ArrayList<PubThread> thread_pub = new ArrayList<>();
+        p.sendArtists();
+        p.takeRequests();
 
 
-        publishers.parallelStream().forEach((publisher) -> {
-
-            try {
-                Socket broker = publisher.getSocket();
-
-                publisher.out = new ObjectOutputStream(broker.getOutputStream());
-                publisher.in = new ObjectInputStream(broker.getInputStream());
-
-                //send ip, port, start and end to broker
-                publisher.out.writeUTF(publisher.getPublisherIP());
-                publisher.out.writeInt(publisher.getPublisherPort());
-                publisher.out.writeChar(publisher.getStart());
-                publisher.out.writeChar(publisher.getEnd());
-
-                //send map to broker
-                publisher.out.writeObject(publisher.getArtistMap());
-                publisher.out.flush();
-                while (true) {
-
-
-                    try {
-                        publisher.requestSocket = publisher.providerSocket.accept();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    PubThread t = new PubThread(publisher.requestSocket, publisher);
-                    thread_pub.add(t);
-                    for (int i = 0; i < thread_pub.size(); i++) {
-                        thread_pub.get(i).start();
-                        if (!thread_pub.get(i).isAlive()) {
-
-                            try {
-                                thread_pub.get(i).join();
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                            thread_pub.remove(i);
-                        }
-                        else {
-
-                            try {
-                                thread_pub.get(i).join(5);
-                                thread_pub.remove(i);
-
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-
-
-                    }
-
-                }
-            }
-            catch (IOException e) {
-                e.printStackTrace();
-            }
-
-        });
     }
 }
