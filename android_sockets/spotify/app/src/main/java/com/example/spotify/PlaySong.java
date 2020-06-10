@@ -33,6 +33,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
+import java.net.Socket;
 import java.util.ArrayList;
 
 import android.media.MediaPlayer.OnCompletionListener;
@@ -53,7 +54,7 @@ public class PlaySong extends AppCompatActivity implements Serializable {
     boolean wasPlaying = false;
     FloatingActionButton fab;
     Button back;
-    Button again;
+
     MediaPlayer player = new MediaPlayer();
     static int num_clicks =0;
     static int stop_pos = 0;
@@ -61,6 +62,7 @@ public class PlaySong extends AppCompatActivity implements Serializable {
     static boolean sw = false;
     static ArrayList<String> downloads = new ArrayList<>();
     static  ArrayList<File> downloadedSongs = new ArrayList<>();
+    boolean pressed = false;
 
     MainActivity m = new MainActivity();
 
@@ -70,14 +72,17 @@ public class PlaySong extends AppCompatActivity implements Serializable {
         setContentView(R.layout.activity_play_song);
         back = (Button)findViewById(R.id.button2);
         fab = (FloatingActionButton)findViewById(R.id.button);
-        again = (Button)findViewById(R.id.button3);
-        again.setVisibility(View.GONE);
+
+
 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
                 AsyncTaskRunner1 runner = new AsyncTaskRunner1();
                 runner.execute();
+
+
                 num_clicks++;
 
                 stop_pos = player.getCurrentPosition();
@@ -98,26 +103,49 @@ public class PlaySong extends AppCompatActivity implements Serializable {
         back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                pressed = true;
                 for(int i=0; i<m.listofsongs.size();i++){
                     m.listofsongs.remove(i);
                 }
 
                 System.out.println("Back pressed releasing the player");
-                if(player!=null) {
+
+                if(player!=null && m.choice==false) {
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    System.out.println("release the player");
                     player.stop();
                     player.reset();
                     player.release();
                     player = null;
                 }
+                if(player!=null && m.choice==true) {
 
-                if(temp!=null){
-                    temp.delete();
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    System.out.println("release the player");
+                   // player.stop();
+                    player.reset();
+                    player.release();
+                    player = null;
+                    if(temp!=null){
+                        temp.delete();
+                    }
                 }
+
                 try {
                     m.requestSocket.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                back.setVisibility(View.GONE);
+                m.choice=false;
                 Intent intent = new Intent(PlaySong.this, MainActivity.class);
                 startActivity(intent);
 
@@ -197,7 +225,7 @@ public class PlaySong extends AppCompatActivity implements Serializable {
 
             try {
 
-
+                Socket request = k.requestSocket;
                 out = k.out;
                 in = k.in;
 
@@ -210,7 +238,7 @@ public class PlaySong extends AppCompatActivity implements Serializable {
 
                 pieces = new ArrayList<>();
 
-                if(on_off==false) {
+                if(on_off==false ) {
                     System.out.println("Offline");
                     try {
                         str = in.readUTF();
@@ -237,7 +265,8 @@ public class PlaySong extends AppCompatActivity implements Serializable {
 
                         }
                         fileOutputStream.close();
-
+                        downloads.add(str);
+                        downloadedSongs.add(fis);
 
                         try {
                             if (player != null && player.isPlaying()) {
@@ -254,46 +283,48 @@ public class PlaySong extends AppCompatActivity implements Serializable {
                                 }
 
                                 fab.setImageDrawable(ContextCompat.getDrawable(PlaySong.this, android.R.drawable.ic_media_pause));
-                                downloads.add(str);
-                                downloadedSongs.add(fis);
+
+
                                 player.setDataSource(fis.getPath());
                                 player.prepare();
                                 player.setVolume(0.5f, 0.5f);
                                 player.setLooping(false);
 
                                 seekBar.setMax(player.getDuration());
-                                player.start();
-                                //seekBar.setMax(player.getDuration());
-                                int currentPosition = player.getCurrentPosition();
-                                int total = player.getDuration();
+                                if (pressed == false) {
+                                    player.start();
+                                    //seekBar.setMax(player.getDuration());
+                                    int currentPosition = player.getCurrentPosition();
+                                    int total = player.getDuration();
 
-                                System.err.println("Fis path:   " + fis.getPath());
-                                while (player != null && player.isPlaying() && currentPosition < total && !back.isPressed()) {
-                                    try {
+                                    System.err.println("Fis path:   " + fis.getPath());
+                                    while (player != null && player.isPlaying() && currentPosition < total && !back.isPressed()) {
+                                        try {
 
-                                        currentPosition = player.getCurrentPosition();
-                                    }  catch (Exception e) {
-                                        e.printStackTrace();
+                                            currentPosition = player.getCurrentPosition();
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                        }
+
+                                        seekBar.setProgress(currentPosition);
+
+
                                     }
 
-                                    seekBar.setProgress(currentPosition);
-
-
                                 }
+                                player.setOnCompletionListener(new OnCompletionListener() {
+                                    @Override
+                                    public void onCompletion(MediaPlayer mp) {
+                                        System.err.println("Releasing the player");
 
+                                        mp.reset();
+
+                                        offline++;
+
+
+                                    }
+                                });
                             }
-                            player.setOnCompletionListener(new OnCompletionListener() {
-                                @Override
-                                public void onCompletion(MediaPlayer mp) {
-                                    System.err.println("Releasing the player");
-
-                                    mp.reset();
-
-                                    offline++;
-
-
-                                }
-                            });
 
 
 
@@ -345,14 +376,14 @@ public class PlaySong extends AppCompatActivity implements Serializable {
                             player.start();
 
 
-                            int j= 2;
+                            int j = 2;
                             out.writeUTF("ok");
                             out.flush();
-                            int pos= 0;
-                            int current =0;
+                            int pos = 0;
+                            int current = 0;
 
 
-                            while (player.isPlaying() ) {
+                            while (player.isPlaying()) {
                                 if (j <= chunks) {
                                     for (int i = 2; i <= chunks; i++) {
                                         try {
@@ -367,6 +398,11 @@ public class PlaySong extends AppCompatActivity implements Serializable {
                                             out.flush();
                                             current = player.getCurrentPosition();
                                             seekBar.setProgress(current);
+                                            if(pressed==true){
+                                                player.stop();
+
+                                            }
+
                                         } catch (Exception e) {
                                             e.printStackTrace();
                                         }
@@ -377,49 +413,60 @@ public class PlaySong extends AppCompatActivity implements Serializable {
                                 stop_pos = player.getCurrentPosition();
                                 seekBar.setProgress(stop_pos);
                             }
+                            if (pressed==false){
+                                System.err.println("back is not pressed");
+                                player.reset();
+                                player.setDataSource(temp.getPath());
 
-                            player.reset();
-                            player.setDataSource(temp.getPath());
-                            player.prepare();
-                            player.setVolume(0.5f, 0.5f);
-                            player.setLooping(false);
-                            seekBar.setMax(player.getDuration());
-                            player.seekTo(stop_pos);
+                                player.prepare();
+                                player.setVolume(0.5f, 0.5f);
+                                player.setLooping(false);
+                                seekBar.setMax(player.getDuration());
+                                player.seekTo(stop_pos);
 
-                            player.start();
-                            System.err.println(123);
-
-
-                            int currentPosition = player.getCurrentPosition();
-                            int total = player.getDuration();
+                                player.start();
+                                System.err.println(123);
 
 
-                            while (player != null && player.isPlaying() && currentPosition < total) {
-                                try {
+                                int currentPosition = player.getCurrentPosition();
+                                int total = player.getDuration();
 
-                                    currentPosition = player.getCurrentPosition();
-                                }  catch (Exception e) {
-                                    e.printStackTrace();
+
+                                while (player != null && player.isPlaying() && currentPosition < total) {
+                                    try {
+
+                                        currentPosition = player.getCurrentPosition();
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+
+                                    seekBar.setProgress(currentPosition);
+
+
                                 }
+                                player.setOnCompletionListener(new OnCompletionListener() {
+                                    @Override
+                                    public void onCompletion(MediaPlayer mp) {
+                                        System.err.println("Releasing the player");
 
-                                seekBar.setProgress(currentPosition);
+                                        if (mp != null) {
+                                            mp.stop();
+                                            mp.reset();
+                                            mp.release();
+                                            mp = null;
+                                        }
 
+                                        if (temp != null) {
+                                            temp.delete();
+                                        }
+
+
+                                    }
+                                });
 
                             }
 
                         }
-                        player.setOnCompletionListener(new OnCompletionListener() {
-                            @Override
-                            public void onCompletion(MediaPlayer mp) {
-                                System.err.println("Releasing the player");
-
-                                mp.reset();
-                                temp.delete();
-
-
-
-                            }
-                        });
 
                     } catch (IOException | ClassNotFoundException e) {
                         e.printStackTrace();
